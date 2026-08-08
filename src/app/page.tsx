@@ -8,6 +8,7 @@ import KeShiHeader from "@/components/KeShiHeader";
 import TianPanDisk from "@/components/TianPanDisk";
 import SikeCards from "@/components/SikeCards";
 import SanchuanChain from "@/components/SanchuanChain";
+import AiDuanke from "@/components/AiDuanke";
 import { chuanTianjiang } from "@/lib/shike";
 
 const GOLDEN: KeShi = build("庚子", "午", "亥");
@@ -77,6 +78,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <AiDuanke ks={ks} />
 
       <footer className="text-center text-xs text-ash pt-4 border-t border-ash/20">
         起课引擎与 liuren-py 同源 · 黄金课例：庚子日 午时 亥将 → 重审课（巳戌卯）
