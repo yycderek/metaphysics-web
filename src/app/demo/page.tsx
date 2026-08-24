@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { DivinationResult } from "@/lib/algorithms/types";
 import { daliurenAdapter } from "@/lib/algorithms/daliuren";
 import StepRenderer from "@/components/StepRenderer";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const GOLDEN: DivinationResult = daliurenAdapter.build({
   rizhu: "庚子",
@@ -23,7 +24,8 @@ export default function DemoPage() {
             黄金课例：庚子日 · 午时 · 亥将 → 重审课（三传 巳→戌→卯）
           </p>
         </div>
-        <nav className="flex gap-2 text-sm">
+        <nav className="flex gap-2 text-sm items-center">
+          <ThemeToggle />
           <a
             href="/"
             className="rounded-lg border border-ash/40 px-4 py-2 text-ash hover:border-gold hover:text-paper transition-colors"

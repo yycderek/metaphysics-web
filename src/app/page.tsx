@@ -16,6 +16,7 @@ import SanchuanChain from "@/components/SanchuanChain";
 import AiDuanke from "@/components/AiDuanke";
 import StepRenderer from "@/components/StepRenderer";
 import DataTree from "@/components/DataTree";
+import ThemeToggle from "@/components/ThemeToggle";
 import { chuanTianjiang } from "@/lib/shike";
 
 const GOLDEN_INPUT: AlgorithmInput = { rizhu: "庚子", shizhi: "午", yuejiang: "亥" };
@@ -80,7 +81,8 @@ export default function HomePage() {
             月将加时 · 天地盘 · 四课 · 九宗门 · 三传 · 天将六亲
           </p>
         </div>
-        <nav className="flex gap-2 text-sm">
+        <nav className="flex gap-2 text-sm items-center">
+          <ThemeToggle />
           <a
             href="/"
             className="rounded-lg border border-gold/60 bg-gold/10 px-4 py-2 text-gold"

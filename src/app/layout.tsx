@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -11,6 +12,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
+      {/* 首帧前设置主题，避免闪烁；默认亮色，localStorage 无值时不动（亮） */}
+      <Script id="theme-init" strategy="beforeInteractive">
+        {`(function(){try{var t=localStorage.getItem("liuren-theme");if(t==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})()`}
+      </Script>
       <body suppressHydrationWarning>{children}</body>
     </html>
   );
