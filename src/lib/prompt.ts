@@ -1,6 +1,7 @@
 // 断课 prompt 模板：课式(KeShi) → 结构化断课提示词
 // 铁律：先由 TS 引擎起课(build)，再喂 LLM 解读，防止 LLM 幻觉起错课
 import type { ChuanDetail, KeShi } from './types'
+import type { ChatMessage } from './aiTypes'
 import { chuanTianjiang, sikeEntries } from './shike'
 import {
   DIZHI_WUXING,
@@ -104,7 +105,7 @@ function formatChuan(c: ChuanDetail, ks: KeShi): string {
 }
 
 /** 断课输入：给定课式 + 问题，组装给 LLM 的完整 messages */
-export function buildDivineMessages(ks: KeShi, question: DivineQuestion) {
+export function buildDivineMessages(ks: KeShi, question: DivineQuestion): ChatMessage[] {
   return [
     { role: 'system', content: buildDivineSystemPrompt() },
     { role: 'user', content: buildDivinePrompt(ks, question) },

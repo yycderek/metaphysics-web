@@ -1,9 +1,8 @@
-// API route：断课 → deepseek chat completions（SSE 流式）
+// API route：断课 → AI Provider 流式解读（SSE 透传）
 // 铁律：前端已用 TS 引擎起好课（KeShi JSON 随请求传入），本路由只负责解读，不自行起课
 import { NextRequest } from 'next/server'
-import { readFileSync, existsSync } from 'node:fs'
-import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { resolveAIConfig, streamChat, type UserAIConfig } from '@/lib/aiProvider'
+import type { ChatMessage } from '@/lib/aiTypes'
 import { buildDivineMessages } from '@/lib/prompt'
 import type { KeShi } from '@/lib/types'
 
@@ -20,34 +19,8 @@ interface DivineRequestBody {
   question: string
   season: '春' | '夏' | '秋' | '冬' | '四季'
   history?: ChatMsg[] // 追问历史（不含本轮）
+  aiConfig?: UserAIConfig // 用户自定义 AI 配置（设置面板，可省略）
 }
-
-/** 读取 deepseek key：环境变量 → ~/.hermes/.env → ~/.hermes/config.yaml */
-function getApiKey(): string {
-  if (process.env.DEEPSEEK_API_KEY) return process.env.DEEPSEEK_API_KEY
-  try {
-    // ~/.hermes/.env（API keys only）
-    const envPath = join(homedir(), '.hermes', '.env')
-    if (existsSync(envPath)) {
-      const content = readFileSync(envPath, 'utf-8')
-      const m = content.match(/^DEEPSEEK_API_KEY\s*=\s*["']?([^"'\n]+)/m)
-      if (m) return m[1].trim()
-    }
-    // config.yaml 兜底
-    const cfgPath = join(homedir(), '.hermes', 'config.yaml')
-    if (existsSync(cfgPath)) {
-      const yaml = readFileSync(cfgPath, 'utf-8')
-      const m = yaml.match(/api_key:\s*([A-Za-z0-9_\-]+)/)
-      if (m) return m[1]
-    }
-  } catch {
-    /* ignore */
-  }
-  throw new Error('DEEPSEEK_API_KEY 未配置（环境变量 / ~/.hermes/.env / config.yaml）')
-}
-
-const DEEPSEEK_BASE = process.env.DEEPSEEK_BASE_URL ?? 'https://api.deepseek.com'
-const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL ?? 'deepseek-v4-flash'
 
 export async function POST(req: NextRequest) {
   let body: DivineRequestBody
@@ -57,7 +30,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: '请求体不是合法 JSON' }, { status: 400 })
   }
 
-  const { ks, question, season, history } = body
+  const { ks, question, season, history, aiConfig } = body
   if (!ks?.sanchuan?.length || !question?.trim()) {
     return Response.json({ error: '缺少课式或问题' }, { status: 400 })
   }
@@ -65,41 +38,29 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: '季节参数非法' }, { status: 400 })
   }
 
-  let apiKey: string
-  try {
-    apiKey = getApiKey()
-  } catch (e) {
-    return Response.json({ error: (e as Error).message }, { status: 500 })
+  const config = resolveAIConfig(aiConfig)
+  if (!config.apiKey) {
+    return Response.json(
+      { error: '未配置 AI API Key（请在 AI 断课面板的 ⚙️ 设置中填写，或设置环境变量 DEEPSEEK_API_KEY）' },
+      { status: 500 },
+    )
   }
 
   const base = buildDivineMessages(ks, { question, season })
   const historyMsgs: ChatMsg[] = (history ?? []).slice(-8) // 最多保留最近 8 轮追问
   const messages = [
     ...base.slice(0, 1), // system
-    ...historyMsgs.map((h) => ({ role: h.role, content: h.content })),
+    ...historyMsgs.map((h): ChatMessage => ({ role: h.role, content: h.content })),
     ...base.slice(1), // 课式上下文 + 本轮问题
   ]
 
   try {
-    const upstream = await fetch(`${DEEPSEEK_BASE}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: DEEPSEEK_MODEL,
-        messages,
-        stream: true,
-        temperature: 0.7,
-        max_tokens: 8192,
-      }),
-    })
+    const upstream = await streamChat(config, messages)
 
     if (!upstream.ok) {
       const errText = await upstream.text().catch(() => '')
       return Response.json(
-        { error: `deepseek 上游错误 ${upstream.status}: ${errText.slice(0, 200)}` },
+        { error: `AI 上游错误 ${upstream.status}: ${errText.slice(0, 200)}` },
         { status: 502 },
       )
     }
@@ -135,6 +96,6 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (e) {
-    return Response.json({ error: `请求 deepseek 失败: ${(e as Error).message}` }, { status: 502 })
+    return Response.json({ error: `请求 AI 失败: ${(e as Error).message}` }, { status: 502 })
   }
 }

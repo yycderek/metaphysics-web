@@ -1,7 +1,9 @@
 "use client";
 // AI 断课对话面板：课式下方，提问 → 流式断语 → 可追问
+// 支持用户自定义 AI API（OpenAI 兼容协议），设置存 localStorage
 import { useEffect, useRef, useState } from "react";
 import type { KeShi } from "@/lib/types";
+import type { UserAIConfig } from "@/lib/aiTypes";
 
 interface Props {
   ks: KeShi;
@@ -14,6 +16,16 @@ interface ChatMsg {
 }
 
 const QUICK_QUESTIONS = ["综合运势", "看事业", "看感情", "看财运"];
+const STORAGE_KEY = "liuren-ai-config";
+
+function loadAIConfig(): UserAIConfig {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as UserAIConfig) : {};
+  } catch {
+    return {};
+  }
+}
 
 function seasonFromNow(): "春" | "夏" | "秋" | "冬" | "四季" {
   const m = new Date().getMonth() + 1; // 1-12
@@ -32,6 +44,46 @@ export default function AiDuanke({ ks }: Props) {
   const [error, setError] = useState("");
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  // ---- 用户自定义 AI 配置 ----
+  const [aiConfig, setAiConfig] = useState<UserAIConfig>(loadAIConfig);
+  const [showSettings, setShowSettings] = useState(false);
+  const [fBaseUrl, setFBaseUrl] = useState(aiConfig.baseUrl ?? "");
+  const [fApiKey, setFApiKey] = useState(aiConfig.apiKey ?? "");
+  const [fModel, setFModel] = useState(aiConfig.model ?? "");
+  const [fTemp, setFTemp] = useState(aiConfig.temperature != null ? String(aiConfig.temperature) : "");
+
+  const saveSettings = () => {
+    const cfg: UserAIConfig = {};
+    if (fBaseUrl.trim()) cfg.baseUrl = fBaseUrl.trim();
+    if (fApiKey.trim()) cfg.apiKey = fApiKey.trim();
+    if (fModel.trim()) cfg.model = fModel.trim();
+    const t = parseFloat(fTemp);
+    if (!Number.isNaN(t) && t > 0 && t <= 2) cfg.temperature = t;
+    setAiConfig(cfg);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
+    } catch {
+      /* 忽略存储失败 */
+    }
+    setShowSettings(false);
+    setError("");
+  };
+
+  const resetSettings = () => {
+    setAiConfig({});
+    setFBaseUrl("");
+    setFApiKey("");
+    setFModel("");
+    setFTemp("");
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
+    setShowSettings(false);
+  };
+
   // 课式变化时清空对话（防止跨课串断）
   const ksKey = `${ks.rizhu}-${ks.shizhi}-${ks.yuejiang}-${ks.sanchuan.join("")}`;
   const prevKey = useRef(ksKey);
@@ -70,6 +122,7 @@ export default function AiDuanke({ ks }: Props) {
           ks,
           question: text,
           season,
+          aiConfig,
           history: history
             .filter((m) => m.content || m.reasoning)
             .map((m) => ({
@@ -139,11 +192,22 @@ export default function AiDuanke({ ks }: Props) {
 
   const stop = () => abortRef.current?.abort();
 
+  const inputCls =
+    "w-full bg-ink border border-ash/40 rounded-lg px-2 py-1.5 text-sm text-paper placeholder:text-ash/50 focus:border-gold outline-none";
+  const labelCls = "block text-xs text-ash mb-1";
+
   return (
     <section className="rounded-xl border border-gold/40 bg-ink-2 p-4">
       <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
         <h3 className="text-gold font-bold">🦉 AI 断课</h3>
         <div className="flex items-center gap-2 text-xs text-ash">
+          <button
+            onClick={() => setShowSettings((s) => !s)}
+            title="API 设置"
+            className="px-2 py-1 rounded-lg border border-ash/40 hover:border-gold hover:text-gold transition-colors"
+          >
+            ⚙️ {aiConfig.baseUrl || aiConfig.model || aiConfig.apiKey ? "自定义 API" : "API 设置"}
+          </button>
           <span>季节</span>
           <select
             className="bg-ink border border-ash/40 rounded-lg px-2 py-1 text-paper text-sm focus:border-gold outline-none"
@@ -156,6 +220,47 @@ export default function AiDuanke({ ks }: Props) {
           </select>
         </div>
       </div>
+
+      {showSettings && (
+        <div className="mb-4 rounded-lg border border-ash/30 bg-ink p-3 space-y-3">
+          <p className="text-xs text-ash/80 leading-relaxed">
+            使用 OpenAI 兼容协议（DeepSeek / 通义 / 豆包 / Kimi / 智谱 / 硅基流动 / Ollama / vLLM 均可）。
+            留空的字段回退到服务端默认（DeepSeek + 环境变量）。API Key 仅保存在本浏览器。
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Base URL</label>
+              <input className={inputCls} placeholder="https://api.deepseek.com" value={fBaseUrl}
+                onChange={(e) => setFBaseUrl(e.target.value)} />
+            </div>
+            <div>
+              <label className={labelCls}>Model</label>
+              <input className={inputCls} placeholder="deepseek-v4-flash" value={fModel}
+                onChange={(e) => setFModel(e.target.value)} />
+            </div>
+            <div>
+              <label className={labelCls}>API Key</label>
+              <input className={inputCls} type="password" placeholder="sk-..." value={fApiKey}
+                onChange={(e) => setFApiKey(e.target.value)} />
+            </div>
+            <div>
+              <label className={labelCls}>Temperature（0-2）</label>
+              <input className={inputCls} type="number" step="0.1" min="0" max="2" placeholder="0.7" value={fTemp}
+                onChange={(e) => setFTemp(e.target.value)} />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={saveSettings}
+              className="rounded-lg bg-gold/20 border border-gold/50 px-3 py-1.5 text-xs text-gold hover:bg-gold/30 transition-colors">
+              保存
+            </button>
+            <button onClick={resetSettings}
+              className="rounded-lg border border-ash/40 px-3 py-1.5 text-xs text-ash hover:text-paper transition-colors">
+              重置为默认
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2 mb-3">
         {QUICK_QUESTIONS.map((q) => (

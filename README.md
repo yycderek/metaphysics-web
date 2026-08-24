@@ -12,9 +12,9 @@
 ## AI 断课
 
 - **铁律**：前端 TS 引擎先精确起课（KeShi JSON），AI 只负责解读，绝不自行起课——避免市面"AI 算命"起错课的毛病
-- 流式 SSE：`/api/divine` 透传 deepseek chat completions，思考过程（`reasoning_content`）与正文（`content`）分开展示
+- 流式 SSE：`/api/divine` 透传 AI 聊天补全，思考过程（`reasoning_content`）与正文（`content`）分开展示
 - 断课原则内置：课名 → 三传 → 天将 → 六亲 → 旺衰 → 旬空逐层分析，追问只答追问
-- 部署需配环境变量 `DEEPSEEK_API_KEY`（本地开发自动读 `~/.hermes/.env`）
+- **可替换 AI API**：断课面板 ⚙️ 设置支持任意 OpenAI 兼容服务（DeepSeek/通义/豆包/Kimi/智谱/硅基流动/Ollama/vLLM），配置 baseUrl / apiKey / model / temperature，localStorage 持久化；留空回退服务端默认（环境变量 `DEEPSEEK_API_KEY` / `DEEPSEEK_BASE_URL` / `DEEPSEEK_MODEL`，本地开发自动读 `~/.hermes/.env`）
 
 ## 开发
 
