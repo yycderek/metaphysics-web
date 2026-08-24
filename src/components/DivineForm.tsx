@@ -1,13 +1,13 @@
 "use client";
 // 起课输入表单：日柱/时支/月将 + 当前时间快捷
+// 阶段3：提交算法输入（AlgorithmInput），由页面经注册表起课（不再直接调用 build）
 import { useState } from "react";
 import { DIZHI, TIANGAN, YUEJIANG_NAME, shizhiFromHour } from "@/lib/data";
 import { rizhuFromDate } from "@/lib/calendar";
-import type { KeShi } from "@/lib/types";
-import { build } from "@/lib/shike";
+import type { AlgorithmInput } from "@/lib/algorithms/types";
 
 interface Props {
-  onDivine: (ks: KeShi) => void;
+  onDivine: (input: AlgorithmInput) => void;
   initialRizhu?: string;
   initialShizhi?: string;
   initialYuejiang?: string;
@@ -38,9 +38,8 @@ export default function DivineForm({
 
   const divine = () => {
     try {
-      const ks = build(gan + zhi, shizhi, yuejiang);
+      onDivine({ rizhu: gan + zhi, shizhi, yuejiang });
       setError("");
-      onDivine(ks);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }

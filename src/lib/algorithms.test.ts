@@ -5,6 +5,7 @@ import { build } from './shike'
 import { daliurenAdapter, rawKeShi, DALIUREN_ID } from './algorithms/daliuren'
 import { getAdapter, listAdapters, buildDivination, registerAdapter } from './algorithms/registry'
 import type { AlgorithmAdapter } from './algorithms/types'
+import { resolveStepView } from './algorithms/stepViews'
 
 const GOLDEN_INPUT = { rizhu: '庚子', shizhi: '午', yuejiang: '亥' }
 
@@ -98,5 +99,18 @@ describe('大六壬适配器', () => {
 
   it('非法输入抛出明确错误', () => {
     expect(() => daliurenAdapter.build({})).toThrow(/输入不合法/)
+  })
+})
+
+describe('步骤视图分发（阶段3）', () => {
+  it('大六壬已知步骤 → 专属视图', () => {
+    for (const key of ['di', 'tian', 'sike', 'jiuzongmen', 'sanchuan', 'tianjiang']) {
+      expect(resolveStepView('daliuren', key)).toBe('daliuren')
+    }
+  })
+  it('未知步骤 / 其他算法 → 通用视图兜底', () => {
+    expect(resolveStepView('daliuren', 'whatever')).toBe('generic')
+    expect(resolveStepView('xiaoliuren', 'di')).toBe('generic')
+    expect(resolveStepView('custom', 'step1')).toBe('generic')
   })
 })
