@@ -18,11 +18,11 @@ export function listAdapters(): AlgorithmAdapter[] {
   return [...registry.values()]
 }
 
-/** 统一入口：按 id 起课 */
-export function buildDivination(id: string, input: AlgorithmInput): DivinationResult {
+/** 统一入口：按 id 起课（远程算法为异步） */
+export async function buildDivination(id: string, input: AlgorithmInput): Promise<DivinationResult> {
   const adapter = getAdapter(id)
   if (!adapter) throw new Error(`未知算法: ${id}（可用: ${listAdapters().map((a) => a.id).join(', ')}）`)
-  return adapter.build(input)
+  return await adapter.build(input)
 }
 
 // 内置算法注册（模块加载即注册，未来插件在 plugins/ 动态 import 后同样调用 registerAdapter）

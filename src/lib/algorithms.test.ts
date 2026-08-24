@@ -15,11 +15,11 @@ describe('算法注册表', () => {
     expect(listAdapters().map((a) => a.id)).toContain(DALIUREN_ID)
   })
 
-  it('未知算法抛出明确错误', () => {
-    expect(() => buildDivination('not-exist', {})).toThrow(/未知算法/)
+  it('未知算法抛出明确错误', async () => {
+    await expect(buildDivination('not-exist', {})).rejects.toThrow(/未知算法/)
   })
 
-  it('支持运行时注册新算法（插件入口契约）', () => {
+  it('支持运行时注册新算法（插件入口契约）', async () => {
     const fake: AlgorithmAdapter = {
       id: 'test-plugin',
       name: '测试算法',
@@ -34,7 +34,7 @@ describe('算法注册表', () => {
     }
     registerAdapter(fake)
     expect(getAdapter('test-plugin')).toBe(fake)
-    const r = buildDivination('test-plugin', { x: 1 })
+    const r = await buildDivination('test-plugin', { x: 1 })
     expect(r.algorithmId).toBe('test-plugin')
     expect(r.raw).toEqual({ ok: true })
   })
@@ -48,15 +48,15 @@ describe('大六壬适配器', () => {
     expect(daliurenAdapter.parseInput?.({})).toBeNull()
   })
 
-  it('黄金课例：适配器 raw 与 shike.build() 完全一致', () => {
-    const result = daliurenAdapter.build(GOLDEN_INPUT)
+  it('黄金课例：适配器 raw 与 shike.build() 完全一致', async () => {
+    const result = await daliurenAdapter.build(GOLDEN_INPUT)
     const ks = rawKeShi(result)
     const ref = build('庚子', '午', '亥')
     expect(ks).toEqual(ref) // 全字段深度一致（天地盘/四课/课名/三传/天将/贵人/旬空）
   })
 
-  it('黄金课例关键锚点：重审课 巳戌卯 勾陈玄武朱雀 官鬼父母妻财', () => {
-    const result = daliurenAdapter.build(GOLDEN_INPUT)
+  it('黄金课例关键锚点：重审课 巳戌卯 勾陈玄武朱雀 官鬼父母妻财', async () => {
+    const result = await daliurenAdapter.build(GOLDEN_INPUT)
     const ks = rawKeShi(result)
     expect(ks.kename).toBe('重审课')
     expect(ks.sanchuan).toEqual(['巳', '戌', '卯'])
@@ -66,8 +66,8 @@ describe('大六壬适配器', () => {
     expect(ks.xunkong).toEqual(['辰', '巳'])
   })
 
-  it('推导过程：6 个步骤，标题与顺序符合大六壬教学', () => {
-    const result = daliurenAdapter.build(GOLDEN_INPUT)
+  it('推导过程：6 个步骤，标题与顺序符合大六壬教学', async () => {
+    const result = await daliurenAdapter.build(GOLDEN_INPUT)
     expect(result.steps.map((s) => s.key)).toEqual(['di', 'tian', 'sike', 'jiuzongmen', 'sanchuan', 'tianjiang'])
     expect(result.steps.map((s) => s.title)).toEqual([
       '一、定地盘',
@@ -84,8 +84,8 @@ describe('大六壬适配器', () => {
     }
   })
 
-  it('步骤数据可支撑推导展示', () => {
-    const result = daliurenAdapter.build(GOLDEN_INPUT)
+  it('步骤数据可支撑推导展示', async () => {
+    const result = await daliurenAdapter.build(GOLDEN_INPUT)
     const tian = result.steps[1].data as { tianpan: Record<string, string> }
     expect(tian.tianpan['午']).toBe('亥') // 亥将加午时
     const sike = result.steps[2].data as { sike: { index: number; bottom: string; top: string; relation: string }[] }

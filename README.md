@@ -13,6 +13,9 @@
 ## 架构（算法可扩展）
 
 - **算法注册表** `src/lib/algorithms/registry.ts`：`AlgorithmAdapter` 接口（`id/name/build/parseInput`），内置大六壬适配器；新算法（小六壬等）实现同一接口即可接入
+- **两种插件形态**：
+  - 本地插件：`src/plugins/` 写适配器 → `plugins/index.ts` 注册（内置小六壬示例，取消注释即启用）
+  - 远程算法服务：页面「🔌 远程算法服务」配置 HTTP 端点即可（任意语言实现，协议见 `docs/PLUGIN-GUIDE.md`，含 Python 示例服务）
 - **通用步骤模型** `DivinationResult.steps`：任意算法的推导过程结构化（title/desc/data），推导模式自动渲染；大六壬步骤有专属视图，未知算法回退通用 JSON 树
 - **AI Provider 抽象** `src/lib/aiProvider.ts`：OpenAI 兼容协议配置化，见下节
 

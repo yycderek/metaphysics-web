@@ -2,15 +2,14 @@
 // 学习演示页：起课全流程动画（黄金课例），由 StepRenderer 驱动（阶段3 通用化）
 import { useState } from "react";
 import type { DivinationResult } from "@/lib/algorithms/types";
-import { buildDivination } from "@/lib/algorithms/registry";
-import { DALIUREN_ID } from "@/lib/algorithms/daliuren";
+import { daliurenAdapter } from "@/lib/algorithms/daliuren";
 import StepRenderer from "@/components/StepRenderer";
 
-const GOLDEN: DivinationResult = buildDivination(DALIUREN_ID, {
+const GOLDEN: DivinationResult = daliurenAdapter.build({
   rizhu: "庚子",
   shizhi: "午",
   yuejiang: "亥",
-});
+}) as DivinationResult;
 
 export default function DemoPage() {
   const [result] = useState<DivinationResult>(GOLDEN);

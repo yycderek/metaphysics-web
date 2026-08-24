@@ -30,6 +30,6 @@ export interface AlgorithmAdapter {
   description: string;
   /** 解析并校验用户输入；不合法返回 null（由调用方提示） */
   parseInput?(input: AlgorithmInput): AlgorithmInput | null;
-  /** 核心：输入 → 占卜结果（含推导步骤） */
-  build(input: AlgorithmInput): DivinationResult;
+  /** 核心：输入 → 占卜结果（含推导步骤）。本地同步实现；远程服务实现返回 Promise */
+  build(input: AlgorithmInput): DivinationResult | Promise<DivinationResult>;
 }

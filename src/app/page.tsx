@@ -1,9 +1,13 @@
 "use client";
-// 起课工具页：表单 → 注册表起课 → 双模式展示（课式结果 / 推导过程）
-import { useState } from "react";
-import type { DivinationResult, AlgorithmInput } from "@/lib/algorithms/types";
-import { buildDivination } from "@/lib/algorithms/registry";
-import { DALIUREN_ID, rawKeShi } from "@/lib/algorithms/daliuren";
+// 起课工具页：算法选择 → 注册表起课 → 双模式展示（课式结果 / 推导过程）
+// 阶段4：支持远程算法服务（localStorage 配置，客户端注册到注册表）
+import { useEffect, useState } from "react";
+import "@/plugins"; // 副作用导入：注册本地算法插件（阶段4）
+import type { DivinationResult, AlgorithmInput, AlgorithmAdapter } from "@/lib/algorithms/types";
+import { buildDivination, listAdapters, registerAdapter } from "@/lib/algorithms/registry";
+import { DALIUREN_ID, daliurenAdapter, rawKeShi } from "@/lib/algorithms/daliuren";
+import { createRemoteAdapter, type RemoteServiceConfig } from "@/lib/algorithms/remote";
+import { loadRemoteServices, saveRemoteServices } from "@/lib/algorithms/storage";
 import DivineForm from "@/components/DivineForm";
 import KeShiHeader from "@/components/KeShiHeader";
 import TianPanDisk from "@/components/TianPanDisk";
@@ -11,6 +15,7 @@ import SikeCards from "@/components/SikeCards";
 import SanchuanChain from "@/components/SanchuanChain";
 import AiDuanke from "@/components/AiDuanke";
 import StepRenderer from "@/components/StepRenderer";
+import DataTree from "@/components/DataTree";
 import { chuanTianjiang } from "@/lib/shike";
 
 const GOLDEN_INPUT: AlgorithmInput = { rizhu: "庚子", shizhi: "午", yuejiang: "亥" };
@@ -18,16 +23,45 @@ const GOLDEN_INPUT: AlgorithmInput = { rizhu: "庚子", shizhi: "午", yuejiang:
 type Mode = "result" | "derive";
 
 export default function HomePage() {
+  // 初始课式：大六壬黄金课例（同步构建；buildDivination 异步化后适配器直调）
   const [result, setResult] = useState<DivinationResult>(() =>
-    buildDivination(DALIUREN_ID, GOLDEN_INPUT),
+    daliurenAdapter.build(GOLDEN_INPUT) as DivinationResult,
   );
   const [mode, setMode] = useState<Mode>("result");
-  const ks = rawKeShi(result);
-  const chuan = chuanTianjiang(ks);
+  const [selectedId, setSelectedId] = useState<string>(DALIUREN_ID);
+  const [adapters, setAdapters] = useState<AlgorithmAdapter[]>(() => listAdapters());
+  const [services, setServices] = useState<RemoteServiceConfig[]>([]);
 
-  const onDivine = (input: AlgorithmInput) => {
-    // 阶段4：算法选择（这里固定大六壬），错误向上冒泡给 DivineForm 展示
-    setResult(buildDivination(DALIUREN_ID, input));
+  // 客户端加载：注册远程算法服务 + 恢复服务列表
+  useEffect(() => {
+    const svc = loadRemoteServices();
+    setServices(svc);
+    for (const s of svc) registerAdapter(createRemoteAdapter(s));
+    setAdapters(listAdapters());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const ks = rawKeShi(result);
+  // chuanTianjiang 依赖大六壬 KeShi 结构，仅大六壬结果时计算（远程/插件算法 raw 结构不同）
+  const chuan = result.algorithmId === DALIUREN_ID ? chuanTianjiang(ks) : [];
+
+  const onDivine = async (input: AlgorithmInput) => {
+    setResult(await buildDivination(selectedId, input)); // 错误向上冒泡给 DivineForm 展示
+  };
+
+  const onServicesChange = (next: RemoteServiceConfig[]) => {
+    setServices(next);
+    saveRemoteServices(next);
+    for (const s of next) registerAdapter(createRemoteAdapter(s));
+    setAdapters(listAdapters());
+    if (next.every((s) => s.id !== selectedId) && selectedId !== DALIUREN_ID) {
+      setSelectedId(DALIUREN_ID); // 所选算法被删除时回退大六壬
+    }
+  };
+
+  const onSelect = (id: string) => {
+    setSelectedId(id);
+    setMode("result");
   };
 
   const tabCls = (active: boolean) =>
@@ -62,7 +96,14 @@ export default function HomePage() {
         </nav>
       </header>
 
-      <DivineForm onDivine={onDivine} />
+      <DivineForm
+        adapters={adapters}
+        selectedId={selectedId}
+        onSelect={onSelect}
+        onDivine={onDivine}
+        services={services}
+        onServicesChange={onServicesChange}
+      />
 
       {/* 双模式切换 */}
       <div className="flex gap-2">
@@ -75,8 +116,9 @@ export default function HomePage() {
       </div>
 
       {mode === "result" ? (
-        <>
-          <KeShiHeader ks={ks} />
+        result.algorithmId === DALIUREN_ID ? (
+          <>
+            <KeShiHeader ks={ks} />
 
           <section className="grid md:grid-cols-2 gap-6 items-start">
             <div className="rounded-xl border border-ash/30 bg-ink-2 p-4">
@@ -110,18 +152,27 @@ export default function HomePage() {
               </div>
             </div>
           </section>
-        </>
+          </>
+        ) : (
+          <section className="rounded-xl border border-ash/30 bg-ink-2 p-4">
+            <h3 className="text-gold font-bold mb-1">课式结果 · {result.algorithmName}</h3>
+            <p className="text-xs text-ash mb-3">
+              该算法无专属展示视图，以下为原始结果（raw）数据。
+            </p>
+            <DataTree data={result.raw} />
+          </section>
+        )
       ) : (
         <section className="rounded-xl border border-ash/30 bg-ink-2 p-6">
           <h3 className="text-gold font-bold mb-1">完整推导过程</h3>
           <p className="text-xs text-ash mb-4">
-            从定地盘到布天将，一步步还原这课式的诞生过程（{result.algorithmName}）。
+            一步步还原这课式的诞生过程（{result.algorithmName}）。
           </p>
           <StepRenderer result={result} />
         </section>
       )}
 
-      <AiDuanke ks={ks} />
+      {result.algorithmId === DALIUREN_ID && <AiDuanke ks={ks} />}
 
       <footer className="text-center text-xs text-ash pt-4 border-t border-ash/20">
         起课引擎与 liuren-py 同源 · 黄金课例：庚子日 午时 亥将 → 重审课（巳戌卯）
