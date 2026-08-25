@@ -1,6 +1,6 @@
-# liuren-web · 大六壬学习平台
+# metaphysics-web · 玄学占卜平台
 
-大六壬起课引擎的 Web 可视化版。深色玄学风（墨底 · 朱砂 · 金），Next.js 16 + Tailwind 4 + framer-motion。
+多算法玄学占卜平台。内置大六壬起课引擎（天地盘、四课、三传、天将六亲可视化 + AI 断课），支持小六壬插件与远程算法服务扩展。深色玄学风（墨底 · 朱砂 · 金），Next.js 16 + Tailwind 4 + framer-motion。
 
 ## 功能
 

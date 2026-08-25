@@ -76,9 +76,9 @@ export default function HomePage() {
     <main className="min-h-screen max-w-5xl mx-auto px-4 py-8 space-y-6">
       <header className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-gold">大六壬 · 起课</h1>
+          <h1 className="text-3xl font-bold text-gold">玄学 · 占卜</h1>
           <p className="text-sm text-ash mt-1">
-            月将加时 · 天地盘 · 四课 · 九宗门 · 三传 · 天将六亲
+            多算法起课平台：大六壬（月将加时 · 天地盘 · 四课 · 三传） · 小六壬（数字起课） · 插件扩展
           </p>
         </div>
         <nav className="flex gap-2 text-sm items-center">
