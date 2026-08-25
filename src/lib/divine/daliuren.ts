@@ -1,8 +1,10 @@
-// 断课 prompt 模板：课式(KeShi) → 结构化断课提示词
+// 大六壬断课模板（迁移自原 prompt.ts）
 // 铁律：先由 TS 引擎起课(build)，再喂 LLM 解读，防止 LLM 幻觉起错课
-import type { ChuanDetail, KeShi } from './types'
-import type { ChatMessage } from './aiTypes'
-import { chuanTianjiang, sikeEntries } from './shike'
+import type { ChuanDetail, KeShi } from "../types";
+import type { DivineRequest, DivineTemplate, Season } from "./types";
+import { registerDivineTemplate } from "./registry";
+import { chuanTianjiang, sikeEntries } from "../shike";
+import { genericDivineTemplate } from "./generic";
 import {
   DIZHI_WUXING,
   GAN_JIGONG,
@@ -10,23 +12,17 @@ import {
   WANGXIU,
   CHANGSHENG_QI,
   CHANGSHENG_STAGES,
-  TIANJIANG_FULL,
   TIANJIANG_JIXIONG,
   TIANJIANG_ZHUSHI,
-} from './data'
+} from "../data";
 
-export interface DivineQuestion {
-  question: string
-  season: '春' | '夏' | '秋' | '冬' | '四季'
-}
-
-const SEASON_HINT: Record<DivineQuestion['season'], string> = {
-  春: '正月—三月（寅卯辰月），木旺火相',
-  夏: '四月—六月（巳午未月），火旺土相',
-  秋: '七月—九月（申酉戌月），金旺水相',
-  冬: '十月—十二月（亥子丑月），水旺木相',
-  四季: '辰戌丑未月（土旺之季），土旺金相',
-}
+const SEASON_HINT: Record<Season, string> = {
+  春: "正月—三月（寅卯辰月），木旺火相",
+  夏: "四月—六月（巳午未月），火旺土相",
+  秋: "七月—九月（申酉戌月），金旺水相",
+  冬: "十月—十二月（亥子丑月），水旺木相",
+  四季: "辰戌丑未月（土旺之季），土旺金相",
+};
 
 const SYSTEM_PROMPT = `你是研习大六壬多年的断课师傅，精通《大六壬指南》《六壬粹言》断课要旨。
 你拿到的是【已经由程序精确起好的课式】（起课过程：月将加时布天地盘 → 四课 → 九宗门定三传 → 布天将），
@@ -53,34 +49,33 @@ const SYSTEM_PROMPT = `你是研习大六壬多年的断课师傅，精通《大
 
 参考表（旺衰、长生、天将取用）：
 - 季节旺衰：${JSON.stringify(WANGXIU, null, 1)}
-- 长生十二宫起点（五行的长生位）：${JSON.stringify(CHANGSHENG_QI)}，顺序：${CHANGSHENG_STAGES.join('→')}
-- 天将吉凶：${JSON.stringify(TIANJIANG_JIXIONG)}；天将事象：${JSON.stringify(TIANJIANG_ZHUSHI)}`
+- 长生十二宫起点（五行的长生位）：${JSON.stringify(CHANGSHENG_QI)}，顺序：${CHANGSHENG_STAGES.join("→")}
+- 天将吉凶：${JSON.stringify(TIANJIANG_JIXIONG)}；天将事象：${JSON.stringify(TIANJIANG_ZHUSHI)}`;
 
-/** 课式 → 用户侧断课请求（含完整课式上下文，供 LLM 引用） */
-export function buildDivineSystemPrompt(): string {
-  return SYSTEM_PROMPT
+/** raw 形状守卫：确认是大六壬 KeShi（防模板拿错结构） */
+function isKeShi(raw: unknown): raw is KeShi {
+  const k = raw as KeShi | null;
+  return !!k && Array.isArray(k.sanchuan) && typeof k.rizhu === "string";
 }
 
-/** 课式 → 断课上下文（一次调用内的系统+课式信息） */
-export function buildDivinePrompt(ks: KeShi, question: DivineQuestion): string {
-  const sike = sikeEntries(ks)
-  const chuan = chuanTianjiang(ks)
-  const seasonHint = SEASON_HINT[question.season]
+function formatChuan(c: ChuanDetail, ks: KeShi): string {
+  const zhiWx = DIZHI_WUXING[c.zhi];
+  return `${c.name}：${c.zhi}（${zhiWx}）· ${c.tianjiang.short}${c.tianjiang.full}（${c.tianjiang.jixiong}，${c.tianjiang.zhushi}）· 六亲${c.liuqin}`;
+}
 
-  const sikeLines = sike
-    .map((s) => `第${s.index}课：${s.bottom}（下）→ ${s.top}（上），${s.relation}`)
-    .join('\n')
+/** 课式 → 用户侧断课上下文（含完整课式信息，供 LLM 引用） */
+function buildContext(ks: KeShi, req: DivineRequest): string {
+  const sike = sikeEntries(ks);
+  const chuan = chuanTianjiang(ks);
+  const seasonHint = SEASON_HINT[req.season];
 
-  const chuanLines = chuan
-    .map((c) => formatChuan(c, ks))
-    .join('\n')
-
+  const sikeLines = sike.map((s) => `第${s.index}课：${s.bottom}（下）→ ${s.top}（上），${s.relation}`).join("\n");
+  const chuanLines = chuan.map((c) => formatChuan(c, ks)).join("\n");
   const tianpanLines = Object.entries(ks.tianpan)
     .map(([di, tian]) => `${di}←${tian}`)
-    .join('，')
-
-  const riGanWx = TIANGAN_WUXING[ks.rigan]
-  const riZhiWx = DIZHI_WUXING[ks.rizhi]
+    .join("，");
+  const riGanWx = TIANGAN_WUXING[ks.rigan];
+  const riZhiWx = DIZHI_WUXING[ks.rizhi];
 
   return `【本课课式（程序起课，勿改）】
 日柱：${ks.rizhu}日（日干${ks.rigan}属${riGanWx}，日支${ks.rizhi}属${riZhiWx}）
@@ -92,24 +87,25 @@ export function buildDivinePrompt(ks: KeShi, question: DivineQuestion): string {
 ${sikeLines}
 三传：
 ${chuanLines}
-占时季节：${question.season}（${seasonHint}）
+占时季节：${req.season}（${seasonHint}）
 
 【问事】
-${question.question}`
+${req.question}`;
 }
 
-function formatChuan(c: ChuanDetail, ks: KeShi): string {
-  const zhiWx = DIZHI_WUXING[c.zhi]
-  const jg = GAN_JIGONG[ks.rigan]
-  return `${c.name}：${c.zhi}（${zhiWx}）· ${c.tianjiang.short}${c.tianjiang.full}（${c.tianjiang.jixiong}，${c.tianjiang.zhushi}）· 六亲${c.liuqin}`
-}
+export const daliurenDivineTemplate: DivineTemplate = {
+  id: "daliuren",
+  buildMessages(req) {
+    const ks = req.raw;
+    if (!isKeShi(ks)) {
+      // 数据形状异常：交由通用模板如实解读
+      return genericDivineTemplate.buildMessages(req);
+    }
+    return [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: buildContext(ks, req) },
+    ];
+  },
+};
 
-/** 断课输入：给定课式 + 问题，组装给 LLM 的完整 messages */
-export function buildDivineMessages(ks: KeShi, question: DivineQuestion): ChatMessage[] {
-  return [
-    { role: 'system', content: buildDivineSystemPrompt() },
-    { role: 'user', content: buildDivinePrompt(ks, question) },
-  ]
-}
-
-export { TIANJIANG_FULL }
+registerDivineTemplate(daliurenDivineTemplate);

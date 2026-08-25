@@ -174,7 +174,7 @@ export default function HomePage() {
         </section>
       )}
 
-      {result.algorithmId === DALIUREN_ID && <AiDuanke ks={ks} />}
+      <AiDuanke result={result} />
 
       <footer className="text-center text-xs text-ash pt-4 border-t border-ash/20">
         起课引擎与 liuren-py 同源 · 黄金课例：庚子日 午时 亥将 → 重审课（巳戌卯）

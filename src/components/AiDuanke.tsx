@@ -1,12 +1,13 @@
 "use client";
-// AI 断课对话面板：课式下方，提问 → 流式断语 → 可追问
+// AI 断课对话面板：占卜结果下方，提问 → 流式断语 → 可追问
+// 阶段5：支持任意算法（按算法 ID 分发断课模板，服务端选择 system prompt）
 // 支持用户自定义 AI API（OpenAI 兼容协议），设置存 localStorage
 import { useEffect, useRef, useState } from "react";
-import type { KeShi } from "@/lib/types";
+import type { DivinationResult } from "@/lib/algorithms/types";
 import type { UserAIConfig } from "@/lib/aiTypes";
 
 interface Props {
-  ks: KeShi;
+  result: DivinationResult;
 }
 
 interface ChatMsg {
@@ -36,7 +37,7 @@ function seasonFromNow(): "春" | "夏" | "秋" | "冬" | "四季" {
   return "四季"; // 农历季月不细分，兜底
 }
 
-export default function AiDuanke({ ks }: Props) {
+export default function AiDuanke({ result }: Props) {
   const [season, setSeason] = useState(seasonFromNow());
   const [question, setQuestion] = useState("");
   const [history, setHistory] = useState<ChatMsg[]>([]);
@@ -44,6 +45,8 @@ export default function AiDuanke({ ks }: Props) {
   const [error, setError] = useState("");
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  const isDaliuren = result.algorithmId === "daliuren";
 
   // ---- 用户自定义 AI 配置 ----
   const [aiConfig, setAiConfig] = useState<UserAIConfig>(loadAIConfig);
@@ -84,16 +87,16 @@ export default function AiDuanke({ ks }: Props) {
     setShowSettings(false);
   };
 
-  // 课式变化时清空对话（防止跨课串断）
-  const ksKey = `${ks.rizhu}-${ks.shizhi}-${ks.yuejiang}-${ks.sanchuan.join("")}`;
-  const prevKey = useRef(ksKey);
+  // 占卜结果变化时清空对话（防止跨次占卜串断）
+  const resultKey = `${result.algorithmId}-${JSON.stringify(result.input ?? {})}`;
+  const prevKey = useRef(resultKey);
   useEffect(() => {
-    if (prevKey.current !== ksKey) {
-      prevKey.current = ksKey;
+    if (prevKey.current !== resultKey) {
+      prevKey.current = resultKey;
       setHistory([]);
       setError("");
     }
-  }, [ksKey]);
+  }, [resultKey]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -119,7 +122,11 @@ export default function AiDuanke({ ks }: Props) {
         headers: { "Content-Type": "application/json" },
         signal: controller.signal,
         body: JSON.stringify({
-          ks,
+          algorithmId: result.algorithmId,
+          algorithmName: result.algorithmName,
+          input: result.input,
+          raw: result.raw,
+          steps: result.steps,
           question: text,
           season,
           aiConfig,
@@ -208,16 +215,20 @@ export default function AiDuanke({ ks }: Props) {
           >
             ⚙️ {aiConfig.baseUrl || aiConfig.model || aiConfig.apiKey ? "自定义 API" : "API 设置"}
           </button>
-          <span>季节</span>
-          <select
-            className="bg-ink border border-ash/40 rounded-lg px-2 py-1 text-paper text-sm focus:border-gold outline-none"
-            value={season}
-            onChange={(e) => setSeason(e.target.value as typeof season)}
-          >
-            {["春", "夏", "秋", "冬", "四季"].map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
+          {isDaliuren && (
+            <>
+              <span>季节</span>
+              <select
+                className="bg-ink border border-ash/40 rounded-lg px-2 py-1 text-paper text-sm focus:border-gold outline-none"
+                value={season}
+                onChange={(e) => setSeason(e.target.value as typeof season)}
+              >
+                {["春", "夏", "秋", "冬", "四季"].map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </>
+          )}
         </div>
       </div>
 
@@ -278,7 +289,7 @@ export default function AiDuanke({ ks }: Props) {
       <div className="space-y-3 max-h-96 overflow-y-auto pr-1 mb-3">
         {history.length === 0 && (
           <p className="text-xs text-ash/70 leading-relaxed">
-            基于上方已起好的课式（引擎精确起课，AI 只负责解读），可问事业、感情、财运等。
+            基于上方程序精确算出的占卜结果（{result.algorithmName}，AI 只负责解读），可问事业、感情、财运等。
           </p>
         )}
         {history.map((m, i) => (
