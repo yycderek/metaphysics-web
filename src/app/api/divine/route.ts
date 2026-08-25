@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
   const config = resolveAIConfig(aiConfig);
   if (!config.apiKey) {
     return Response.json(
-      { error: "未配置 AI API Key（请在 AI 断课面板的 ⚙️ 设置中填写，或设置环境变量 DEEPSEEK_API_KEY）" },
+      { error: "未配置 AI API Key（请在 AI 断课面板的 ⚙️ 设置中填写，或设置环境变量 AI_API_KEY / DEEPSEEK_API_KEY）" },
       { status: 500 },
     );
   }
