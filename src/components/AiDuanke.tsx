@@ -17,11 +17,12 @@ interface ChatMsg {
 }
 
 const QUICK_QUESTIONS = ["综合运势", "看事业", "看感情", "看财运"];
-const STORAGE_KEY = "liuren-ai-config";
+const STORAGE_KEY = "metaphysics-ai-config";
+const LEGACY_STORAGE_KEY = "liuren-ai-config";
 
 function loadAIConfig(): UserAIConfig {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY);
     return raw ? (JSON.parse(raw) as UserAIConfig) : {};
   } catch {
     return {};
@@ -45,6 +46,8 @@ export default function AiDuanke({ result }: Props) {
   const [error, setError] = useState("");
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const accRef = useRef("");
+  const accReasonRef = useRef("");
 
   const isDaliuren = result.algorithmId === "daliuren";
 
@@ -54,7 +57,9 @@ export default function AiDuanke({ result }: Props) {
   const [fBaseUrl, setFBaseUrl] = useState(aiConfig.baseUrl ?? "");
   const [fApiKey, setFApiKey] = useState(aiConfig.apiKey ?? "");
   const [fModel, setFModel] = useState(aiConfig.model ?? "");
-  const [fTemp, setFTemp] = useState(aiConfig.temperature != null ? String(aiConfig.temperature) : "");
+  const [fTemp, setFTemp] = useState(
+    aiConfig.temperature != null ? String(aiConfig.temperature) : "",
+  );
 
   const saveSettings = () => {
     const cfg: UserAIConfig = {};
@@ -66,6 +71,7 @@ export default function AiDuanke({ result }: Props) {
     setAiConfig(cfg);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
+      localStorage.removeItem(LEGACY_STORAGE_KEY); // 迁移：清除旧键
     } catch {
       /* 忽略存储失败 */
     }
@@ -81,6 +87,7 @@ export default function AiDuanke({ result }: Props) {
     setFTemp("");
     try {
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
     } catch {
       /* ignore */
     }
@@ -112,8 +119,8 @@ export default function AiDuanke({ result }: Props) {
 
     const controller = new AbortController();
     abortRef.current = controller;
-    let acc = "";
-    let accReason = "";
+    accRef.current = "";
+    accReasonRef.current = "";
     setHistory((h) => [...h, { role: "assistant", content: "", reasoning: "" }]);
 
     try {
@@ -153,27 +160,28 @@ export default function AiDuanke({ result }: Props) {
         const { done, value } = await reader.read();
         if (done) break;
         buf += decoder.decode(value, { stream: true });
-        // 解析 SSE：data: {...}\n\n
-        const parts = buf.split("\n\n");
+        // 解析 SSE：event 块以空行分隔（data: {...}）。用正则切分以兼容 \n\n / \r\n\r\n /
+        // 混用换行，避免 provider 使用 CRLF 时漏解析；未完整的尾部块保留在 buf 中续读。
+        const parts = buf.split(/\r?\n\r?\n/);
         buf = parts.pop() ?? "";
         for (const part of parts) {
           const line = part.trim();
+          // 仅处理 data: 行；`:` 开头的注释行与 event:/id: 行直接跳过
           if (!line.startsWith("data:")) continue;
           const payload = line.slice(5).trim();
-          if (payload === "[DONE]") continue;
+          if (payload === "[DONE]") break;
           try {
             const json = JSON.parse(payload);
             const delta = json.choices?.[0]?.delta ?? {};
             const reason = delta.reasoning_content ?? "";
             const txt = delta.content ?? "";
             if (reason || txt) {
-              accReason += reason;
-              acc += txt;
-              setHistory((h) => {
-                const nh = [...h];
-                nh[nh.length - 1] = { role: "assistant", content: acc, reasoning: accReason };
-                return nh;
-              });
+              accReasonRef.current += reason;
+              accRef.current += txt;
+              setHistory((h) => [
+                ...h.slice(0, -1),
+                { role: "assistant", content: accRef.current, reasoning: accReasonRef.current },
+              ]);
             }
           } catch {
             /* 忽略不完整 chunk */
@@ -211,6 +219,8 @@ export default function AiDuanke({ result }: Props) {
           <button
             onClick={() => setShowSettings((s) => !s)}
             title="API 设置"
+            aria-expanded={showSettings}
+            aria-controls="ai-duanke-settings"
             className="px-2 py-1 rounded-lg border border-ash/40 hover:border-gold hover:text-gold transition-colors"
           >
             ⚙️ {aiConfig.baseUrl || aiConfig.model || aiConfig.apiKey ? "自定义 API" : "API 设置"}
@@ -224,7 +234,9 @@ export default function AiDuanke({ result }: Props) {
                 onChange={(e) => setSeason(e.target.value as typeof season)}
               >
                 {["春", "夏", "秋", "冬", "四季"].map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
                 ))}
               </select>
             </>
@@ -233,40 +245,68 @@ export default function AiDuanke({ result }: Props) {
       </div>
 
       {showSettings && (
-        <div className="mb-4 rounded-lg border border-ash/30 bg-ink p-3 space-y-3">
+        <div
+          id="ai-duanke-settings"
+          className="mb-4 rounded-lg border border-ash/30 bg-ink p-3 space-y-3"
+        >
           <p className="text-xs text-ash/80 leading-relaxed">
-            使用 OpenAI 兼容协议（DeepSeek / 通义 / 豆包 / Kimi / 智谱 / 硅基流动 / Ollama / vLLM 均可）。
-            留空的字段回退到服务端默认（DeepSeek + 环境变量）。API Key 仅保存在本浏览器。
+            使用 OpenAI 兼容协议（DeepSeek / 通义 / 豆包 / Kimi / 智谱 / 硅基流动 / Ollama / vLLM
+            均可）。 留空的字段回退到服务端默认（DeepSeek + 环境变量）。API Key 仅保存在本浏览器。
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Base URL</label>
-              <input className={inputCls} placeholder="https://api.deepseek.com" value={fBaseUrl}
-                onChange={(e) => setFBaseUrl(e.target.value)} />
+              <input
+                className={inputCls}
+                placeholder="https://api.deepseek.com"
+                value={fBaseUrl}
+                onChange={(e) => setFBaseUrl(e.target.value)}
+              />
             </div>
             <div>
               <label className={labelCls}>Model</label>
-              <input className={inputCls} placeholder="deepseek-v4-flash" value={fModel}
-                onChange={(e) => setFModel(e.target.value)} />
+              <input
+                className={inputCls}
+                placeholder="deepseek-v4-flash"
+                value={fModel}
+                onChange={(e) => setFModel(e.target.value)}
+              />
             </div>
             <div>
               <label className={labelCls}>API Key</label>
-              <input className={inputCls} type="password" placeholder="sk-..." value={fApiKey}
-                onChange={(e) => setFApiKey(e.target.value)} />
+              <input
+                className={inputCls}
+                type="password"
+                placeholder="sk-..."
+                value={fApiKey}
+                onChange={(e) => setFApiKey(e.target.value)}
+              />
             </div>
             <div>
               <label className={labelCls}>Temperature（0-2）</label>
-              <input className={inputCls} type="number" step="0.1" min="0" max="2" placeholder="0.7" value={fTemp}
-                onChange={(e) => setFTemp(e.target.value)} />
+              <input
+                className={inputCls}
+                type="number"
+                step="0.1"
+                min="0"
+                max="2"
+                placeholder="0.7"
+                value={fTemp}
+                onChange={(e) => setFTemp(e.target.value)}
+              />
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={saveSettings}
-              className="rounded-lg bg-gold/20 border border-gold/50 px-3 py-1.5 text-xs text-gold hover:bg-gold/30 transition-colors">
+            <button
+              onClick={saveSettings}
+              className="rounded-lg bg-gold/20 border border-gold/50 px-3 py-1.5 text-xs text-gold hover:bg-gold/30 transition-colors"
+            >
               保存
             </button>
-            <button onClick={resetSettings}
-              className="rounded-lg border border-ash/40 px-3 py-1.5 text-xs text-ash hover:text-paper transition-colors">
+            <button
+              onClick={resetSettings}
+              className="rounded-lg border border-ash/40 px-3 py-1.5 text-xs text-ash hover:text-paper transition-colors"
+            >
               重置为默认
             </button>
           </div>
@@ -289,7 +329,8 @@ export default function AiDuanke({ result }: Props) {
       <div className="space-y-3 max-h-96 overflow-y-auto pr-1 mb-3">
         {history.length === 0 && (
           <p className="text-xs text-ash/70 leading-relaxed">
-            基于上方程序精确算出的占卜结果（{result.algorithmName}，AI 只负责解读），可问事业、感情、财运等。
+            基于上方程序精确算出的占卜结果（{result.algorithmName}，AI
+            只负责解读），可问事业、感情、财运等。
           </p>
         )}
         {history.map((m, i) => (
@@ -305,7 +346,9 @@ export default function AiDuanke({ result }: Props) {
               {m.role === "assistant" && m.reasoning && (
                 <details className="mb-2 text-xs text-ash/70 border-b border-ash/20 pb-1">
                   <summary className="cursor-pointer select-none">🧠 思考过程</summary>
-                  <div className="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap">{m.reasoning}</div>
+                  <div className="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap">
+                    {m.reasoning}
+                  </div>
                 </details>
               )}
               {m.content || (streaming && i === history.length - 1 ? "……" : "")}

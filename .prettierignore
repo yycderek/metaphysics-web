@@ -1,0 +1,8 @@
+.next/
+out/
+node_modules/
+next-env.d.ts
+*.tsbuildinfo
+package-lock.json
+# 由 liuren-py scripts/export_data.py 生成，勿手改，也不参与 Prettier 格式化（避免与生成器打架）
+src/lib/data.json

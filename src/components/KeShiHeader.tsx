@@ -1,6 +1,12 @@
 "use client";
 // 课式头部：日柱/时支/月将/课名/方法/贵人/旬空
-import { DIZHI_WUXING, DIZHI_YINYANG, TIANGAN_WUXING, TIANGAN_YINYANG, YUEJIANG_NAME } from "@/lib/data";
+import {
+  DIZHI_WUXING,
+  DIZHI_YINYANG,
+  TIANGAN_WUXING,
+  TIANGAN_YINYANG,
+  YUEJIANG_NAME,
+} from "@/lib/data";
 import type { KeShi } from "@/lib/types";
 
 export default function KeShiHeader({ ks }: { ks: KeShi }) {
@@ -24,7 +30,9 @@ export default function KeShiHeader({ ks }: { ks: KeShi }) {
           <div className="text-ash text-xs">时支</div>
           <div className="text-lg text-paper">
             {ks.shizhi}
-            <span className="text-xs text-ash ml-1">{DIZHI_WUXING[ks.rizhi]}·{DIZHI_YINYANG[ks.rizhi]}</span>
+            <span className="text-xs text-ash ml-1">
+              {DIZHI_WUXING[ks.rizhi]}·{DIZHI_YINYANG[ks.rizhi]}
+            </span>
           </div>
         </div>
         <div>

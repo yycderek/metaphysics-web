@@ -4,8 +4,9 @@ export default function DataTree({ data }: { data: unknown }) {
   const render = (v: unknown, depth: number): React.ReactNode => {
     const pad = { paddingLeft: depth * 14 };
     if (v === null || v === undefined) return <span className="text-ash/60">null</span>;
-    if (typeof v === "string") return <span className="text-jade">"{v}"</span>;
-    if (typeof v === "number" || typeof v === "boolean") return <span className="text-gold">{String(v)}</span>;
+    if (typeof v === "string") return <span className="text-jade">&quot;{v}&quot;</span>;
+    if (typeof v === "number" || typeof v === "boolean")
+      return <span className="text-gold">{String(v)}</span>;
     if (Array.isArray(v)) {
       if (v.length === 0) return <span className="text-ash/60">[]</span>;
       return (
@@ -33,5 +34,9 @@ export default function DataTree({ data }: { data: unknown }) {
     }
     return <span>{String(v)}</span>;
   };
-  return <div className="rounded-lg border border-ash/30 bg-ink p-4 font-mono text-sm">{render(data, 0)}</div>;
+  return (
+    <div className="rounded-lg border border-ash/30 bg-ink p-4 font-mono text-sm">
+      {render(data, 0)}
+    </div>
+  );
 }

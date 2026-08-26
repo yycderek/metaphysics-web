@@ -17,7 +17,9 @@ export default function SanchuanChain({ ks }: { ks: KeShi }) {
         {chuan.map((c, i) => (
           <div key={c.name} className="flex items-center gap-2 md:gap-4">
             {i > 0 && <span className="text-ash text-2xl">→</span>}
-            <div className={`rounded-lg border-2 px-4 py-3 text-center min-w-[92px] ${JIXIONG_COLOR[c.tianjiang.jixiong]} bg-ink-2`}>
+            <div
+              className={`rounded-lg border-2 px-4 py-3 text-center min-w-[92px] ${JIXIONG_COLOR[c.tianjiang.jixiong]} bg-ink-2`}
+            >
               <div className="text-xs text-ash mb-1">{c.name}</div>
               <div className="text-3xl text-paper">{c.zhi}</div>
               <div className="mt-1 text-sm">

@@ -49,7 +49,10 @@ function buildContext(req: DivineRequest): string {
   const palmSteps = (req.steps ?? [])
     .filter((s) => (s.data as { landed?: string } | null)?.landed)
     .map((s) => (s.data as { landed: string }).landed);
-  const chain = palmSteps.length >= 2 ? `${palmSteps.join(" → ")}（落宫 ${palmSteps[palmSteps.length - 1]}）` : r.palm;
+  const chain =
+    palmSteps.length >= 2
+      ? `${palmSteps.join(" → ")}（落宫 ${palmSteps[palmSteps.length - 1]}）`
+      : r.palm;
 
   return `【本课结果（程序起课，勿改）】
 算法：小六壬（数字起课）

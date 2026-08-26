@@ -5,21 +5,23 @@
 ## 接口定义（src/lib/algorithms/types.ts）
 
 ```ts
-interface AlgorithmInput { [key: string]: string | number | undefined }
+interface AlgorithmInput {
+  [key: string]: string | number | undefined;
+}
 
 interface StepResult {
-  key: string;   // 步骤唯一标识，如 'yue' / 'tian'
+  key: string; // 步骤唯一标识，如 'yue' / 'tian'
   title: string; // 展示标题，如 '一、大安起月'
-  desc: string;  // 步骤说明
+  desc: string; // 步骤说明
   data: unknown; // 步骤中间数据（推导模式展示；无专属视图时渲染为 JSON 树）
 }
 
 interface DivinationResult {
-  algorithmId: string;   // 唯一 id，如 'xiaoliuren'
+  algorithmId: string; // 唯一 id，如 'xiaoliuren'
   algorithmName: string; // 展示名
   input: AlgorithmInput; // 实际生效的输入
-  steps: StepResult[];   // 推导过程（可为空数组）
-  raw: unknown;          // 算法特有结果（结果模式展示；大六壬 = KeShi）
+  steps: StepResult[]; // 推导过程（可为空数组）
+  raw: unknown; // 算法特有结果（结果模式展示；大六壬 = KeShi）
 }
 
 interface AlgorithmAdapter {

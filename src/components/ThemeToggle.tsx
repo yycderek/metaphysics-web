@@ -1,16 +1,15 @@
 "use client";
 // 主题切换：亮色（默认）/ 暗色，localStorage 持久化
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-const STORAGE_KEY = "liuren-theme";
+const STORAGE_KEY = "metaphysics-theme";
+const LEGACY_KEY = "liuren-theme";
 
 export default function ThemeToggle() {
-  const [dark, setDark] = useState(false);
-
-  // 挂载时与当前 documentElement 状态同步（首帧 class 已由 layout 内联脚本设置）
-  useEffect(() => {
-    setDark(document.documentElement.classList.contains("dark"));
-  }, []);
+  // 首帧 class 已由 layout 内联脚本设置；此处惰性读取，SSR 时守卫 document 不存在
+  const [dark, setDark] = useState(
+    () => typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
+  );
 
   const toggle = () => {
     const next = !dark;
@@ -18,6 +17,7 @@ export default function ThemeToggle() {
     document.documentElement.classList.toggle("dark", next);
     try {
       localStorage.setItem(STORAGE_KEY, next ? "dark" : "light");
+      localStorage.removeItem(LEGACY_KEY); // 迁移：清除旧键
     } catch {
       /* ignore */
     }

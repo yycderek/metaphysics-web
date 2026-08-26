@@ -13,9 +13,7 @@ export default function SikeCards({ ks }: { ks: KeShi }) {
           <div
             key={e.index}
             className={`rounded-lg p-3 text-center border transition-colors ${
-              isKe
-                ? "border-vermilion/80 bg-vermilion/10"
-                : "border-ash/30 bg-ink-2"
+              isKe ? "border-vermilion/80 bg-vermilion/10" : "border-ash/30 bg-ink-2"
             }`}
           >
             <div className="text-xs text-ash mb-1">
@@ -24,13 +22,7 @@ export default function SikeCards({ ks }: { ks: KeShi }) {
             <div className="text-xl text-paper my-1">
               {e.bottom} <span className="text-ash">→</span> {e.top}
             </div>
-            <div
-              className={`text-xs ${
-                isKe ? "text-vermilion" : "text-ash"
-              }`}
-            >
-              {e.relation}
-            </div>
+            <div className={`text-xs ${isKe ? "text-vermilion" : "text-ash"}`}>{e.relation}</div>
           </div>
         );
       })}

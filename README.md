@@ -31,20 +31,25 @@
 
 ```bash
 npm install
-npm run dev       # http://localhost:3000
-npm test          # vitest 黄金课例（13 项）
-npm run build     # 生产构建
+npm run dev          # http://localhost:3000
+npm test             # vitest 单元测试（49 项）
+npm run typecheck    # TypeScript 类型检查
+npm run lint         # ESLint（eslint-config-next）
+npm run format       # Prettier 格式化
+npm run build        # 生产构建
 ```
+
+质量门禁（CI）：`tsc --noEmit` + `eslint .` + `prettier --check .` + `vitest run` + `next build` 全部通过才合入。
 
 ## 架构
 
-| 层 | 文件 | 说明 |
-|---|---|---|
-| 数据 | `src/lib/data.json` | 由 liuren-py `scripts/export_data.py` 导出，勿手改 |
-| 算法 | `src/lib/*.ts` | 天地盘 / 四课 / 九宗门 / 天将 / 六亲，与 liuren-py 同源 |
-| AI 断课 | `src/lib/prompt.ts` + `src/app/api/divine/route.ts` + `src/components/AiDuanke.tsx` | 断课提示词模板 / deepseek SSE 代理 / 对话面板 |
-| 组件 | `src/components/*.tsx` | 天盘圆盘 SVG、四课卡、三传链、表单、步骤演示 |
-| 页面 | `src/app/*` | 起课工具页 + 学习演示页 |
+| 层      | 文件                                                                                | 说明                                                    |
+| ------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| 数据    | `src/lib/data.json`                                                                 | 由 liuren-py `scripts/export_data.py` 导出，勿手改      |
+| 算法    | `src/lib/*.ts`                                                                      | 天地盘 / 四课 / 九宗门 / 天将 / 六亲，与 liuren-py 同源 |
+| AI 断课 | `src/lib/prompt.ts` + `src/app/api/divine/route.ts` + `src/components/AiDuanke.tsx` | 断课提示词模板 / deepseek SSE 代理 / 对话面板           |
+| 组件    | `src/components/*.tsx`                                                              | 天盘圆盘 SVG、四课卡、三传链、表单、步骤演示            |
+| 页面    | `src/app/*`                                                                         | 起课工具页 + 学习演示页                                 |
 
 ## 黄金课例
 

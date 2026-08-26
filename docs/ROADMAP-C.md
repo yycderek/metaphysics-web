@@ -5,6 +5,7 @@
 ## 已完成（本次会话）
 
 ### 1. `src/lib/prompt.ts`（新）✅
+
 - `buildDivineSystemPrompt()`：断课师傅 system prompt——不自行起课、按课名→三传→天将→六亲→旺衰→旬空逐层断、先总断后分述再建议、400-600字、追问只答追问
 - `buildDivinePrompt(ks, question)`：课式→上下文（日柱/占时/月将/课名/贵人/旬空/天地盘/四课/三传带天将六亲/季节旺衰提示）
 - 内置参考表：WANGXIU 旺相休囚死、长生十二宫、天将吉凶事象
@@ -12,6 +13,7 @@
 - 季节参数：春/夏/秋/冬/四季，`seasonFromNow()` 自动按月份取
 
 ### 2. `src/app/api/divine/route.ts`（新）✅
+
 - POST JSON：`{ ks, question, season, history? }`（history 最多保留8轮）
 - **key 读取顺序：环境变量 DEEPSEEK_API_KEY → ~/.hermes/.env → config.yaml**
   - ⚠️ 坑：config.yaml 里的 api_key 是**火山引擎 Ark** 的 key（auth.json 可见），不是 deepseek 官方 key，直接用它调 api.deepseek.com 会 401
@@ -20,15 +22,18 @@
 - ⚠️ deepseek-v4-flash 是**推理模型**：SSE delta 含 `reasoning_content`（思考）和 `content`（正文）两个字段，正文在思考完成后才出现
 
 ### 3. `src/components/AiDuanke.tsx`（新）✅
+
 - 断课对话面板：快捷问题（综合运势/看事业/看感情/看财运）、季节选择、输入框、流式输出、停止按钮、追问历史
 - SSE 解析同时累积 reasoning_content（🧠 思考过程，`<details>` 折叠灰字）和 content（正文）
 - 课式变化自动清空对话（防跨课串断）
 - 追问时把 assistant 的 content 或 reasoning 传给上游
 
 ### 4. `src/app/page.tsx` 集成 ✅
+
 - 起课结果下方插入 `<AiDuanke ks={ks} />`
 
 ### 5. 验证
+
 - `tsc --noEmit` 通过
 - 黄金课例 13/13 vitest 通过
 - `next build` 通过（/api/divine 正确识别为动态路由 ƒ）

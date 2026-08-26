@@ -2,10 +2,6 @@
 // 与 liuren-py scripts/selfcheck.py 的黄金课例保持一致
 import { describe, expect, it } from "vitest";
 import { build, chuanTianjiang, sikeEntries } from "@/lib/shike";
-import { buildTianpan } from "@/lib/pan";
-import { buildSike, kePositions } from "@/lib/kegong";
-import { determineSanchuan } from "@/lib/sanchuan";
-import { guiren, buildTianjiang } from "@/lib/tianjiang";
 import { xunkong, shizhiFromHour } from "@/lib/data";
 import { rizhuFromDate } from "@/lib/calendar";
 

@@ -1,6 +1,7 @@
 "use client";
 // 起课工具页：算法选择 → 注册表起课 → 双模式展示（课式结果 / 推导过程）
 // 阶段4：支持远程算法服务（localStorage 配置，客户端注册到注册表）
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import "@/plugins"; // 副作用导入：注册本地算法插件（阶段4）
 import type { DivinationResult, AlgorithmInput, AlgorithmAdapter } from "@/lib/algorithms/types";
@@ -25,8 +26,8 @@ type Mode = "result" | "derive";
 
 export default function HomePage() {
   // 初始课式：大六壬黄金课例（同步构建；buildDivination 异步化后适配器直调）
-  const [result, setResult] = useState<DivinationResult>(() =>
-    daliurenAdapter.build(GOLDEN_INPUT) as DivinationResult,
+  const [result, setResult] = useState<DivinationResult>(
+    () => daliurenAdapter.build(GOLDEN_INPUT) as DivinationResult,
   );
   const [mode, setMode] = useState<Mode>("result");
   const [selectedId, setSelectedId] = useState<string>(DALIUREN_ID);
@@ -39,7 +40,6 @@ export default function HomePage() {
     setServices(svc);
     for (const s of svc) registerAdapter(createRemoteAdapter(s));
     setAdapters(listAdapters());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const ks = rawKeShi(result);
@@ -78,23 +78,24 @@ export default function HomePage() {
         <div>
           <h1 className="text-3xl font-bold text-gold">玄学 · 占卜</h1>
           <p className="text-sm text-ash mt-1">
-            多算法起课平台：大六壬（月将加时 · 天地盘 · 四课 · 三传） · 小六壬（数字起课） · 插件扩展
+            多算法起课平台：大六壬（月将加时 · 天地盘 · 四课 · 三传） · 小六壬（数字起课） ·
+            插件扩展
           </p>
         </div>
         <nav className="flex gap-2 text-sm items-center">
           <ThemeToggle />
-          <a
+          <Link
             href="/"
             className="rounded-lg border border-gold/60 bg-gold/10 px-4 py-2 text-gold"
           >
             🔮 起课
-          </a>
-          <a
+          </Link>
+          <Link
             href="/demo"
             className="rounded-lg border border-ash/40 px-4 py-2 text-ash hover:border-gold hover:text-paper transition-colors"
           >
             🎓 六步学习
-          </a>
+          </Link>
         </nav>
       </header>
 
@@ -109,10 +110,18 @@ export default function HomePage() {
 
       {/* 双模式切换 */}
       <div className="flex gap-2">
-        <button className={tabCls(mode === "result")} onClick={() => setMode("result")}>
+        <button
+          className={tabCls(mode === "result")}
+          onClick={() => setMode("result")}
+          aria-pressed={mode === "result"}
+        >
           📊 课式结果
         </button>
-        <button className={tabCls(mode === "derive")} onClick={() => setMode("derive")}>
+        <button
+          className={tabCls(mode === "derive")}
+          onClick={() => setMode("derive")}
+          aria-pressed={mode === "derive"}
+        >
           🧭 推导过程
         </button>
       </div>
@@ -122,38 +131,36 @@ export default function HomePage() {
           <>
             <KeShiHeader ks={ks} />
 
-          <section className="grid md:grid-cols-2 gap-6 items-start">
-            <div className="rounded-xl border border-ash/30 bg-ink-2 p-4">
-              <h3 className="text-gold font-bold mb-3 text-center">天地盘</h3>
-              <TianPanDisk ks={ks} />
-            </div>
-
-            <div className="space-y-6">
+            <section className="grid md:grid-cols-2 gap-6 items-start">
               <div className="rounded-xl border border-ash/30 bg-ink-2 p-4">
-                <h3 className="text-gold font-bold mb-3">四课</h3>
-                <SikeCards ks={ks} />
+                <h3 className="text-gold font-bold mb-3 text-center">天地盘</h3>
+                <TianPanDisk ks={ks} />
               </div>
-              <div className="rounded-xl border border-ash/30 bg-ink-2 p-4">
-                <h3 className="text-gold font-bold mb-3">三传</h3>
-                <SanchuanChain ks={ks} />
-                <div className="mt-4 border-t border-ash/20 pt-3 space-y-1.5 text-sm">
-                  {chuan.map((c) => (
-                    <div key={c.name} className="flex items-center gap-3">
-                      <span className="w-12 text-gold">{c.name}</span>
-                      <span className="w-8 text-xl text-paper">{c.zhi}</span>
-                      <span className="w-20">
-                        {c.tianjiang.short}·{c.tianjiang.full}
-                      </span>
-                      <span className="text-xs text-ash flex-1">
-                        {c.tianjiang.zhushi}
-                      </span>
-                      <span className="text-xs text-paper">六亲 {c.liuqin}</span>
-                    </div>
-                  ))}
+
+              <div className="space-y-6">
+                <div className="rounded-xl border border-ash/30 bg-ink-2 p-4">
+                  <h3 className="text-gold font-bold mb-3">四课</h3>
+                  <SikeCards ks={ks} />
+                </div>
+                <div className="rounded-xl border border-ash/30 bg-ink-2 p-4">
+                  <h3 className="text-gold font-bold mb-3">三传</h3>
+                  <SanchuanChain ks={ks} />
+                  <div className="mt-4 border-t border-ash/20 pt-3 space-y-1.5 text-sm">
+                    {chuan.map((c) => (
+                      <div key={c.name} className="flex items-center gap-3">
+                        <span className="w-12 text-gold">{c.name}</span>
+                        <span className="w-8 text-xl text-paper">{c.zhi}</span>
+                        <span className="w-20">
+                          {c.tianjiang.short}·{c.tianjiang.full}
+                        </span>
+                        <span className="text-xs text-ash flex-1">{c.tianjiang.zhushi}</span>
+                        <span className="text-xs text-paper">六亲 {c.liuqin}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
+            </section>
           </>
         ) : (
           <section className="rounded-xl border border-ash/30 bg-ink-2 p-4">

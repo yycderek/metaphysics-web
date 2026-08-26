@@ -65,7 +65,14 @@ function DaliurenStepView({ step, ks }: { step: StepResult; ks: KeShi }) {
         </div>
       );
     case "tianjiang": {
-      const data = step.data as { chuanDetail?: { name: string; zhi: string; tianjiang: { short: string; full: string; zhushi: string }; liuqin: string }[] };
+      const data = step.data as {
+        chuanDetail?: {
+          name: string;
+          zhi: string;
+          tianjiang: { short: string; full: string; zhushi: string };
+          liuqin: string;
+        }[];
+      };
       const chuan = data.chuanDetail ?? [];
       return (
         <div className="space-y-4">
@@ -157,7 +164,9 @@ export default function StepRenderer({ result, autoPlay = false }: Props) {
                 setPlaying(false);
               }}
               className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
-                i === step ? "border-gold bg-gold/15 text-gold" : "border-ash/30 text-ash hover:text-paper"
+                i === step
+                  ? "border-gold bg-gold/15 text-gold"
+                  : "border-ash/30 text-ash hover:text-paper"
               }`}
             >
               {s.title.split("、")[0]}

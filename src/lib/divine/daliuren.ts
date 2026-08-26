@@ -7,7 +7,6 @@ import { chuanTianjiang, sikeEntries } from "../shike";
 import { genericDivineTemplate } from "./generic";
 import {
   DIZHI_WUXING,
-  GAN_JIGONG,
   TIANGAN_WUXING,
   WANGXIU,
   CHANGSHENG_QI,
@@ -58,7 +57,7 @@ function isKeShi(raw: unknown): raw is KeShi {
   return !!k && Array.isArray(k.sanchuan) && typeof k.rizhu === "string";
 }
 
-function formatChuan(c: ChuanDetail, ks: KeShi): string {
+function formatChuan(c: ChuanDetail): string {
   const zhiWx = DIZHI_WUXING[c.zhi];
   return `${c.name}：${c.zhi}（${zhiWx}）· ${c.tianjiang.short}${c.tianjiang.full}（${c.tianjiang.jixiong}，${c.tianjiang.zhushi}）· 六亲${c.liuqin}`;
 }
@@ -69,8 +68,10 @@ function buildContext(ks: KeShi, req: DivineRequest): string {
   const chuan = chuanTianjiang(ks);
   const seasonHint = SEASON_HINT[req.season];
 
-  const sikeLines = sike.map((s) => `第${s.index}课：${s.bottom}（下）→ ${s.top}（上），${s.relation}`).join("\n");
-  const chuanLines = chuan.map((c) => formatChuan(c, ks)).join("\n");
+  const sikeLines = sike
+    .map((s) => `第${s.index}课：${s.bottom}（下）→ ${s.top}（上），${s.relation}`)
+    .join("\n");
+  const chuanLines = chuan.map((c) => formatChuan(c)).join("\n");
   const tianpanLines = Object.entries(ks.tianpan)
     .map(([di, tian]) => `${di}←${tian}`)
     .join("，");

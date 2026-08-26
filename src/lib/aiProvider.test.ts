@@ -3,7 +3,14 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { resolveAIConfig, resolveApiKey } from "./aiProvider";
 
-const ENV_KEYS = ["AI_API_KEY", "AI_BASE_URL", "AI_MODEL", "DEEPSEEK_API_KEY", "DEEPSEEK_BASE_URL", "DEEPSEEK_MODEL"];
+const ENV_KEYS = [
+  "AI_API_KEY",
+  "AI_BASE_URL",
+  "AI_MODEL",
+  "DEEPSEEK_API_KEY",
+  "DEEPSEEK_BASE_URL",
+  "DEEPSEEK_MODEL",
+];
 
 afterEach(() => {
   for (const k of ENV_KEYS) delete process.env[k];

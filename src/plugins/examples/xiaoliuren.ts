@@ -48,7 +48,9 @@ export const xiaoliurenAdapter: AlgorithmAdapter = {
   build(input: AlgorithmInput) {
     const parsed = this.parseInput!(input);
     if (!parsed) {
-      throw new Error('小六壬输入不合法：需要 month/day/hour 三个 1-30 的整数，如 {"month":3,"day":18,"hour":7}');
+      throw new Error(
+        '小六壬输入不合法：需要 month/day/hour 三个 1-30 的整数，如 {"month":3,"day":18,"hour":7}',
+      );
     }
     const month = Number(parsed.month);
     const day = Number(parsed.day);

@@ -6,8 +6,8 @@ import type { KeShi } from "@/lib/types";
 const CX = 210;
 const CY = 210;
 const R_OUTER = 178; // 外环
-const R_TIAN = 152;  // 天盘支位置
-const R_DI = 100;    // 地盘支位置
+const R_TIAN = 152; // 天盘支位置
+const R_DI = 100; // 地盘支位置
 
 function pos(i: number, r: number): [number, number] {
   const ang = ((-90 + i * 30) * Math.PI) / 180;
@@ -34,8 +34,15 @@ export default function TianPanDisk({ ks }: { ks: KeShi }) {
       {DIZHI.map((d, i) => {
         const [x, y] = pos(i, R_DI);
         return (
-          <text key={`di-${d}`} x={x} y={y} textAnchor="middle" dominantBaseline="central"
-            fontSize="17" fill="#f0e6d0">
+          <text
+            key={`di-${d}`}
+            x={x}
+            y={y}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize="17"
+            fill="#f0e6d0"
+          >
             {d}
           </text>
         );
@@ -48,9 +55,15 @@ export default function TianPanDisk({ ks }: { ks: KeShi }) {
         const isGui = tian === ks.guiren;
         return (
           <g key={`tian-${d}`}>
-            <text x={x} y={y} textAnchor="middle" dominantBaseline="central"
-              fontSize="19" fontWeight={isGui ? 700 : 400}
-              fill={isGui ? "#c9a227" : "#d9b98c"}>
+            <text
+              x={x}
+              y={y}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fontSize="19"
+              fontWeight={isGui ? 700 : 400}
+              fill={isGui ? "#c9a227" : "#d9b98c"}
+            >
               {tian}
             </text>
             {isGui && (

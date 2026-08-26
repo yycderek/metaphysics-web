@@ -64,7 +64,7 @@ export default function DivineForm({
       } else {
         const parsed: unknown = JSON.parse(jsonInput || "{}");
         if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-          throw new Error("JSON 输入必须是对象，如 {\"month\": 3, \"day\": 18, \"question\": \"出行\"}");
+          throw new Error('JSON 输入必须是对象，如 {"month": 3, "day": 18, "question": "出行"}');
         }
         input = parsed as AlgorithmInput;
       }
@@ -123,24 +123,28 @@ export default function DivineForm({
         </div>
         <button
           onClick={() => setShowServices((s) => !s)}
+          aria-expanded={showServices}
+          aria-controls="remote-services-panel"
           className="rounded-lg border border-ash/40 px-3 py-2 text-sm text-ash hover:border-gold hover:text-paper transition-colors"
         >
           🔌 远程算法服务 {services.length > 0 ? `(${services.length})` : ""}
         </button>
         {!isDaliuren && (
-          <span className="text-xs text-ash py-2">
-            此算法输入为 JSON 对象，字段定义见算法说明
-          </span>
+          <span className="text-xs text-ash py-2">此算法输入为 JSON 对象，字段定义见算法说明</span>
         )}
       </div>
 
       {/* 远程算法服务管理 */}
       {showServices && (
-        <div className="rounded-lg border border-ash/30 bg-ink p-3 space-y-3">
+        <div
+          id="remote-services-panel"
+          className="rounded-lg border border-ash/30 bg-ink p-3 space-y-3"
+        >
           <p className="text-xs text-ash/80 leading-relaxed">
-            远程算法服务 = 任意 HTTP 端点（Python/Node/云函数均可）。协议：POST 请求体{" "}
-            {"{"}"input": 输入对象{"}"}，响应 JSON：{"{"}"algorithmId","algorithmName","input","steps","raw"{"}"}。
-            配置后无需改代码，起课表单自动出现该算法。
+            远程算法服务 = 任意 HTTP 端点（Python/Node/云函数均可）。协议：POST 请求体 {"{"}
+            &quot;input&quot;: 输入对象{"}"}，响应 JSON：{"{"}
+            &quot;algorithmId&quot;,&quot;algorithmName&quot;,&quot;input&quot;,&quot;steps&quot;,&quot;raw&quot;
+            {"}"}。 配置后无需改代码，起课表单自动出现该算法。
           </p>
           {services.length > 0 && (
             <div className="space-y-1.5">
@@ -160,12 +164,24 @@ export default function DivineForm({
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <input className={inputCls} placeholder="名称（如 小六壬）" value={sName}
-              onChange={(e) => setSName(e.target.value)} />
-            <input className={inputCls} placeholder="id（可选，默认=名称）" value={sId}
-              onChange={(e) => setSId(e.target.value)} />
-            <input className={inputCls} placeholder="https://your-service.com/divine" value={sUrl}
-              onChange={(e) => setSUrl(e.target.value)} />
+            <input
+              className={inputCls}
+              placeholder="名称（如 小六壬）"
+              value={sName}
+              onChange={(e) => setSName(e.target.value)}
+            />
+            <input
+              className={inputCls}
+              placeholder="id（可选，默认=名称）"
+              value={sId}
+              onChange={(e) => setSId(e.target.value)}
+            />
+            <input
+              className={inputCls}
+              placeholder="https://your-service.com/divine"
+              value={sUrl}
+              onChange={(e) => setSUrl(e.target.value)}
+            />
           </div>
           <button
             onClick={addService}
@@ -183,7 +199,9 @@ export default function DivineForm({
             <div className="text-xs text-ash mb-1">日干</div>
             <select className={selectCls} value={gan} onChange={(e) => setGan(e.target.value)}>
               {TIANGAN.map((g) => (
-                <option key={g} value={g}>{g}</option>
+                <option key={g} value={g}>
+                  {g}
+                </option>
               ))}
             </select>
           </div>
@@ -191,23 +209,37 @@ export default function DivineForm({
             <div className="text-xs text-ash mb-1">日支</div>
             <select className={selectCls} value={zhi} onChange={(e) => setZhi(e.target.value)}>
               {DIZHI.map((d) => (
-                <option key={d} value={d}>{d}</option>
+                <option key={d} value={d}>
+                  {d}
+                </option>
               ))}
             </select>
           </div>
           <div>
             <div className="text-xs text-ash mb-1">时支</div>
-            <select className={selectCls} value={shizhi} onChange={(e) => setShizhi(e.target.value)}>
+            <select
+              className={selectCls}
+              value={shizhi}
+              onChange={(e) => setShizhi(e.target.value)}
+            >
               {DIZHI.map((d) => (
-                <option key={d} value={d}>{d}</option>
+                <option key={d} value={d}>
+                  {d}
+                </option>
               ))}
             </select>
           </div>
           <div>
             <div className="text-xs text-ash mb-1">月将</div>
-            <select className={selectCls} value={yuejiang} onChange={(e) => setYuejiang(e.target.value)}>
+            <select
+              className={selectCls}
+              value={yuejiang}
+              onChange={(e) => setYuejiang(e.target.value)}
+            >
               {DIZHI.map((d) => (
-                <option key={d} value={d}>{d}·{YUEJIANG_NAME[d]}</option>
+                <option key={d} value={d}>
+                  {d}·{YUEJIANG_NAME[d]}
+                </option>
               ))}
             </select>
           </div>
