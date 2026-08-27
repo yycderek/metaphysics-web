@@ -3,6 +3,7 @@
 // 阶段5：支持任意算法（按算法 ID 分发断课模板，服务端选择 system prompt）
 // 支持用户自定义 AI API（OpenAI 兼容协议），设置存 localStorage
 import { useEffect, useRef, useState } from "react";
+import { consumeSSE, parseSSEEvent } from "@/lib/sse";
 import type { DivinationResult } from "@/lib/algorithms/types";
 import type { UserAIConfig } from "@/lib/aiTypes";
 
@@ -159,19 +160,15 @@ export default function AiDuanke({ result }: Props) {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        buf += decoder.decode(value, { stream: true });
-        // 解析 SSE：event 块以空行分隔（data: {...}）。用正则切分以兼容 \n\n / \r\n\r\n /
-        // 混用换行，避免 provider 使用 CRLF 时漏解析；未完整的尾部块保留在 buf 中续读。
-        const parts = buf.split(/\r?\n\r?\n/);
-        buf = parts.pop() ?? "";
-        for (const part of parts) {
-          const line = part.trim();
-          // 仅处理 data: 行；`:` 开头的注释行与 event:/id: 行直接跳过
-          if (!line.startsWith("data:")) continue;
-          const payload = line.slice(5).trim();
-          if (payload === "[DONE]") break;
+        // 增量解析 SSE：归一化 CRLF，兼容 event 块分隔差异；未完整尾部保留续读
+        const { events, rest } = consumeSSE(buf, decoder.decode(value, { stream: true }));
+        buf = rest;
+        for (const event of events) {
+          const result = parseSSEEvent(event);
+          if (result.type === "ignore") continue;
+          if (result.type === "done") break;
           try {
-            const json = JSON.parse(payload);
+            const json = JSON.parse(result.payload);
             const delta = json.choices?.[0]?.delta ?? {};
             const reason = delta.reasoning_content ?? "";
             const txt = delta.content ?? "";

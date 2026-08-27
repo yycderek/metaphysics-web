@@ -7,6 +7,7 @@
 - 🔮 **起课工具**（`/`）：选日柱 / 时支 / 月将，一键起课，输出天地盘圆盘、四课、三传链、天将六亲细断
 - 📊 **双模式展示**：起课后可切换「课式结果」（天地盘/四课/三传总览）与「🧭 推导过程」（定地盘→安天盘→排四课→九宗门→得三传→布天将 逐步动画，可自动演示）
 - 🎓 **六步学习**（`/demo`）：黄金课例全流程动画演示（自动播放）
+- 🧬 **智能占卜 Agent**（自主式）：直接描述问事（可带日期/时辰），Agent 自主选择算法与参数、调用引擎精确起课，再输出**结构化断语**（总结/分述/风险/建议/置信度/出处）
 - 🦉 **AI 断课**（起课结果下方）：基于引擎精确起好的课式，由 AI 流式断课——总断→分述→建议；支持快捷提问（事业/感情/财运）、自由追问、思考过程折叠、课式变化自动清空对话
 - 🌓 **主题切换**：亮色（默认）/ 暗色双主题，右上角一键切换，localStorage 持久化
 - 📱 响应式：移动端单列，桌面双栏
@@ -23,6 +24,7 @@
 ## AI 断课
 
 - **铁律**：前端 TS 引擎先精确起课（KeShi JSON），AI 只负责解读，绝不自行起课——避免市面"AI 算命"起错课的毛病
+- **智能 Agent**（`/api/agent` + `src/lib/agent/`）：模型通过 `divinate` 工具调用引擎（function-calling），自主决定算法/参数，循环至输出结构化 JSON；不传日柱/时支/月将时默认取当前时刻（月将为按月近似，见 `agent/params.ts` 说明）
 - 流式 SSE：`/api/divine` 透传 AI 聊天补全，思考过程（`reasoning_content`）与正文（`content`）分开展示
 - 断课原则内置：课名 → 三传 → 天将 → 六亲 → 旺衰 → 旬空逐层分析，追问只答追问
 - **可替换 AI API**：断课面板 ⚙️ 设置支持任意 OpenAI 兼容服务（DeepSeek/通义/豆包/Kimi/智谱/硅基流动/Ollama/vLLM），配置 baseUrl / apiKey / model / temperature，localStorage 持久化；留空回退服务端默认（环境变量 `AI_API_KEY` / `AI_BASE_URL` / `AI_MODEL`，旧名 `DEEPSEEK_*` 兼容；本地开发自动读 `~/.hermes/.env`）
@@ -32,7 +34,7 @@
 ```bash
 npm install
 npm run dev          # http://localhost:3000
-npm test             # vitest 单元测试（49 项）
+npm test             # vitest 单元/组件测试（68 项，含 SSE/表单/Agent 循环）
 npm run typecheck    # TypeScript 类型检查
 npm run lint         # ESLint（eslint-config-next）
 npm run format       # Prettier 格式化

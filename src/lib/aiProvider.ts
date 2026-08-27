@@ -5,9 +5,9 @@
 import { readFileSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import type { AIProviderConfig, UserAIConfig, ChatMessage } from "./aiTypes";
+import type { AIProviderConfig, UserAIConfig, ChatMessage, ToolCall, ToolDef } from "./aiTypes";
 
-export type { AIProviderConfig, UserAIConfig, ChatMessage };
+export type { AIProviderConfig, UserAIConfig, ChatMessage, ToolCall, ToolDef };
 
 const DEFAULT_BASE_URL = "https://api.deepseek.com";
 const DEFAULT_MODEL = "deepseek-v4-flash";
@@ -29,25 +29,14 @@ function readHermesEnv(name: string): string {
 
 /**
  * 读取 API key（回退链）：
- * env AI_API_KEY → env DEEPSEEK_API_KEY → ~/.hermes/.env AI_API_KEY
- * → ~/.hermes/.env DEEPSEEK_API_KEY → ~/.hermes/config.yaml api_key
+ * env AI_API_KEY → env DEEPSEEK_API_KEY → ~/.hermes/.env AI_API_KEY → ~/.hermes/.env DEEPSEEK_API_KEY
+ * 注意：不再读 ~/.hermes/config.yaml 的 api_key——那是火山引擎 Ark 的 key，
+ * 配到 DeepSeek base_url 必然 401（旧坑，见 ROADMAP-C）。
  */
 export function resolveApiKey(): string {
   if (process.env.AI_API_KEY) return process.env.AI_API_KEY;
   if (process.env.DEEPSEEK_API_KEY) return process.env.DEEPSEEK_API_KEY;
-  const fromEnvFile = readHermesEnv("AI_API_KEY") || readHermesEnv("DEEPSEEK_API_KEY");
-  if (fromEnvFile) return fromEnvFile;
-  try {
-    const cfgPath = join(homedir(), ".hermes", "config.yaml");
-    if (existsSync(cfgPath)) {
-      const yaml = readFileSync(cfgPath, "utf-8");
-      const m = yaml.match(/api_key:\s*([A-Za-z0-9_\-]+)/);
-      if (m) return m[1];
-    }
-  } catch {
-    /* ignore */
-  }
-  return "";
+  return readHermesEnv("AI_API_KEY") || readHermesEnv("DEEPSEEK_API_KEY");
 }
 
 /** 合并配置：用户设置 > 环境变量（AI_* 优先，DEEPSEEK_* 兼容）> 内置默认 */
@@ -85,4 +74,43 @@ export async function streamChat(
     }),
     signal,
   });
+}
+
+/** 非流式补全（支持 function-calling）：返回 assistant 消息（content + tool_calls）。Agent 循环用 */
+export async function chatCompletion(
+  config: AIProviderConfig,
+  messages: ChatMessage[],
+  tools?: ToolDef[],
+  signal?: AbortSignal,
+): Promise<{ content: string; tool_calls?: ToolCall[] }> {
+  const url = `${config.baseUrl.replace(/\/+$/, "")}/chat/completions`;
+  const payload: Record<string, unknown> = {
+    model: config.model,
+    messages,
+    stream: false,
+    temperature: config.temperature,
+    max_tokens: config.maxTokens,
+  };
+  if (tools?.length) payload.tools = tools;
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${config.apiKey}`,
+    },
+    body: JSON.stringify(payload),
+    signal,
+  });
+  if (!resp.ok) {
+    const text = await resp.text().catch(() => "");
+    throw new Error(`AI 上游错误 ${resp.status}: ${text.slice(0, 200)}`);
+  }
+  const json = (await resp.json()) as {
+    choices?: Array<{ message?: { content?: string | null; tool_calls?: ToolCall[] } }>;
+  };
+  const msg = json.choices?.[0]?.message;
+  return {
+    content: msg?.content ?? "",
+    tool_calls: msg?.tool_calls,
+  };
 }

@@ -1,7 +1,6 @@
 "use client";
 // 起课工具页：算法选择 → 注册表起课 → 双模式展示（课式结果 / 推导过程）
 // 阶段4：支持远程算法服务（localStorage 配置，客户端注册到注册表）
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import "@/plugins"; // 副作用导入：注册本地算法插件（阶段4）
 import type { DivinationResult, AlgorithmInput, AlgorithmAdapter } from "@/lib/algorithms/types";
@@ -15,9 +14,10 @@ import TianPanDisk from "@/components/TianPanDisk";
 import SikeCards from "@/components/SikeCards";
 import SanchuanChain from "@/components/SanchuanChain";
 import AiDuanke from "@/components/AiDuanke";
+import DivinationAgent from "@/components/DivinationAgent";
 import StepRenderer from "@/components/StepRenderer";
 import DataTree from "@/components/DataTree";
-import ThemeToggle from "@/components/ThemeToggle";
+import SiteHeader from "@/components/SiteHeader";
 import { chuanTianjiang } from "@/lib/shike";
 
 const GOLDEN_INPUT: AlgorithmInput = { rizhu: "庚子", shizhi: "午", yuejiang: "亥" };
@@ -74,30 +74,11 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen max-w-5xl mx-auto px-4 py-8 space-y-6">
-      <header className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-3xl font-bold text-gold">玄学 · 占卜</h1>
-          <p className="text-sm text-ash mt-1">
-            多算法起课平台：大六壬（月将加时 · 天地盘 · 四课 · 三传） · 小六壬（数字起课） ·
-            插件扩展
-          </p>
-        </div>
-        <nav className="flex gap-2 text-sm items-center">
-          <ThemeToggle />
-          <Link
-            href="/"
-            className="rounded-lg border border-gold/60 bg-gold/10 px-4 py-2 text-gold"
-          >
-            🔮 起课
-          </Link>
-          <Link
-            href="/demo"
-            className="rounded-lg border border-ash/40 px-4 py-2 text-ash hover:border-gold hover:text-paper transition-colors"
-          >
-            🎓 六步学习
-          </Link>
-        </nav>
-      </header>
+      <SiteHeader
+        title="玄学 · 占卜"
+        subtitle="多算法起课平台：大六壬（月将加时 · 天地盘 · 四课 · 三传） · 小六壬（数字起课） · 插件扩展"
+        active="divine"
+      />
 
       <DivineForm
         adapters={adapters}
@@ -180,6 +161,8 @@ export default function HomePage() {
           <StepRenderer result={result} />
         </section>
       )}
+
+      <DivinationAgent />
 
       <AiDuanke result={result} />
 

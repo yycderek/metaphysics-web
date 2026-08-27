@@ -38,11 +38,23 @@ export async function POST(req: NextRequest) {
 
   const { algorithmId, algorithmName, input, raw, question, season, steps, history, aiConfig } =
     body;
+
+  // 输入护栏：防止超长/滥用请求消耗 token（长度上限为保守值）
+  const MAX_QUESTION_LEN = 2000;
+  const MAX_MSG_LEN = 4000;
+  const MAX_MSG_COUNT = 8;
+  const MAX_STEPS = 30;
   if (!algorithmId || raw == null || !question?.trim()) {
     return Response.json({ error: "缺少算法标识、结果数据或问题" }, { status: 400 });
   }
+  if (typeof question !== "string" || question.length > MAX_QUESTION_LEN) {
+    return Response.json({ error: `问题过长（最多 ${MAX_QUESTION_LEN} 字）` }, { status: 400 });
+  }
   if (!["春", "夏", "秋", "冬", "四季"].includes(season)) {
     return Response.json({ error: "季节参数非法" }, { status: 400 });
+  }
+  if (Array.isArray(steps) && steps.length > MAX_STEPS) {
+    return Response.json({ error: "推导步骤数量超上限" }, { status: 400 });
   }
 
   const config = resolveAIConfig(aiConfig);
@@ -67,7 +79,14 @@ export async function POST(req: NextRequest) {
     season,
     steps,
   });
-  const historyMsgs: ChatMsg[] = (history ?? []).slice(-8); // 最多保留最近 8 轮追问
+  // 追问历史：最多保留最近 MAX_MSG_COUNT 轮，且单条内容截断
+  const historyMsgs: ChatMsg[] = (history ?? [])
+    .slice(-MAX_MSG_COUNT)
+    .filter((h) => typeof h.content === "string" && h.content.trim())
+    .map((h) => ({
+      role: h.role,
+      content: h.content.slice(0, MAX_MSG_LEN),
+    }));
   const messages = [
     ...base.slice(0, 1), // system
     ...historyMsgs.map((h): ChatMessage => ({ role: h.role, content: h.content })),

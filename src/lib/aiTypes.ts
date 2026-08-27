@@ -12,6 +12,27 @@ export interface AIProviderConfig {
 export type UserAIConfig = Partial<AIProviderConfig>;
 
 export interface ChatMessage {
-  role: "system" | "user" | "assistant";
-  content: string;
+  role: "system" | "user" | "assistant" | "tool";
+  content: string | null;
+  /** assistant 消息请求调用工具时的工具调用（function-calling） */
+  tool_calls?: ToolCall[];
+  /** tool 结果消息：回填对应的工具调用 id */
+  tool_call_id?: string;
+}
+
+/** OpenAI function-calling 工具定义 */
+export interface FunctionDef {
+  name: string;
+  description?: string;
+  parameters: Record<string, unknown>;
+}
+export interface ToolDef {
+  type: "function";
+  function: FunctionDef;
+}
+/** 模型请求调用某个工具时返回的结构 */
+export interface ToolCall {
+  id: string;
+  type: "function";
+  function: { name: string; arguments: string };
 }
