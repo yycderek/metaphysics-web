@@ -5,6 +5,7 @@ import { executeDivinate } from "./divinate";
 import { verifyDivination } from "./verify";
 import type {
   AgentDivination,
+  AgentEvent,
   AgentLoopResult,
   AgentMeta,
   AgentStepInterp,
@@ -21,6 +22,8 @@ export interface LoopOptions {
   question: string;
   /** 多轮历史（不含本轮），供模型复用此前对话 */
   history?: ChatMessage[];
+  /** 里程碑事件回调（用于 SSE 流式展示过程） */
+  onEvent?: (e: AgentEvent) => void;
   maxIters?: number;
   now?: Date;
 }
@@ -97,12 +100,15 @@ function clarificationOf(toolCalls: ToolCall[]): string | null {
 
 export async function runAgentLoop(opts: LoopOptions): Promise<AgentLoopResult> {
   const { system, callLLM, question, now = new Date() } = opts;
+  const onEvent = opts.onEvent ?? (() => {});
   const history = (opts.history ?? [])
     .filter((m) => m.content !== null && ["user", "assistant", "tool"].includes(m.role))
     .slice(-14);
   const maxIters = opts.maxIters ?? DEFAULT_MAX_ITERS;
   const messages: ChatMessage[] = [{ role: "system", content: system }, ...history];
   let lastMeta: AgentMeta | undefined;
+
+  onEvent({ type: "status", text: "正在理解你的问题并决定起课参数…" });
 
   for (let i = 0; i < maxIters; i++) {
     if (i === 0) messages.push({ role: "user", content: question });
@@ -121,17 +127,24 @@ export async function runAgentLoop(opts: LoopOptions): Promise<AgentLoopResult> 
         content: turn.content ?? "",
         tool_calls: turn.tool_calls.filter((c) => c.function.name !== "ask_clarification"),
       });
+      onEvent({ type: "status", text: "正在调用引擎起课…" });
       for (const call of turn.tool_calls.filter((c) => c.function.name === "divinate")) {
         let toolContent: string;
         try {
           const outcome = await executeDivinate(call, question, now);
           lastMeta = outcome.meta;
           toolContent = outcome.context;
+          onEvent({
+            type: "divination",
+            summary: outcome.meta.summary,
+            algorithmId: outcome.meta.divination.algorithmId,
+          });
         } catch (e) {
           toolContent = `起课失败：${(e as Error).message}`;
         }
         messages.push({ role: "tool", content: toolContent, tool_call_id: call.id });
       }
+      onEvent({ type: "status", text: "正在根据课式断课并校对…" });
       continue;
     }
 
@@ -166,6 +179,7 @@ export async function runAgentLoop(opts: LoopOptions): Promise<AgentLoopResult> 
             role: "user",
             content: `你的断语引用了与引擎不符的卦理事实：${v.mismatch}。请基于引擎给定的正确事实，重新完整输出 JSON（"依据"字段必须与引擎完全一致）。`,
           });
+          onEvent({ type: "status", text: "自校验发现误差，正在重新校对…" });
           continue;
         }
         return { ok: false, error: `自校验未通过：${v.mismatch}`, trace: messages };

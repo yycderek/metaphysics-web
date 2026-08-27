@@ -127,6 +127,36 @@ describe("runAgentLoop", () => {
   });
 });
 
+describe("runAgentLoop 事件上报", () => {
+  it("onEvent 收到 status 与 divination 里程碑", async () => {
+    const events: Array<{ type: string; text?: string; summary?: string }> = [];
+    const callLLM: CallLLM = async (messages) => {
+      if (messages.some((m) => m.role === "tool")) return { content: VALID_JSON };
+      return {
+        content: "",
+        tool_calls: [
+          toolCall("call_1", "divinate", {
+            algorithm: "daliuren",
+            params: { rizhu: "庚子", shizhi: "午", yuejiang: "亥" },
+          }),
+        ],
+      };
+    };
+    const res = await runAgentLoop({
+      system: "sys",
+      question: "看看事业",
+      callLLM,
+      onEvent: (e) => events.push(e),
+      now: new Date(2026, 7, 26, 12),
+    });
+    expect(res.ok).toBe(true);
+    const divinationEvents = events.filter((e) => e.type === "divination");
+    expect(divinationEvents.length).toBeGreaterThan(0);
+    expect(divinationEvents[0].summary).toContain("重审课");
+    expect(events.some((e) => e.type === "status")).toBe(true);
+  });
+});
+
 describe("tryParseStructured", () => {
   it("剥离 markdown 代码块后正确解析（含依据）", () => {
     expect(tryParseStructured("```json\n" + VALID_JSON + "\n```")?.依据?.六亲).toEqual([

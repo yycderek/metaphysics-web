@@ -40,6 +40,7 @@ export default function DivinationAgent() {
   const [turns, setTurns] = useState<AgentTurn[]>([]);
   const [pendingClarify, setPendingClarify] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<string[]>([]);
   const [error, setError] = useState("");
   const abortRef = useRef<AbortController | null>(null);
   const threadRef = useRef<HistoryMsg[]>([]);
@@ -51,8 +52,10 @@ export default function DivinationAgent() {
     setInput("");
     setBusy(true);
     setError("");
+    setProgress([]);
     const controller = new AbortController();
     abortRef.current = controller;
+    const milestones: string[] = [];
     try {
       const resp = await fetch("/api/agent", {
         method: "POST",
@@ -65,42 +68,86 @@ export default function DivinationAgent() {
           aiConfig: loadAIConfig(),
         }),
       });
-      const json = (await resp.json()) as {
-        ok: boolean;
-        kind?: "answer" | "clarify";
-        question?: string;
-        error?: string;
-        result?: AgentDivination;
-        meta?: AgentMeta;
-      };
-      if (!json.ok) throw new Error(json.error ?? "请求失败");
-
-      if (json.kind === "clarify" && json.question) {
-        const qtext = json.question;
-        threadRef.current = [...threadRef.current, { role: "assistant", content: qtext }];
-        setTurns((t) => [...t, { question: text, clarify: qtext }]);
-        setPendingClarify(qtext);
-        return;
+      if (!resp.ok) {
+        const j = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+        throw new Error(j.error ?? "请求失败");
       }
-      if (!json.result) throw new Error("未返回结构化结果");
+      if (!resp.body) throw new Error("无响应流");
 
-      const prior = json.meta?.divination ? toPriorDivination(json.meta.divination) : null;
-      if (prior) divinationsRef.current = [...divinationsRef.current, prior].slice(-6);
-      const recap = `${json.result.卦象}｜${json.result.结论.总断}`;
-      threadRef.current = [
-        ...threadRef.current,
-        { role: "user", content: text },
-        { role: "assistant", content: recap },
-      ];
-      setTurns((t) => [
-        ...t,
-        { question: text, interpretation: json.result!, divination: json.meta?.divination },
-      ]);
-      setPendingClarify(null);
+      // 逐段解析 SSE（复用 sse.ts 的事件切分，兼容 CRLF）
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      let finalized = false;
+
+      const handleEvent = async (payload: unknown) => {
+        const ev = payload as {
+          type?: string;
+          text?: string;
+          summary?: string;
+          ok?: boolean;
+          kind?: "answer" | "clarify";
+          question?: string;
+          error?: string;
+          result?: AgentDivination;
+          meta?: AgentMeta;
+        };
+        if (ev.type === "status" && ev.text) {
+          milestones.push(ev.text);
+          setProgress([...milestones]);
+        } else if (ev.type === "divination" && ev.summary) {
+          milestones.push(`起课成功：${ev.summary}`);
+          setProgress([...milestones]);
+        } else if (ev.type === "error") {
+          throw new Error(ev.error ?? "Agent 出错");
+        } else if (ev.type === "done") {
+          finalized = true;
+          if (!ev.ok) throw new Error(ev.error ?? "请求失败");
+          if (ev.kind === "clarify" && ev.question) {
+            threadRef.current = [...threadRef.current, { role: "assistant", content: ev.question }];
+            setTurns((t) => [...t, { question: text, clarify: ev.question }]);
+            setPendingClarify(ev.question);
+            return;
+          }
+          if (!ev.result) throw new Error("未返回结构化结果");
+          const prior = ev.meta?.divination ? toPriorDivination(ev.meta.divination) : null;
+          if (prior) divinationsRef.current = [...divinationsRef.current, prior].slice(-6);
+          const recap = `${ev.result.卦象}｜${ev.result.结论.总断}`;
+          threadRef.current = [
+            ...threadRef.current,
+            { role: "user", content: text },
+            { role: "assistant", content: recap },
+          ];
+          setTurns((t) => [
+            ...t,
+            { question: text, interpretation: ev.result!, divination: ev.meta?.divination },
+          ]);
+          setPendingClarify(null);
+        }
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const parts = buf.split(/\r?\n\r?\n/);
+        buf = parts.pop() ?? "";
+        for (const part of parts) {
+          const line = part.trim();
+          if (!line.startsWith("data:")) continue;
+          try {
+            await handleEvent(JSON.parse(line.slice(5).trim()));
+          } catch {
+            /* 忽略不完整块 */
+          }
+        }
+        if (finalized) break;
+      }
     } catch (e) {
       if ((e as Error).name !== "AbortError") setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
+      setProgress([]);
       abortRef.current = null;
     }
   };
@@ -150,6 +197,16 @@ export default function DivinationAgent() {
             <span className="text-xs text-ash animate-pulse">Agent 正在自主起课并解读…</span>
           )}
         </div>
+        {busy && progress.length > 0 && (
+          <div className="mt-2 rounded-lg border border-ash/30 bg-ink px-3 py-2 space-y-1">
+            {progress.map((p, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs text-ash">
+                <span className="text-gold">{i === progress.length - 1 ? "●" : "✓"}</span>
+                <span className={i === progress.length - 1 ? "text-paper/90" : ""}>{p}</span>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="flex flex-wrap gap-2 mt-2">
           {EXAMPLES.map((q) => (
             <button

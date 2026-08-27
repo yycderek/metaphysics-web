@@ -72,19 +72,45 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  try {
-    const prior = sanitizeDivinations(body.divinations);
-    const result = await runAgentLoop({
-      system: buildAgentSystem(prior),
-      question,
-      history: sanitizeHistory(body.history),
-      callLLM: (messages) => chatCompletion(config, messages, [divinateTool, askClarificationTool]),
-    });
-    return Response.json(result);
-  } catch (e) {
-    return Response.json(
-      { ok: false, error: `AI 请求失败: ${(e as Error).message}` },
-      { status: 502 },
-    );
-  }
+  const encoder = new TextEncoder();
+  // SSE 流式返回 agent 过程：progress 事件 + 最终 done/clarify/error
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (payload: unknown) =>
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
+      try {
+        const prior = sanitizeDivinations(body.divinations);
+        const result = await runAgentLoop({
+          system: buildAgentSystem(prior),
+          question,
+          history: sanitizeHistory(body.history),
+          callLLM: (messages) =>
+            chatCompletion(config, messages, [divinateTool, askClarificationTool]),
+          onEvent: (e) => send(e),
+        });
+        send({
+          type: "done",
+          ok: result.ok,
+          kind: result.kind,
+          result: result.result,
+          meta: result.meta,
+          question: result.question,
+          error: result.error,
+        });
+      } catch (e) {
+        send({ type: "error", error: `AI 请求失败: ${(e as Error).message}` });
+      } finally {
+        controller.close();
+      }
+    },
+    cancel() {},
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
+    },
+  });
 }

@@ -46,6 +46,10 @@ export interface PriorDivination {
   facts: string;
 }
 
+/** Agent 循环运行中上报的里程碑事件（供 SSE 流式展示过程） */
+export type AgentEvent =
+  { type: "status"; text: string } | { type: "divination"; summary: string; algorithmId: string };
+
 /** Agent 循环返回 */
 export interface AgentLoopResult {
   ok: boolean;
