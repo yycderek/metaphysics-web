@@ -3,24 +3,37 @@
 import { NextRequest } from "next/server";
 import "@/plugins"; // 副作用导入：注册本地算法（xiaoliuren 等）供服务端起课
 import { resolveAIConfig, chatCompletion } from "@/lib/aiProvider";
-import { AGENT_SYSTEM, divinateTool } from "@/lib/agent/prompt";
+import { buildAgentSystem, divinateTool, askClarificationTool } from "@/lib/agent/prompt";
 import { runAgentLoop } from "@/lib/agent/loop";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_QUESTION_LEN = 2000;
-const MAX_MSG_LEN = 4000;
+const MAX_MSG_LEN = 6000;
 
-function sanitizeHistory(raw: unknown): { role: "user" | "assistant"; content: string }[] {
+function sanitizeHistory(raw: unknown) {
   if (!Array.isArray(raw)) return [];
   return raw
     .map((m) => m as { role?: string; content?: unknown })
     .filter((m) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
-    .slice(-12)
+    .slice(-14)
     .map((m) => ({
       role: m.role as "user" | "assistant",
       content: (m.content as string).slice(0, MAX_MSG_LEN),
+    }));
+}
+
+/** 先前已起的卦（卦记忆），送入上下文供模型复读 */
+function sanitizeDivinations(raw: unknown): { summary: string; facts: string }[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((m) => m as { summary?: unknown; facts?: unknown })
+    .filter((m) => typeof m.summary === "string" && typeof m.facts === "string")
+    .slice(-6)
+    .map((m) => ({
+      summary: (m.summary as string).slice(0, 200),
+      facts: (m.facts as string).slice(0, 600),
     }));
 }
 
@@ -28,6 +41,7 @@ export async function POST(req: NextRequest) {
   let body: {
     question?: string;
     history?: unknown;
+    divinations?: unknown;
     aiConfig?: Parameters<typeof resolveAIConfig>[0];
   };
   try {
@@ -59,11 +73,12 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const prior = sanitizeDivinations(body.divinations);
     const result = await runAgentLoop({
-      system: AGENT_SYSTEM,
+      system: buildAgentSystem(prior),
       question,
       history: sanitizeHistory(body.history),
-      callLLM: (messages) => chatCompletion(config, messages, [divinateTool]),
+      callLLM: (messages) => chatCompletion(config, messages, [divinateTool, askClarificationTool]),
     });
     return Response.json(result);
   } catch (e) {

@@ -1,4 +1,4 @@
-// 智能占卜 Agent 类型：结构化断语（简略/详细）+ Agent 内部消息形状
+// 智能占卜 Agent 类型：结构化断语（简略/详细）+ 澄清 + 自校验 + 卦记忆
 import type { AlgorithmInput, DivinationResult } from "@/lib/algorithms/types";
 import type { ChatMessage } from "@/lib/aiTypes";
 
@@ -14,13 +14,22 @@ export interface AgentStepInterp {
   步骤: string;
   解读: string;
 }
-/** 结构化断语（P0 目标 2 + 简略/详细）：最终输出必须是该 JSON 形状 */
+/** 断语引用的事实（自校验用）：声明这句断语依据的引擎卦理事实 */
+export interface AgentFacts {
+  三传?: string[];
+  天将?: string[];
+  六亲?: string[];
+  结果?: string;
+}
+/** 结构化断语（P0 目标 2 + 简略/详细 + 自校验）：最终输出必须是该 JSON 形状 */
 export interface AgentDivination {
   卦象: string;
   算法: string;
   吉凶?: "吉" | "中" | "凶";
   结论: AgentConcl;
   逐步: AgentStepInterp[];
+  /** 依据（大六壬建议必填），声明引用的三传/天将/六亲，供服务端与引擎逐项核对 */
+  依据?: AgentFacts;
   置信度: "高" | "中" | "低";
   出处?: string;
 }
@@ -31,11 +40,21 @@ export interface DivinateParams {
   params?: AlgorithmInput;
 }
 
+/** 先前已起的卦（卦记忆）：供模型在后续轮次"复读"已算过的卦 */
+export interface PriorDivination {
+  summary: string;
+  facts: string;
+}
+
 /** Agent 循环返回 */
 export interface AgentLoopResult {
   ok: boolean;
+  /** answer = 最终断语；clarify = 需要向用户澄清（见 question / meta 为 undefined） */
+  kind?: "answer" | "clarify";
   result?: AgentDivination;
   error?: string;
+  /** clarify 时的追问内容 */
+  question?: string;
   /** 起课元信息（算法名/课式摘要/引擎完整结果），供前端可视化 + 简略/详细展示 */
   meta?: AgentMeta;
   /** 完整消息轨迹（含 tool 往返），供调试/后续多轮复用 */

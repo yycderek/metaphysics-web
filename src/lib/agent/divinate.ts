@@ -3,11 +3,12 @@ import { buildDivination } from "@/lib/algorithms/registry";
 import { getDivineTemplate, genericDivineTemplate } from "@/lib/divine";
 import { rizhuFromDate } from "@/lib/calendar";
 import { shizhiFromHour } from "@/lib/data";
+import { chuanTianjiang } from "@/lib/shike";
 import type { AlgorithmInput, DivinationResult } from "@/lib/algorithms/types";
 import type { ToolCall } from "@/lib/aiTypes";
 import { seasonFromNow, yuejiangFromMonth } from "./params";
 import type { Season } from "@/lib/divine/types";
-import type { AgentMeta, DivinateParams } from "./types";
+import type { AgentFacts, AgentMeta, DivinateParams } from "./types";
 
 export interface AgentToolContext {
   context: string;
@@ -70,6 +71,36 @@ export function keShiSummary(result: DivinationResult): string {
     return `${raw.kename}（${(raw.sanchuan ?? []).join("→")}）`;
   }
   return `${result.algorithmName} · 参数 ${JSON.stringify(result.input)}`;
+}
+
+/** 从引擎结果抽取可核验的卦理事实（大六壬：三传/天将/六亲；其他：结果） */
+export function divinationFacts(result: DivinationResult): AgentFacts {
+  if (result.algorithmId === "daliuren") {
+    const ks = result.raw as { sanchuan?: string[] } | null;
+    const chuan = chuanTianjiang(result.raw as Parameters<typeof chuanTianjiang>[0]);
+    return {
+      三传: ks?.sanchuan ?? [],
+      天将: chuan.map((c) => c.tianjiang.full),
+      六亲: chuan.map((c) => c.liuqin),
+    };
+  }
+  const raw = result.raw as { palm?: string; auspicious?: string } | null;
+  return { 结果: raw?.palm ? `${raw.palm}（${raw.auspicious ?? ""}）` : String(result.raw ?? "") };
+}
+
+/** 卦记忆：把一卦压成"摘要 + 事实"供后续轮复读 */
+export function toPriorDivination(result: DivinationResult): { summary: string; facts: string } {
+  const facts = divinationFacts(result);
+  return { summary: keShiSummary(result), facts: summarizeFacts(facts) };
+}
+
+function summarizeFacts(f: AgentFacts): string {
+  const parts: string[] = [];
+  if (f.三传?.length) parts.push(`三传 ${f.三传.join("→")}`);
+  if (f.天将?.length) parts.push(`天将 ${f.天将.join("/")}`);
+  if (f.六亲?.length) parts.push(`六亲 ${f.六亲.join("/")}`);
+  if (f.结果) parts.push(`结果 ${f.结果}`);
+  return parts.join(" · ") || "-";
 }
 
 /** 执行 divinate：缺省参数取此刻（默认日柱=今天、时支=当前、月将=当月近似） */

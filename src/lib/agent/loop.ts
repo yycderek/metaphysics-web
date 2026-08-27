@@ -1,7 +1,8 @@
-// Agent 循环：感知→决策→行动（调用工具）→观察→最终结构化输出
+// Agent 循环：感知→决策→行动（调用工具）→观察→自校验→最终结构化输出
 // 依赖一个可注入的 callLLM（便于用 mock 单测），工具执行用真实引擎。
 import type { ChatMessage, ToolCall } from "@/lib/aiTypes";
 import { executeDivinate } from "./divinate";
+import { verifyDivination } from "./verify";
 import type {
   AgentDivination,
   AgentLoopResult,
@@ -18,13 +19,13 @@ export interface LoopOptions {
   system: string;
   callLLM: CallLLM;
   question: string;
-  /** 多轮历史（不含本轮），供模型复用此前卦象上下文 */
+  /** 多轮历史（不含本轮），供模型复用此前对话 */
   history?: ChatMessage[];
   maxIters?: number;
   now?: Date;
 }
 
-const DEFAULT_MAX_ITERS = 5;
+const DEFAULT_MAX_ITERS = 7;
 const CONFIDENCE = new Set(["高", "中", "低"]);
 const JIXIONG = new Set(["吉", "中", "凶"]);
 
@@ -53,6 +54,7 @@ export function tryParseStructured(text: string): AgentDivination | null {
     const conf = obj["置信度"];
     if (!CONFIDENCE.has(conf as string)) return null;
     const jx = obj["吉凶"];
+    const f = obj["依据"] as Record<string, unknown> | undefined;
     return {
       卦象: obj["卦象"],
       算法: obj["算法"],
@@ -64,6 +66,15 @@ export function tryParseStructured(text: string): AgentDivination | null {
         风险: typeof c["风险"] === "string" ? c["风险"] : undefined,
       },
       逐步: steps,
+      依据:
+        f && typeof f === "object"
+          ? {
+              三传: Array.isArray(f["三传"]) ? f["三传"].map(String) : undefined,
+              天将: Array.isArray(f["天将"]) ? f["天将"].map(String) : undefined,
+              六亲: Array.isArray(f["六亲"]) ? f["六亲"].map(String) : undefined,
+              结果: typeof f["结果"] === "string" ? f["结果"] : undefined,
+            }
+          : undefined,
       置信度: conf as AgentDivination["置信度"],
       出处: typeof obj["出处"] === "string" ? obj["出处"] : undefined,
     };
@@ -72,28 +83,45 @@ export function tryParseStructured(text: string): AgentDivination | null {
   }
 }
 
+/** 从工具调用里解析澄清问题 */
+function clarificationOf(toolCalls: ToolCall[]): string | null {
+  const call = toolCalls.find((c) => c.function.name === "ask_clarification");
+  if (!call) return null;
+  try {
+    const q = JSON.parse(call.function.arguments || "{}") as { question?: string };
+    return q.question?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function runAgentLoop(opts: LoopOptions): Promise<AgentLoopResult> {
   const { system, callLLM, question, now = new Date() } = opts;
   const history = (opts.history ?? [])
-    .filter((m) => m.content !== null && (m.role === "user" || m.role === "assistant"))
-    .slice(-12);
+    .filter((m) => m.content !== null && ["user", "assistant", "tool"].includes(m.role))
+    .slice(-14);
   const maxIters = opts.maxIters ?? DEFAULT_MAX_ITERS;
   const messages: ChatMessage[] = [{ role: "system", content: system }, ...history];
   let lastMeta: AgentMeta | undefined;
 
   for (let i = 0; i < maxIters; i++) {
-    const userMessages: ChatMessage[] =
-      i === 0 ? [...messages, { role: "user", content: question }] : messages;
-    const turn = await callLLM(userMessages);
+    if (i === 0) messages.push({ role: "user", content: question });
+    const turn = await callLLM(messages);
 
-    // 模型请求调用工具 → 执行引擎 → 把观察结果回灌
+    // 模型请求调用工具
     if (turn.tool_calls?.length) {
+      // 澄清优先：直接返回给用户，等待其回复后再继续
+      const clarifyQ = clarificationOf(turn.tool_calls);
+      if (clarifyQ) {
+        messages.push({ role: "assistant", content: clarifyQ });
+        return { ok: true, kind: "clarify", question: clarifyQ, trace: messages };
+      }
       messages.push({
         role: "assistant",
         content: turn.content ?? "",
-        tool_calls: turn.tool_calls,
+        tool_calls: turn.tool_calls.filter((c) => c.function.name !== "ask_clarification"),
       });
-      for (const call of turn.tool_calls) {
+      for (const call of turn.tool_calls.filter((c) => c.function.name === "divinate")) {
         let toolContent: string;
         try {
           const outcome = await executeDivinate(call, question, now);
@@ -111,20 +139,40 @@ export async function runAgentLoop(opts: LoopOptions): Promise<AgentLoopResult> 
     const content = (turn.content ?? "").trim();
     if (!content) return { ok: false, error: "AI 未返回内容", trace: messages };
     const parsed = tryParseStructured(content);
-    if (parsed) {
-      return { ok: true, result: parsed, meta: lastMeta, trace: messages };
+    if (!parsed) {
+      if (i < maxIters - 1) {
+        messages.push({ role: "assistant", content });
+        messages.push({
+          role: "user",
+          content:
+            "你输出的必须是合法 JSON（符合 {卦象:string, 算法:string, 结论:{总断,现状,建议}, 逐步:[{步骤,解读}], 依据?, 置信度:高|中|低}）。请重新只输出该 JSON 对象，不要加任何解释。",
+        });
+        continue;
+      }
+      return {
+        ok: false,
+        error: `AI 输出不是合法 JSON：${content.slice(0, 200)}`,
+        trace: messages,
+      };
     }
-    // 不合法：给一次纠正机会（追加要求重新输出 JSON）
-    if (i < maxIters - 1) {
-      messages.push({ role: "assistant", content });
-      messages.push({
-        role: "user",
-        content:
-          "你输出的必须是合法 JSON（符合 {卦象:string, 算法:string, 结论:{总断,现状,建议}, 逐步:[{步骤,解读}], 置信度:高|中|低}）。请重新只输出该 JSON 对象，不要加任何解释。",
-      });
-      continue;
+
+    // 自校验：比对断语引用的卦理事实与引擎真实事实
+    if (lastMeta) {
+      const v = verifyDivination(lastMeta.divination, parsed);
+      if (!v.ok) {
+        if (i < maxIters - 1) {
+          messages.push({ role: "assistant", content });
+          messages.push({
+            role: "user",
+            content: `你的断语引用了与引擎不符的卦理事实：${v.mismatch}。请基于引擎给定的正确事实，重新完整输出 JSON（"依据"字段必须与引擎完全一致）。`,
+          });
+          continue;
+        }
+        return { ok: false, error: `自校验未通过：${v.mismatch}`, trace: messages };
+      }
     }
-    return { ok: false, error: `AI 输出不是合法 JSON：${content.slice(0, 200)}`, trace: messages };
+
+    return { ok: true, kind: "answer", result: parsed, meta: lastMeta, trace: messages };
   }
   return { ok: false, error: "Agent 达到最大迭代次数仍未给出结构化结果", trace: messages };
 }

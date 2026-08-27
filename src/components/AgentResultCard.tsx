@@ -54,6 +54,20 @@ export default function AgentResultCard({ divination, interpretation }: Props) {
         <div className="text-xs text-ash/70">出处：{interpretation.出处}</div>
       )}
 
+      {interpretation.依据 && (
+        <div className="text-xs text-ash/70">
+          依据（已核对引擎）：
+          {[
+            interpretation.依据.三传?.length ? `三传 ${interpretation.依据.三传.join("→")}` : "",
+            interpretation.依据.天将?.length ? `天将 ${interpretation.依据.天将.join("/")}` : "",
+            interpretation.依据.六亲?.length ? `六亲 ${interpretation.依据.六亲.join("/")}` : "",
+            interpretation.依据.结果 ?? "",
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </div>
+      )}
+
       {mode === "brief" ? (
         <div className="space-y-4">
           {/* 结论（简略解读） */}
