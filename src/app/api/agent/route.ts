@@ -5,6 +5,7 @@ import "@/plugins"; // 副作用导入：注册本地算法（xiaoliuren 等）�
 import { resolveAIConfig, chatCompletion } from "@/lib/aiProvider";
 import { buildAgentSystem, divinateTool, askClarificationTool } from "@/lib/agent/prompt";
 import { runAgentLoop } from "@/lib/agent/loop";
+import { derivePersona } from "@/lib/agent/params";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,6 +43,7 @@ export async function POST(req: NextRequest) {
     question?: string;
     history?: unknown;
     divinations?: unknown;
+    profile?: string;
     aiConfig?: Parameters<typeof resolveAIConfig>[0];
   };
   try {
@@ -80,8 +82,9 @@ export async function POST(req: NextRequest) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
       try {
         const prior = sanitizeDivinations(body.divinations);
+        const persona = derivePersona(body.profile);
         const result = await runAgentLoop({
-          system: buildAgentSystem(prior),
+          system: buildAgentSystem(prior, persona),
           question,
           history: sanitizeHistory(body.history),
           callLLM: (messages) =>

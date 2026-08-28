@@ -39,6 +39,8 @@ export default function DivinationAgent() {
   const [input, setInput] = useState("");
   const [turns, setTurns] = useState<AgentTurn[]>([]);
   const [pendingClarify, setPendingClarify] = useState<string | null>(null);
+  const [profile, setProfile] = useState("");
+  const [showProfile, setShowProfile] = useState(false);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<string[]>([]);
   const [error, setError] = useState("");
@@ -65,6 +67,7 @@ export default function DivinationAgent() {
           question: text,
           history: threadRef.current,
           divinations: divinationsRef.current,
+          profile: profile.trim() || undefined,
           aiConfig: loadAIConfig(),
         }),
       });
@@ -168,6 +171,26 @@ export default function DivinationAgent() {
             🤔 请先回答：{pendingClarify}
           </div>
         )}
+
+        {/* 出生信息（可选，用于个人化断课） */}
+        <div className="mb-2">
+          <button
+            type="button"
+            onClick={() => setShowProfile((s) => !s)}
+            aria-expanded={showProfile}
+            className="text-xs text-ash hover:text-gold transition-colors"
+          >
+            🧑 出生信息（可选）{profile ? " •" : ""}
+          </button>
+          {showProfile && (
+            <input
+              value={profile}
+              onChange={(e) => setProfile(e.target.value)}
+              placeholder="如：1992-07-15 午时 男（用于个人化断课）"
+              className="mt-1 w-full bg-ink border border-ash/40 rounded-lg px-3 py-2 text-sm text-paper placeholder:text-ash/60 focus:border-gold outline-none"
+            />
+          )}
+        </div>
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}

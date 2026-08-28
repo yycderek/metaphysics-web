@@ -11,6 +11,7 @@ import SikeCards from "@/components/SikeCards";
 import SanchuanChain from "@/components/SanchuanChain";
 import StepRenderer from "@/components/StepRenderer";
 import DataTree from "@/components/DataTree";
+import ShareCard from "@/components/ShareCard";
 
 interface Props {
   divination: DivinationResult | undefined;
@@ -21,6 +22,7 @@ export default function AgentResultCard({ divination, interpretation }: Props) {
   const isDaliuren = divination?.algorithmId === "daliuren";
   const ks = isDaliuren ? rawKeShi(divination!) : null;
   const [mode, setMode] = useState<"brief" | "detail">("brief");
+  const [share, setShare] = useState(false);
 
   const tabCls = (active: boolean) =>
     `px-3 py-1 rounded-lg text-xs border transition-colors ${
@@ -47,8 +49,17 @@ export default function AgentResultCard({ divination, interpretation }: Props) {
           <button className={tabCls(mode === "detail")} onClick={() => setMode("detail")}>
             详细
           </button>
+          <button
+            className={tabCls(share)}
+            aria-expanded={share}
+            onClick={() => setShare((s) => !s)}
+          >
+            分享
+          </button>
         </div>
       </div>
+
+      {share && <ShareCard interpretation={interpretation} />}
 
       {interpretation.出处 && (
         <div className="text-xs text-ash/70">出处：{interpretation.出处}</div>
