@@ -13,13 +13,14 @@ export const divinateTool: ToolDef = {
       properties: {
         algorithm: {
           type: "string",
-          enum: ["daliuren", "xiaoliuren"],
-          description: "占卜算法，默认 daliuren（大六壬）。",
+          enum: ["daliuren", "xiaoliuren", "liuyao", "meihua"],
+          description:
+            "占卜算法，默认 daliuren（大六壬）。liuyao 六爻（随机摇掷或传 tosses）；meihua 梅花易数报数（传 num1,num2）。",
         },
         params: {
           type: "object",
           description:
-            "算法参数。daliuren 可传 [rizhu 日柱(如 庚子)，shizhi 时支(如 午)，yuejiang 月将(如 亥)]，缺省时自动取当前时刻；xiaoliuren 传 {month,day,hour} 三个 1-30 整数。",
+            "算法参数。daliuren 可传 [rizhu 日柱(如 庚子)，shizhi 时支(如 午)，yuejiang 月将(如 亥)]，缺省时自动取当前时刻；xiaoliuren 传 {month,day,hour} 三个 1-30 整数；liuyao 传 {tosses:「6,7,8,9,6,7」} 逗号分隔（可缺省随机）；meihua 传 {num1,num2} 两个正整数。",
         },
       },
       required: [],

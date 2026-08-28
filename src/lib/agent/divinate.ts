@@ -66,14 +66,22 @@ export function keShiContext(result: DivinationResult, question: string, season:
 
 /** 课式摘要：供前端展示"起的是什么课" */
 export function keShiSummary(result: DivinationResult): string {
-  const raw = result.raw as { kename?: string; sanchuan?: string[] } | null;
+  const raw = result.raw as {
+    kename?: string;
+    sanchuan?: string[];
+    本卦?: string;
+    变卦?: string;
+  } | null;
   if (result.algorithmId === "daliuren" && raw?.kename) {
     return `${raw.kename}（${(raw.sanchuan ?? []).join("→")}）`;
+  }
+  if (raw?.本卦) {
+    return raw.变卦 ? `${raw.本卦}→${raw.变卦}` : raw.本卦;
   }
   return `${result.algorithmName} · 参数 ${JSON.stringify(result.input)}`;
 }
 
-/** 从引擎结果抽取可核验的卦理事实（大六壬：三传/天将/六亲；其他：结果） */
+/** 从引擎结果抽取可核验的卦理事实（大六壬：三传/天将/六亲；其他：卦象/结果） */
 export function divinationFacts(result: DivinationResult): AgentFacts {
   if (result.algorithmId === "daliuren") {
     const ks = result.raw as { sanchuan?: string[] } | null;
@@ -84,7 +92,13 @@ export function divinationFacts(result: DivinationResult): AgentFacts {
       六亲: chuan.map((c) => c.liuqin),
     };
   }
-  const raw = result.raw as { palm?: string; auspicious?: string } | null;
+  const raw = result.raw as {
+    palm?: string;
+    auspicious?: string;
+    本卦?: string;
+    变卦?: string;
+  } | null;
+  if (raw?.本卦) return { 结果: raw.变卦 ? `${raw.本卦}→${raw.变卦}` : raw.本卦 };
   return { 结果: raw?.palm ? `${raw.palm}（${raw.auspicious ?? ""}）` : String(result.raw ?? "") };
 }
 

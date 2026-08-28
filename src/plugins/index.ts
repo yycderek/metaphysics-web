@@ -8,4 +8,8 @@
 // 「远程算法服务」方式（页面 🔌 面板配置 URL 即可，协议见 docs/PLUGIN-GUIDE.md）。
 import { registerAdapter } from "@/lib/algorithms/registry";
 import { xiaoliurenAdapter } from "./examples/xiaoliuren";
+import { liuyaoAdapter } from "@/lib/algorithms/liuyao";
+import { meihuaAdapter } from "@/lib/algorithms/meihua";
 registerAdapter(xiaoliurenAdapter);
+registerAdapter(liuyaoAdapter);
+registerAdapter(meihuaAdapter);
