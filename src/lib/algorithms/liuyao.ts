@@ -10,6 +10,7 @@ import {
   liuShenStart,
   LIUSHEN,
   NAKKA,
+  TRIGRAM_WX,
   trigramFromBinary,
   yingOf,
   type TrigramName,
@@ -75,7 +76,8 @@ function buildRaw(tosses: Toss[], now: Date) {
 
   // 纳甲
   const ys: Yao[] = [];
-  let shiWx = "";
+  // 六亲以"卦宫五行"为我（火珠林/卜筮正宗法），非世爻地支五行
+  const palaceWx = TRIGRAM_WX[hex.palace];
   for (let i = 0; i < 6; i++) {
     const isLower = i < 3;
     const t: TrigramName = isLower ? hex.lower : hex.upper;
@@ -94,9 +96,8 @@ function buildRaw(tosses: Toss[], now: Date) {
       liuqin: "",
       liushen: LIUSHEN[(sStart + i) % 6],
     });
-    if (hex.shi === i + 1) shiWx = wx;
   }
-  for (const y of ys) y.liuqin = liuqinFor(shiWx, y.wx);
+  for (const y of ys) y.liuqin = liuqinFor(palaceWx, y.wx);
 
   return {
     本卦: hex.name,
@@ -107,7 +108,7 @@ function buildRaw(tosses: Toss[], now: Date) {
     世爻: `${nth(hex.shi)}爻`,
     应爻: `${nth(yingOf(hex.shi))}爻`,
     旬空: kong,
-    用神: `世爻五行为${shiWx}，各爻六亲供取用神参考`,
+    用神: `以卦宫${palaceWx}（${hex.palace}宫）为"我"论六亲，请按所测事类取用神`,
     日柱: rizhu,
     爻: ys.map((y) => ({
       爻位: `${nth(y.pos)}${y.yang ? "阳" : "阴"}`,

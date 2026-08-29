@@ -39,7 +39,7 @@ describe("yijing 数据查询", () => {
 });
 
 describe("六爻适配器", () => {
-  it("全少阳 777777 → 乾为天，静爻，册五爻世应正确", () => {
+  it("全少阳 777777 → 乾为天，静爻，世应/六亲正确（以宫金为我）", () => {
     const r = liuyaoAdapter.build({ tosses: "7,7,7,7,7,7" }) as DivinationResult;
     const raw = r.raw as {
       本卦: string;
@@ -47,7 +47,7 @@ describe("六爻适配器", () => {
       宫: string;
       世爻: string;
       应爻: string;
-      爻: unknown[];
+      爻: Array<{ 纳: string; 六亲: string }>;
     };
     expect(raw.本卦).toBe("乾为天");
     expect(raw.变卦).toBe("乾为天");
@@ -55,6 +55,10 @@ describe("六爻适配器", () => {
     expect(raw.世爻).toBe("上爻");
     expect(raw.应爻).toBe("三爻");
     expect(raw.爻).toHaveLength(6);
+    // 乾宫金为我：初爻甲子(金生水)=子孙，二爻甲寅(金克木)=妻财，三爻甲辰(土生金)=父母
+    expect(raw.爻[0]).toMatchObject({ 纳: "甲子", 六亲: "子孙" });
+    expect(raw.爻[1]).toMatchObject({ 纳: "甲寅", 六亲: "妻财" });
+    expect(raw.爻[2]).toMatchObject({ 纳: "甲辰", 六亲: "父母" });
   });
 
   it("初爻老阳 97... → 变卦天风姤（初爻变阴，下卦成巽）", () => {
