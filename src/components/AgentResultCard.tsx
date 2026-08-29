@@ -12,6 +12,8 @@ import SanchuanChain from "@/components/SanchuanChain";
 import StepRenderer from "@/components/StepRenderer";
 import DataTree from "@/components/DataTree";
 import ShareCard from "@/components/ShareCard";
+import LiuyaoPan from "@/components/LiuyaoPan";
+import MeihuaPan from "@/components/MeihuaPan";
 
 interface Props {
   divination: DivinationResult | undefined;
@@ -125,6 +127,10 @@ export default function AgentResultCard({ divination, interpretation }: Props) {
                   </div>
                 </div>
               </>
+            ) : divination.algorithmId === "liuyao" ? (
+              <LiuyaoPan raw={divination.raw} />
+            ) : divination.algorithmId === "meihua" ? (
+              <MeihuaPan raw={divination.raw} />
             ) : (
               <DataTree data={divination.raw} />
             )

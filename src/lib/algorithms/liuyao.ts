@@ -107,6 +107,8 @@ function buildRaw(tosses: Toss[], now: Date) {
     宫: `${hex.palace}宫`,
     世爻: `${nth(hex.shi)}爻`,
     应爻: `${nth(yingOf(hex.shi))}爻`,
+    世位: hex.shi,
+    应位: yingOf(hex.shi),
     旬空: kong,
     用神: `以卦宫${palaceWx}（${hex.palace}宫）为"我"论六亲，请按所测事类取用神`,
     日柱: rizhu,

@@ -135,6 +135,13 @@ export const HEXAGRAMS: Hexagram[] = H.map(([name, lower, upper, palace, shi]) =
   shi,
 }));
 
+/** 由卦名取六爻二进制（自下而上，阳=1 阴=0） */
+export function hexagramBinary(name: string): number[] {
+  const h = HEXAGRAMS.find((x) => x.name === name || x.name.startsWith(name));
+  if (!h) throw new Error(`未知卦名：${name}`);
+  return [...TRIGRAM_BINARY[h.lower], ...TRIGRAM_BINARY[h.upper]];
+}
+
 const HEX_BY_UPPER_LOWER = new Map<string, Hexagram>();
 for (const h of HEXAGRAMS) HEX_BY_UPPER_LOWER.set(`${h.upper}|${h.lower}`, h);
 

@@ -20,6 +20,8 @@
   - 本地插件：`src/plugins/` 写适配器 → `plugins/index.ts` 注册
   - 远程算法服务：页面「🔌 远程算法服务」配置 HTTP 端点即可（任意语言实现，协议见 `docs/PLUGIN-GUIDE.md`，含 Python 示例服务）
 - **易学公库** `src/lib/algorithms/yijing.ts`：六十四卦（上下卦→卦名）、八宫世应、纳甲、先天八卦数，六爻/梅花复用
+- **断课模板** `src/lib/divine/`：每种算法一个模板产生"课式上下文"——大六壬/小六壬/六爻/梅花/通用；六爻/梅花均含专业断法（用神/体用/本互变/动爻）
+- **专属可视化**：六爻排盘（本卦/变卦卦象 + 纳甲六亲六神表 + 世应旬空）、梅花卦象（本/互/变卦）
 - **通用步骤模型** `DivinationResult.steps`：任意算法的推导过程结构化（title/desc/data），推导模式自动渲染；大六壬步骤有专属视图，未知算法回退通用 JSON 树
 - **AI Provider 抽象** `src/lib/aiProvider.ts`：OpenAI 兼容协议配置化，见下节
 
@@ -36,7 +38,7 @@
 ```bash
 npm install
 npm run dev          # http://localhost:3000
-npm test             # vitest 单元/组件测试（86 项，含易学/六爻/梅花/Agent/SSE）
+npm test             # vitest 单元/组件测试（90 项，含易学/六爻/梅花/断课模板/Agent/SSE）
 npm run typecheck    # TypeScript 类型检查
 npm run lint         # ESLint（eslint-config-next）
 npm run format       # Prettier 格式化

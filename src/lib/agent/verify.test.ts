@@ -2,6 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { verifyDivination } from "./verify";
 import { daliurenAdapter } from "@/lib/algorithms/daliuren";
+import { meihuaAdapter } from "@/lib/algorithms/meihua";
 import type { AgentDivination } from "./types";
 import type { DivinationResult } from "@/lib/algorithms/types";
 
@@ -49,5 +50,21 @@ describe("verifyDivination", () => {
   it("缺依据或无校验算法的结果 → 跳过（ok）", () => {
     const noFacts: AgentDivination = { ...base, 依据: undefined };
     expect(verifyDivination(divination, noFacts).ok).toBe(true);
+  });
+
+  it("梅花（非大六壬）卦名不符 → 不通过", () => {
+    const meihua = meihuaAdapter.build({ num1: 3, num2: 7 }) as DivinationResult;
+    const wrong: AgentDivination = { ...base, 依据: { 结果: "坎为水" } };
+    const v = verifyDivination(meihua, wrong);
+    expect(v.ok).toBe(false);
+    expect(v.mismatch).toContain("卦象");
+    // 正确卦名通过
+    const right: AgentDivination = {
+      ...base,
+      依据: {
+        结果: `${(meihua.raw as { 本卦: string }).本卦}→${(meihua.raw as { 变卦: string }).变卦}`,
+      },
+    };
+    expect(verifyDivination(meihua, right).ok).toBe(true);
   });
 });

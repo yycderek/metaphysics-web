@@ -18,6 +18,8 @@ import DivinationAgent from "@/components/DivinationAgent";
 import StepRenderer from "@/components/StepRenderer";
 import DataTree from "@/components/DataTree";
 import SiteHeader from "@/components/SiteHeader";
+import LiuyaoPan from "@/components/LiuyaoPan";
+import MeihuaPan from "@/components/MeihuaPan";
 import { chuanTianjiang } from "@/lib/shike";
 
 const GOLDEN_INPUT: AlgorithmInput = { rizhu: "庚子", shizhi: "午", yuejiang: "亥" };
@@ -146,10 +148,18 @@ export default function HomePage() {
         ) : (
           <section className="rounded-xl border border-ash/30 bg-ink-2 p-4">
             <h3 className="text-gold font-bold mb-1">课式结果 · {result.algorithmName}</h3>
-            <p className="text-xs text-ash mb-3">
-              该算法无专属展示视图，以下为原始结果（raw）数据。
-            </p>
-            <DataTree data={result.raw} />
+            {result.algorithmId === "liuyao" ? (
+              <LiuyaoPan raw={result.raw} />
+            ) : result.algorithmId === "meihua" ? (
+              <MeihuaPan raw={result.raw} />
+            ) : (
+              <>
+                <p className="text-xs text-ash mb-3">
+                  该算法无专属展示视图，以下为原始结果（raw）数据。
+                </p>
+                <DataTree data={result.raw} />
+              </>
+            )}
           </section>
         )
       ) : (

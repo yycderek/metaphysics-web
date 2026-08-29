@@ -27,25 +27,38 @@ export function verifyDivination(
   divination: DivinationResult,
   interpretation: AgentDivination,
 ): VerifyResult {
-  if (divination.algorithmId !== "daliuren") return { ok: true };
   const stated = interpretation.依据;
   if (!stated) return { ok: true }; // 未声明依据，无从校验，跳过
   const engine = divinationFacts(divination);
   const problems: string[] = [];
 
-  if (stated.三传?.length && !eq(stated.三传, engine.三传 ?? [])) {
-    problems.push(`三传引擎为 ${(engine.三传 ?? []).join("→")}，你引为 ${stated.三传.join("→")}`);
+  // 大六壬：逐项核对三传/天将/六亲
+  if (divination.algorithmId === "daliuren") {
+    if (stated.三传?.length && !eq(stated.三传, engine.三传 ?? [])) {
+      problems.push(`三传引擎为 ${(engine.三传 ?? []).join("→")}，你引为 ${stated.三传.join("→")}`);
+    }
+    if (
+      stated.天将?.length &&
+      !eq(stated.天将.map(normalizeTianjiang), (engine.天将 ?? []).map(normalizeTianjiang))
+    ) {
+      problems.push(`天将引擎为 ${(engine.天将 ?? []).join("/")}，你引为 ${stated.天将.join("/")}`);
+    }
+    if (stated.六亲?.length && !eq(stated.六亲, engine.六亲 ?? [])) {
+      problems.push(`六亲引擎为 ${(engine.六亲 ?? []).join("/")}，你引为 ${stated.六亲.join("/")}`);
+    }
   }
-  if (
-    stated.天将?.length &&
-    !eq(stated.天将.map(normalizeTianjiang), (engine.天将 ?? []).map(normalizeTianjiang))
-  ) {
-    problems.push(`天将引擎为 ${(engine.天将 ?? []).join("/")}，你引为 ${stated.天将.join("/")}`);
+
+  // 卦名/结果核验（六爻/梅花/小六壬等）：本卦名必须与引擎一致
+  if (stated.结果) {
+    const eng = engine.结果 ?? "";
+    if (eng) {
+      const engBen = eng.split("→")[0];
+      if (!stated.结果.includes(engBen) && !eng.includes(stated.结果)) {
+        problems.push(`卦象引擎为 ${eng}，你引为 ${stated.结果}`);
+      }
+    }
   }
-  if (stated.六亲?.length && !eq(stated.六亲, engine.六亲 ?? [])) {
-    problems.push(`六亲引擎为 ${(engine.六亲 ?? []).join("/")}，你引为 ${stated.六亲.join("/")}`);
-  }
-  // 校验引用是否为空（不校验）已由上面覆盖
+
   if (problems.length) return { ok: false, mismatch: problems.join("；") };
   return { ok: true };
 }
