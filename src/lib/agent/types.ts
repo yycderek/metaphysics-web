@@ -21,13 +21,26 @@ export interface AgentFacts {
   六亲?: string[];
   结果?: string;
 }
-/** 结构化断语（P0 目标 2 + 简略/详细 + 自校验）：最终输出必须是该 JSON 形状 */
+/** 多卦中每一卦的逐卦解读（卦组项） */
+export interface AgentDivineOne {
+  卦象: string;
+  算法?: string;
+  吉凶?: "吉" | "中" | "凶";
+  /** 该卦核心结论（一句话） */
+  要点: string;
+  /** 该卦对问事的解读 */
+  结论: string;
+  建议?: string;
+}
+/** 结构化断语（P0 目标 2 + 简略/详细 + 自校验 + 多卦综断）：最终输出必须是该 JSON 形状 */
 export interface AgentDivination {
   卦象: string;
   算法: string;
   吉凶?: "吉" | "中" | "凶";
   结论: AgentConcl;
   逐步: AgentStepInterp[];
+  /** 多卦综断时：逐卦解读（与本次起课顺序对应）；单卦可省略 */
+  卦组?: AgentDivineOne[];
   /** 依据（大六壬建议必填），声明引用的三传/天将/六亲，供服务端与引擎逐项核对 */
   依据?: AgentFacts;
   置信度: "高" | "中" | "低";
@@ -72,4 +85,6 @@ export interface AgentMeta {
   summary: string;
   /** 引擎完整结果（steps + raw），供 StepRenderer / 天地盘 / 四课 / 三传 复用 */
   divination: DivinationResult;
+  /** 本次循环实际起出的全部卦（多卦综断/换时辰对比用），按起课顺序 */
+  divinations?: DivinationResult[];
 }

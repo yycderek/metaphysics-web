@@ -1,10 +1,11 @@
 "use client";
 // Agent 结果卡：展示一次自主起课的卦象与解读。
-// 简略 = 卦象(天地盘/四课/三传) + 结论；详细 = 推导过程(StepRenderer) + 逐步占断解读。
+// 单卦 = 简略(天地盘/四课/三传+结论) / 详细(推导过程+逐步占断)；多卦 = 综断 + 对比表 + 逐卦解读。
 import { useState } from "react";
 import type { AgentDivination } from "@/lib/agent/types";
 import type { DivinationResult } from "@/lib/algorithms/types";
 import { rawKeShi } from "@/lib/algorithms/daliuren";
+import { keShiSummary } from "@/lib/agent/divinate";
 import KeShiHeader from "@/components/KeShiHeader";
 import TianPanDisk from "@/components/TianPanDisk";
 import SikeCards from "@/components/SikeCards";
@@ -14,26 +15,47 @@ import DataTree from "@/components/DataTree";
 import ShareCard from "@/components/ShareCard";
 import LiuyaoPan from "@/components/LiuyaoPan";
 import MeihuaPan from "@/components/MeihuaPan";
+import ChangyanTrack from "@/components/ChangyanTrack";
 
 interface Props {
   divination: DivinationResult | undefined;
   interpretation: AgentDivination;
+  /** 本次起出的全部卦（多卦综断/换时辰对比时提供） */
+  divinations?: DivinationResult[];
+  /** 应验追踪条目标识（由父级生成，稳定 per 卦） */
+  entryId?: string;
 }
 
-export default function AgentResultCard({ divination, interpretation }: Props) {
+export default function AgentResultCard({
+  divination,
+  interpretation,
+  divinations,
+  entryId,
+}: Props) {
   const isDaliuren = divination?.algorithmId === "daliuren";
   const ks = isDaliuren ? rawKeShi(divination!) : null;
   const [mode, setMode] = useState<"brief" | "detail">("brief");
   const [share, setShare] = useState(false);
+  const isMulti = !!(interpretation.卦组?.length || (divinations && divinations.length > 1));
 
   const tabCls = (active: boolean) =>
     `px-3 py-1 rounded-lg text-xs border transition-colors ${
       active ? "border-gold/60 bg-gold/10 text-gold" : "border-ash/40 text-ash hover:text-paper"
     }`;
 
+  const facts = interpretation.依据
+    ? [
+        interpretation.依据.三传?.length ? `三传 ${interpretation.依据.三传.join("→")}` : "",
+        interpretation.依据.天将?.length ? `天将 ${interpretation.依据.天将.join("/")}` : "",
+        interpretation.依据.六亲?.length ? `六亲 ${interpretation.依据.六亲.join("/")}` : "",
+        interpretation.依据.结果 ?? "",
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : "";
+
   return (
     <div className="rounded-lg border border-ash/30 bg-ink p-4 space-y-4">
-      {/* 卦象头 + 简略/详细切换 */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="text-sm">
           <span className="text-gold font-bold">{interpretation.卦象}</span>
@@ -45,12 +67,16 @@ export default function AgentResultCard({ divination, interpretation }: Props) {
           </span>
         </div>
         <div className="flex gap-2">
-          <button className={tabCls(mode === "brief")} onClick={() => setMode("brief")}>
-            简略
-          </button>
-          <button className={tabCls(mode === "detail")} onClick={() => setMode("detail")}>
-            详细
-          </button>
+          {!isMulti && (
+            <>
+              <button className={tabCls(mode === "brief")} onClick={() => setMode("brief")}>
+                简略
+              </button>
+              <button className={tabCls(mode === "detail")} onClick={() => setMode("detail")}>
+                详细
+              </button>
+            </>
+          )}
           <button
             className={tabCls(share)}
             aria-expanded={share}
@@ -66,24 +92,12 @@ export default function AgentResultCard({ divination, interpretation }: Props) {
       {interpretation.出处 && (
         <div className="text-xs text-ash/70">出处：{interpretation.出处}</div>
       )}
+      {facts && <div className="text-xs text-ash/70">依据（已核对引擎）：{facts}</div>}
 
-      {interpretation.依据 && (
-        <div className="text-xs text-ash/70">
-          依据（已核对引擎）：
-          {[
-            interpretation.依据.三传?.length ? `三传 ${interpretation.依据.三传.join("→")}` : "",
-            interpretation.依据.天将?.length ? `天将 ${interpretation.依据.天将.join("/")}` : "",
-            interpretation.依据.六亲?.length ? `六亲 ${interpretation.依据.六亲.join("/")}` : "",
-            interpretation.依据.结果 ?? "",
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-        </div>
-      )}
-
-      {mode === "brief" ? (
+      {isMulti ? (
+        <MultiPan interpretation={interpretation} divinations={divinations} />
+      ) : mode === "brief" ? (
         <div className="space-y-4">
-          {/* 结论（简略解读） */}
           <div className="space-y-2 text-sm leading-relaxed">
             <div>
               <span className="text-gold font-bold mr-2">总断</span>
@@ -104,8 +118,6 @@ export default function AgentResultCard({ divination, interpretation }: Props) {
               </div>
             )}
           </div>
-
-          {/* 卦象（课式）简略可视化 */}
           {divination ? (
             isDaliuren && ks ? (
               <>
@@ -140,10 +152,7 @@ export default function AgentResultCard({ divination, interpretation }: Props) {
         </div>
       ) : (
         <div className="space-y-4">
-          {/* 推导过程可视化 */}
           {divination && <StepRenderer result={divination} />}
-
-          {/* 逐步占断解读（每一步 + 解读） */}
           {divination?.steps.length ? (
             <div className="space-y-3">
               {divination.steps.map((s, i) => {
@@ -163,6 +172,104 @@ export default function AgentResultCard({ divination, interpretation }: Props) {
           ) : (
             <p className="text-xs text-ash">该算法未提供推导步骤。</p>
           )}
+        </div>
+      )}
+
+      {entryId && divination && (
+        <ChangyanTrack
+          id={entryId}
+          algorithmId={divination.algorithmId}
+          卦象={interpretation.卦象}
+          总结={interpretation.结论.总断}
+        />
+      )}
+    </div>
+  );
+}
+
+/** 多卦综断：综合结论 + 对比表 + 逐卦解读 */
+function MultiPan({
+  interpretation,
+  divinations,
+}: {
+  interpretation: AgentDivination;
+  divinations?: DivinationResult[];
+}) {
+  const groups = interpretation.卦组 ?? [];
+  const rows = groups.length
+    ? groups.map((g, i) => ({
+        卦象: g.卦象,
+        吉凶: g.吉凶,
+        要点: g.要点,
+        结论: g.结论,
+        divination: divinations?.[i],
+      }))
+    : (divinations ?? []).map((d) => ({
+        卦象: keShiSummary(d),
+        吉凶: undefined as "吉" | "中" | "凶" | undefined,
+        要点: d.raw ? String((d.raw as { kename?: string }).kename ?? "") : "",
+        结论: "",
+        divination: d,
+      }));
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg border border-gold/40 bg-ink-2 p-3 space-y-1 text-sm">
+        <div>
+          <span className="text-gold font-bold mr-2">综断</span>
+          {interpretation.结论.总断}
+        </div>
+        <div>
+          <span className="text-gold font-bold mr-2">现状</span>
+          {interpretation.结论.现状}
+        </div>
+        <div>
+          <span className="text-jade font-bold mr-2">建议</span>
+          {interpretation.结论.建议}
+        </div>
+        {interpretation.结论.风险 && (
+          <div>
+            <span className="text-vermilion font-bold mr-2">风险</span>
+            {interpretation.结论.风险}
+          </div>
+        )}
+      </div>
+
+      {rows.length > 1 && (
+        <div className="rounded-lg border border-ash/30 bg-ink-2 overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="text-ash border-b border-ash/20">
+                <th className="px-2 py-1 text-left w-28">卦象</th>
+                <th className="px-2 py-1 text-left w-16">吉凶</th>
+                <th className="px-2 py-1 text-left">要点</th>
+                <th className="px-2 py-1 text-left">结论</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr key={i} className="border-b border-ash/10 align-top">
+                  <td className="px-2 py-1 text-gold">{r.卦象}</td>
+                  <td className="px-2 py-1">{r.吉凶 ?? "-"}</td>
+                  <td className="px-2 py-1 text-paper/90">{r.要点}</td>
+                  <td className="px-2 py-1 text-paper/90">{r.结论}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {groups.length > 0 && (
+        <div className="space-y-2">
+          {groups.map((g, i) => (
+            <div key={i} className="rounded-lg border border-ash/30 bg-ink-2 p-3 text-sm space-y-1">
+              <span className="text-gold font-bold mr-2">{g.卦象}</span>
+              {g.吉凶 && <span className="text-ash text-xs">{g.吉凶}</span>}
+              <div className="text-paper/90">{g.结论}</div>
+              {g.建议 && <div className="text-xs text-jade">建议：{g.建议}</div>}
+            </div>
+          ))}
         </div>
       )}
     </div>

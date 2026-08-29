@@ -13,6 +13,9 @@ const eslintConfig = [
       // （主题首帧恢复、远程算法服务持久化恢复），这是 React 官方推荐的外部系统同步方式，
       // 该新规则在此场景频繁误报，故关闭。
       "react-hooks/set-state-in-effect": "off",
+      // react-compiler 的 purity 规则会把事件 handler 里的 Date.now()/localStorage 等判为"非纯"，
+      // 对浏览器业务（应验追踪、历史持久化）是正常用法，关闭以免误报。
+      "react-hooks/purity": "off",
       // 统一约定：用 `_` 前缀标记故意的未使用参数/变量（如算法方法签名、fetch mock）。
       "@typescript-eslint/no-unused-vars": [
         "warn",

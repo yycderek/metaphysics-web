@@ -1,9 +1,10 @@
-// Agent 循环：感知→决策→行动（调用工具）→观察→自校验→最终结构化输出
+// Agent 循环：感知→决策→行动（调用工具）→观察→自校验→二次反思→最终结构化输出
 // 依赖一个可注入的 callLLM（便于用 mock 单测），工具执行用真实引擎。
 import type { ChatMessage, ToolCall } from "@/lib/aiTypes";
 import { executeDivinate, resolveDivinateArgs } from "./divinate";
 import { verifyDivination } from "./verify";
 import type {
+  AgentDivineOne,
   AgentDivination,
   AgentEvent,
   AgentLoopResult,
@@ -11,6 +12,7 @@ import type {
   AgentStepInterp,
   DivinateParams,
 } from "./types";
+import type { DivinationResult } from "@/lib/algorithms/types";
 
 export type CallLLM = (
   messages: ChatMessage[],
@@ -28,7 +30,7 @@ export interface LoopOptions {
   now?: Date;
 }
 
-const DEFAULT_MAX_ITERS = 7;
+const DEFAULT_MAX_ITERS = 8;
 const CONFIDENCE = new Set(["高", "中", "低"]);
 const JIXIONG = new Set(["吉", "中", "凶"]);
 
@@ -58,6 +60,21 @@ export function tryParseStructured(text: string): AgentDivination | null {
     if (!CONFIDENCE.has(conf as string)) return null;
     const jx = obj["吉凶"];
     const f = obj["依据"] as Record<string, unknown> | undefined;
+    // 多卦逐卦解读（可选）
+    const gua = obj["卦组"];
+    const 卦组: AgentDivineOne[] | undefined = Array.isArray(gua)
+      ? gua
+          .filter((g): g is Record<string, unknown> => !!g && typeof g === "object")
+          .map((g) => ({
+            卦象: String(g["卦象"] ?? ""),
+            算法: typeof g["算法"] === "string" ? g["算法"] : undefined,
+            吉凶: JIXIONG.has(g["吉凶"] as string) ? (g["吉凶"] as "吉" | "中" | "凶") : undefined,
+            要点: String(g["要点"] ?? g["结论"] ?? ""),
+            结论: String(g["结论"] ?? ""),
+            建议: typeof g["建议"] === "string" ? g["建议"] : undefined,
+          }))
+          .filter((g) => g.卦象 && (g.要点 || g.结论))
+      : undefined;
     return {
       卦象: obj["卦象"],
       算法: obj["算法"],
@@ -69,6 +86,7 @@ export function tryParseStructured(text: string): AgentDivination | null {
         风险: typeof c["风险"] === "string" ? c["风险"] : undefined,
       },
       逐步: steps,
+      卦组: 卦组?.length ? 卦组 : undefined,
       依据:
         f && typeof f === "object"
           ? {
@@ -86,6 +104,24 @@ export function tryParseStructured(text: string): AgentDivination | null {
   }
 }
 
+/** 审视结论解析：返回是否需要重写 */
+function parseCritique(text: string): { rewrite: boolean; reason?: string } {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start >= 0 && end > start) {
+    try {
+      const o = JSON.parse(text.slice(start, end + 1)) as Record<string, unknown>;
+      return {
+        rewrite: o["重写"] === true,
+        reason: typeof o["原因"] === "string" ? o["原因"] : undefined,
+      };
+    } catch {
+      /* fallthrough */
+    }
+  }
+  return { rewrite: /需|要修改|重写|有误|不符|矛盾/.test(text), reason: text.slice(0, 120) };
+}
+
 /** 从工具调用里解析澄清问题 */
 function clarificationOf(toolCalls: ToolCall[]): string | null {
   const call = toolCalls.find((c) => c.function.name === "ask_clarification");
@@ -98,6 +134,8 @@ function clarificationOf(toolCalls: ToolCall[]): string | null {
   }
 }
 
+const CRITIQUE_PROMPT = `请以挑剔的断卦师视角审视上面这份断语：检查 ①是否前后矛盾；②是否过度断言（说了引擎数据不支持的结论）；③是否遗漏了该卦的关键（如动爻/旬空/用神）。一切无误则输出 {"重写":false}；有问题则输出 {"重写":true,"原因":"具体问题"}。只输出该 JSON，不要其他文字。`;
+
 export async function runAgentLoop(opts: LoopOptions): Promise<AgentLoopResult> {
   const { system, callLLM, question, now = new Date() } = opts;
   const onEvent = opts.onEvent ?? (() => {});
@@ -107,6 +145,7 @@ export async function runAgentLoop(opts: LoopOptions): Promise<AgentLoopResult> 
   const maxIters = opts.maxIters ?? DEFAULT_MAX_ITERS;
   const messages: ChatMessage[] = [{ role: "system", content: system }, ...history];
   let lastMeta: AgentMeta | undefined;
+  const executed: DivinationResult[] = [];
   // 同参数 divinate 去重：避免模型在同一循环内重复起同一卦（同算法+参数复用上次结果）
   const divinationCache = new Map<string, { context: string; meta: AgentMeta }>();
 
@@ -118,7 +157,6 @@ export async function runAgentLoop(opts: LoopOptions): Promise<AgentLoopResult> 
 
     // 模型请求调用工具
     if (turn.tool_calls?.length) {
-      // 澄清优先：直接返回给用户，等待其回复后再继续
       const clarifyQ = clarificationOf(turn.tool_calls);
       if (clarifyQ) {
         messages.push({ role: "assistant", content: clarifyQ });
@@ -131,19 +169,18 @@ export async function runAgentLoop(opts: LoopOptions): Promise<AgentLoopResult> 
       });
       onEvent({ type: "status", text: "正在调用引擎起课…" });
       for (const call of turn.tool_calls.filter((c) => c.function.name === "divinate")) {
-        // 归一化去重 key：解析参数后取规范化形式，忽略 JSON 键序/空格差异
         const args = resolveDivinateArgs(call.function.arguments);
         const key = `${args.algorithm}|${JSON.stringify(args.params ?? {})}|${args.longitude ?? 120}`;
         let toolContent: string;
         const cached = divinationCache.get(key);
         if (cached) {
-          // 相同参数重复请求：复用上次结果，不再重复起课
           toolContent = `${cached.context}\n（注：此询问与前面已算的课参数完全相同，已复用该课，无需重复起卦。）`;
           lastMeta = cached.meta;
         } else {
           try {
             const outcome = await executeDivinate(call, question, now);
             lastMeta = outcome.meta;
+            executed.push(outcome.result);
             toolContent = outcome.context;
             divinationCache.set(key, { context: outcome.context, meta: outcome.meta });
             onEvent({
@@ -171,7 +208,7 @@ export async function runAgentLoop(opts: LoopOptions): Promise<AgentLoopResult> 
         messages.push({
           role: "user",
           content:
-            "你输出的必须是合法 JSON（符合 {卦象:string, 算法:string, 结论:{总断,现状,建议}, 逐步:[{步骤,解读}], 依据?, 置信度:高|中|低}）。请重新只输出该 JSON 对象，不要加任何解释。",
+            "你输出的必须是合法 JSON（符合 {卦象:string, 算法:string, 结论:{总断,现状,建议}, 逐步:[{步骤,解读}], 卦组?:[{卦象,要点,结论}], 依据?, 置信度:高|中|低}）。请重新只输出该 JSON 对象，不要加任何解释。",
         });
         continue;
       }
@@ -199,7 +236,30 @@ export async function runAgentLoop(opts: LoopOptions): Promise<AgentLoopResult> 
       }
     }
 
-    return { ok: true, kind: "answer", result: parsed, meta: lastMeta, trace: messages };
+    // 二次反思：低置信度/有风险时审视一遍，发现问题则重写
+    if (parsed.置信度 !== "高" && i < maxIters - 1) {
+      onEvent({ type: "status", text: "正在审视断语是否自洽…" });
+      const critiqueTurn = await callLLM([
+        ...messages,
+        { role: "assistant", content },
+        { role: "user", content: CRITIQUE_PROMPT },
+      ]);
+      const crit = parseCritique(critiqueTurn.content);
+      if (crit.rewrite) {
+        messages.push({ role: "assistant", content });
+        messages.push({
+          role: "user",
+          content: `你刚才的断语未经得起审视：${crit.reason ?? "存在矛盾或过度断言"}。请重新输出更严谨、紧扣引擎数据的 JSON（保持结构）。`,
+        });
+        onEvent({ type: "status", text: "断语经审视需修正，正在重写…" });
+        continue;
+      }
+    }
+
+    const meta = lastMeta
+      ? { ...lastMeta, divinations: executed.length ? executed : undefined }
+      : undefined;
+    return { ok: true, kind: "answer", result: parsed, meta, trace: messages };
   }
   return { ok: false, error: "Agent 达到最大迭代次数仍未给出结构化结果", trace: messages };
 }

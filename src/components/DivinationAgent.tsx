@@ -4,7 +4,9 @@
 // 支持：澄清追问（信息不足时先问再算）、把已算的卦作为记忆复读、换时辰/参数对比。
 import { useRef, useState } from "react";
 import AgentResultCard from "@/components/AgentResultCard";
+import HistoryPanel from "@/components/HistoryPanel";
 import { toPriorDivination } from "@/lib/agent/divinate";
+import { loadHistory, pushHistoryEntry, saveHistory } from "@/lib/history";
 import type { AgentDivination, AgentMeta } from "@/lib/agent/types";
 import type { DivinationResult } from "@/lib/algorithms/types";
 
@@ -23,6 +25,8 @@ interface AgentTurn {
   clarify?: string;
   interpretation?: AgentDivination;
   divination?: DivinationResult;
+  divinations?: DivinationResult[];
+  entryId?: string;
   error?: string;
 }
 
@@ -121,10 +125,27 @@ export default function DivinationAgent() {
             { role: "user", content: text },
             { role: "assistant", content: recap },
           ];
+          const entryId = `${ev.result.卦象}-${Date.now()}`;
           setTurns((t) => [
             ...t,
-            { question: text, interpretation: ev.result!, divination: ev.meta?.divination },
+            {
+              question: text,
+              interpretation: ev.result!,
+              divination: ev.meta?.divination,
+              divinations: ev.meta?.divinations,
+              entryId,
+            },
           ]);
+          // 写入历史（回看用）
+          const h = {
+            id: entryId,
+            question: text,
+            卦象: ev.result.卦象,
+            interpretation: ev.result!,
+            divination: ev.meta?.divination,
+            ts: Date.now(),
+          };
+          saveHistory(pushHistoryEntry(loadHistory(), h));
           setPendingClarify(null);
         }
       };
@@ -264,11 +285,18 @@ export default function DivinationAgent() {
             ) : t.error ? (
               <div className="text-sm text-vermilion">{t.error}</div>
             ) : t.interpretation ? (
-              <AgentResultCard divination={t.divination} interpretation={t.interpretation} />
+              <AgentResultCard
+                divination={t.divination}
+                interpretation={t.interpretation}
+                divinations={t.divinations}
+                entryId={t.entryId}
+              />
             ) : null}
           </div>
         ))}
       </div>
+
+      <HistoryPanel />
     </section>
   );
 }

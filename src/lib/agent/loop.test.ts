@@ -182,4 +182,102 @@ describe("tryParseStructured", () => {
   it("拒绝纯文本", () => {
     expect(tryParseStructured("这段占卜结果是……")).toBeNull();
   });
+
+  it("解析卦组（多卦综断）", () => {
+    const multi = JSON.stringify({
+      卦象: "事业综断",
+      算法: "大六壬",
+      结论: { 总断: "先难后易", 现状: "复", 建议: "守" },
+      逐步: [],
+      卦组: [
+        { 卦象: "年运：知一课", 要点: "初传吉", 结论: "上半年平", 吉凶: "中" },
+        { 卦象: "一事：涉害课", 要点: "中段阻力", 结论: "下半转好" },
+      ],
+      置信度: "中",
+    });
+    const p = tryParseStructured(multi);
+    expect(p?.卦组).toHaveLength(2);
+    expect(p?.卦组?.[0].要点).toBe("初传吉");
+  });
+});
+
+describe("多卦综断 + 二次反思", () => {
+  it("同轮起两卦 → meta.divinations 收集两卦", async () => {
+    const callLLM: CallLLM = async (messages) => {
+      // 已有工具结果 → 输出含卦组的综断
+      if (messages.some((m) => m.role === "tool")) {
+        return {
+          content: JSON.stringify({
+            卦象: "综断",
+            算法: "大六壬",
+            结论: { 总断: "x", 现状: "y", 建议: "z" },
+            逐步: [],
+            卦组: [
+              { 卦象: "返吟课", 要点: "a", 结论: "b" },
+              { 卦象: "知一课", 要点: "c", 结论: "d" },
+            ],
+            置信度: "高",
+          }),
+        };
+      }
+      return {
+        content: "",
+        tool_calls: [
+          toolCall("c1", "divinate", {
+            algorithm: "daliuren",
+            params: { rizhu: "庚子", shizhi: "午", yuejiang: "亥" },
+          }),
+          toolCall("c2", "divinate", {
+            algorithm: "daliuren",
+            params: { rizhu: "甲子", shizhi: "子", yuejiang: "子" },
+          }),
+        ],
+      };
+    };
+    const res = await runAgentLoop({
+      system: "sys",
+      question: "看看今年事业",
+      callLLM,
+      now: new Date(2026, 7, 26, 12),
+    });
+    expect(res.ok).toBe(true);
+    expect(res.result?.卦组).toHaveLength(2);
+    expect(res.meta?.divinations).toHaveLength(2);
+  });
+
+  it("二次反思要求重写 → 最终通过", async () => {
+    const graded = (conf: string) =>
+      JSON.stringify({
+        卦象: "重审课（巳→戌→卯）",
+        算法: "大六壬",
+        结论: { 总断: "x", 现状: "y", 建议: "z" },
+        逐步: [],
+        依据: CORRECT,
+        置信度: conf,
+      });
+    const callLLM: CallLLM = async (messages) => {
+      const last = messages[messages.length - 1];
+      const user = last?.role === "user" && typeof last.content === "string" ? last.content : "";
+      if (user.includes("挑剔的断卦师")) return { content: '{"重写":true,"原因":"总断过于绝对"}' };
+      if (user.includes("重新输出更严谨")) return { content: graded("高") };
+      if (messages.some((m) => m.role === "tool")) return { content: graded("低") };
+      return {
+        content: "",
+        tool_calls: [
+          toolCall("c1", "divinate", {
+            algorithm: "daliuren",
+            params: { rizhu: "庚子", shizhi: "午", yuejiang: "亥" },
+          }),
+        ],
+      };
+    };
+    const res = await runAgentLoop({
+      system: "sys",
+      question: "看事业",
+      callLLM,
+      now: new Date(2026, 7, 26, 12),
+    });
+    expect(res.ok).toBe(true);
+    expect(res.result?.置信度).toBe("高");
+  });
 });
