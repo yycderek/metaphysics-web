@@ -20,6 +20,7 @@ import DataTree from "@/components/DataTree";
 import SiteHeader from "@/components/SiteHeader";
 import LiuyaoPan from "@/components/LiuyaoPan";
 import MeihuaPan from "@/components/MeihuaPan";
+import EvalPanel from "@/components/EvalPanel";
 import { chuanTianjiang } from "@/lib/shike";
 
 const GOLDEN_INPUT: AlgorithmInput = { rizhu: "庚子", shizhi: "午", yuejiang: "亥" };
@@ -173,6 +174,8 @@ export default function HomePage() {
       )}
 
       <DivinationAgent />
+
+      <EvalPanel />
 
       <AiDuanke result={result} />
 
