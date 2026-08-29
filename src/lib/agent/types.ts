@@ -38,6 +38,8 @@ export interface AgentDivination {
 export interface DivinateParams {
   algorithm?: string;
   params?: AlgorithmInput;
+  /** 当地东经（东正西负），用于真太阳时，默认 120 */
+  longitude?: number;
 }
 
 /** 先前已起的卦（卦记忆）：供模型在后续轮次"复读"已算过的卦 */

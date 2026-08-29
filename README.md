@@ -28,7 +28,7 @@
 ## AI 断课
 
 - **铁律**：前端 TS 引擎先精确起课（KeShi JSON），AI 只负责解读，绝不自行起课——避免市面"AI 算命"起错课的毛病
-- **智能 Agent**（`/api/agent` + `src/lib/agent/`）：模型通过 `divinate` 工具调用引擎（function-calling），自主决定算法/参数；信息不足会先 `ask_clarification` 澄清；已算过的卦作为记忆可复读对比；最终输出结构化断语并**自校验**（引用的三传/天将/六亲与引擎逐项比对，不符重试）；**SSE 流式**返回过程（status/起课成功/校对），前端实时展示；不传日柱/时支/月将时默认取当前时刻（月将为按月近似，见 `agent/params.ts` 说明）
+- **智能 Agent**（`/api/agent` + `src/lib/agent/`）：模型通过 `divinate` 工具调用引擎（function-calling），自主决定算法/参数；信息不足会先 `ask_clarification` 澄清；已算过的卦作为记忆可复读对比；最终输出结构化断语并**自校验**（大六壬比对三传/天将/六亲、其它算法比对卦名，不符重试）；**SSE 流式**返回过程；默认取**真太阳时 + 节气精确月将**（可选经度，见 `lib/astro.ts`）；同参数 divinate 去重
 - 流式 SSE：`/api/divine` 透传 AI 聊天补全，思考过程（`reasoning_content`）与正文（`content`）分开展示
 - 断课原则内置：课名 → 三传 → 天将 → 六亲 → 旺衰 → 旬空逐层分析，追问只答追问
 - **可替换 AI API**：断课面板 ⚙️ 设置支持任意 OpenAI 兼容服务（DeepSeek/通义/豆包/Kimi/智谱/硅基流动/Ollama/vLLM），配置 baseUrl / apiKey / model / temperature，localStorage 持久化；留空回退服务端默认（环境变量 `AI_API_KEY` / `AI_BASE_URL` / `AI_MODEL`，旧名 `DEEPSEEK_*` 兼容；本地开发自动读 `~/.hermes/.env`）
@@ -38,7 +38,7 @@
 ```bash
 npm install
 npm run dev          # http://localhost:3000
-npm test             # vitest 单元/组件测试（90 项，含易学/六爻/梅花/断课模板/Agent/SSE）
+npm test             # vitest 单元/组件测试（95 项，含易学/六爻/梅花/天文/断课模板/Agent/SSE）
 npm run typecheck    # TypeScript 类型检查
 npm run lint         # ESLint（eslint-config-next）
 npm run format       # Prettier 格式化

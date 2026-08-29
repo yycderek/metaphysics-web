@@ -54,7 +54,8 @@ export default function ShareCard({ interpretation }: Props) {
       a.href = URL.createObjectURL(blob);
       a.download = `占卜-${interpretation.卦象}.png`;
       a.click();
-      URL.revokeObjectURL(a.href);
+      // 延后释放，避免浏览器读取前 URL 已被回收导致下载失败
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
       setNote("已下载");
     } catch (e) {
       setNote((e as Error).message);
@@ -89,6 +90,7 @@ export default function ShareCard({ interpretation }: Props) {
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         width={WIDTH}
         height={HEIGHT}
+        style={{ fontFamily: `"Songti SC","Noto Serif SC","STSong","SimSun",serif` }}
         className="w-full max-w-[320px] mx-auto block"
       >
         <rect width={WIDTH} height={HEIGHT} fill={INK} />

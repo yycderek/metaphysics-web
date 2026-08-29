@@ -20,7 +20,11 @@ export const divinateTool: ToolDef = {
         params: {
           type: "object",
           description:
-            "算法参数。daliuren 可传 [rizhu 日柱(如 庚子)，shizhi 时支(如 午)，yuejiang 月将(如 亥)]，缺省时自动取当前时刻；xiaoliuren 传 {month,day,hour} 三个 1-30 整数；liuyao 传 {tosses:「6,7,8,9,6,7」} 逗号分隔（可缺省随机）；meihua 传 {num1,num2} 两个正整数。",
+            "算法参数。daliuren 可传 [rizhu 日柱(如 庚子)，shizhi 时支(如 午)，yuejiang 月将(如 亥)]，缺省时自动取当前时刻（真太阳时 + 节气月将）；xiaoliuren 传 {month,day,hour} 三个 1-30 整数；liuyao 传 {tosses:「6,7,8,9,6,7」} 逗号分隔（可缺省随机）；meihua 传 {num1,num2} 两个正整数。",
+        },
+        longitude: {
+          type: "number",
+          description: "当地东经（东正西负，如 北京116.4 / 广州113.3），用于真太阳时；缺省 120。",
         },
       },
       required: [],

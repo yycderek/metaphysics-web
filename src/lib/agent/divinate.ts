@@ -2,11 +2,11 @@
 import { buildDivination } from "@/lib/algorithms/registry";
 import { getDivineTemplate, genericDivineTemplate } from "@/lib/divine";
 import { rizhuFromDate } from "@/lib/calendar";
-import { shizhiFromHour } from "@/lib/data";
 import { chuanTianjiang } from "@/lib/shike";
 import type { AlgorithmInput, DivinationResult } from "@/lib/algorithms/types";
 import type { ToolCall } from "@/lib/aiTypes";
-import { seasonFromNow, yuejiangFromMonth } from "./params";
+import { seasonFromNow, yuejiangFromDate } from "./params";
+import { trueSolarShizhi } from "@/lib/astro";
 import type { Season } from "@/lib/divine/types";
 import type { AgentFacts, AgentMeta, DivinateParams } from "./types";
 
@@ -17,17 +17,25 @@ export interface AgentToolContext {
   season: Season;
 }
 
-/** 工具对模型暴露的输入形状：接受算法 + 可选参数；daliuren 缺省取此刻 */
+/** 工具对模型暴露的输入形状：接受算法 + 可选参数 + 经度；daliuren 缺省取此刻（真太阳时/节气月将） */
 export function resolveDivinateArgs(argumentsJson: string): DivinateParams {
   const parsed = JSON.parse(argumentsJson || "{}") as DivinateParams;
-  return { algorithm: parsed.algorithm || "daliuren", params: parsed.params ?? {} };
+  return {
+    algorithm: parsed.algorithm || "daliuren",
+    params: parsed.params ?? {},
+    longitude: typeof parsed.longitude === "number" ? parsed.longitude : undefined,
+  };
 }
 
-export function buildDaliurenDefaults(input: AlgorithmInput, now: Date): AlgorithmInput {
+export function buildDaliurenDefaults(
+  input: AlgorithmInput,
+  now: Date,
+  longitude = 120,
+): AlgorithmInput {
   return {
     rizhu: String(input.rizhu ?? "").trim() || rizhuFromDate(now),
-    shizhi: String(input.shizhi ?? "").trim() || shizhiFromHour(now.getHours()),
-    yuejiang: String(input.yuejiang ?? "").trim() || yuejiangFromMonth(now.getMonth() + 1),
+    shizhi: String(input.shizhi ?? "").trim() || trueSolarShizhi(now, longitude),
+    yuejiang: String(input.yuejiang ?? "").trim() || yuejiangFromDate(now),
   };
 }
 
@@ -36,8 +44,9 @@ export function resolveParams(
   algorithm: string,
   params: AlgorithmInput,
   now: Date,
+  longitude?: number,
 ): AlgorithmInput {
-  if (algorithm === "daliuren") return buildDaliurenDefaults(params, now);
+  if (algorithm === "daliuren") return buildDaliurenDefaults(params, now, longitude);
   // 其他算法：原样透传（其 adapter.parseInput 会校验）
   return params;
 }
@@ -117,7 +126,7 @@ function summarizeFacts(f: AgentFacts): string {
   return parts.join(" · ") || "-";
 }
 
-/** 执行 divinate：缺省参数取此刻（默认日柱=今天、时支=当前、月将=当月近似） */
+/** 执行 divinate：缺省参数取此刻（日柱=今天、时辰=真太阳时、月将=节气精确） */
 export async function executeDivinate(
   call: ToolCall,
   question: string,
@@ -125,7 +134,7 @@ export async function executeDivinate(
 ): Promise<AgentToolContext> {
   const args = resolveDivinateArgs(call.function.arguments);
   const season = seasonFromNow(now);
-  const input = resolveParams(args.algorithm!, args.params ?? {}, now);
+  const input = resolveParams(args.algorithm!, args.params ?? {}, now, args.longitude);
   const result = await buildDivination(args.algorithm!, input);
   const context = keShiContext(result, question, season);
   const meta: AgentMeta = {

@@ -1,7 +1,7 @@
 // Agent 循环：感知→决策→行动（调用工具）→观察→自校验→最终结构化输出
 // 依赖一个可注入的 callLLM（便于用 mock 单测），工具执行用真实引擎。
 import type { ChatMessage, ToolCall } from "@/lib/aiTypes";
-import { executeDivinate } from "./divinate";
+import { executeDivinate, resolveDivinateArgs } from "./divinate";
 import { verifyDivination } from "./verify";
 import type {
   AgentDivination,
@@ -107,6 +107,8 @@ export async function runAgentLoop(opts: LoopOptions): Promise<AgentLoopResult> 
   const maxIters = opts.maxIters ?? DEFAULT_MAX_ITERS;
   const messages: ChatMessage[] = [{ role: "system", content: system }, ...history];
   let lastMeta: AgentMeta | undefined;
+  // 同参数 divinate 去重：避免模型在同一循环内重复起同一卦（同算法+参数复用上次结果）
+  const divinationCache = new Map<string, { context: string; meta: AgentMeta }>();
 
   onEvent({ type: "status", text: "正在理解你的问题并决定起课参数…" });
 
@@ -129,18 +131,29 @@ export async function runAgentLoop(opts: LoopOptions): Promise<AgentLoopResult> 
       });
       onEvent({ type: "status", text: "正在调用引擎起课…" });
       for (const call of turn.tool_calls.filter((c) => c.function.name === "divinate")) {
+        // 归一化去重 key：解析参数后取规范化形式，忽略 JSON 键序/空格差异
+        const args = resolveDivinateArgs(call.function.arguments);
+        const key = `${args.algorithm}|${JSON.stringify(args.params ?? {})}|${args.longitude ?? 120}`;
         let toolContent: string;
-        try {
-          const outcome = await executeDivinate(call, question, now);
-          lastMeta = outcome.meta;
-          toolContent = outcome.context;
-          onEvent({
-            type: "divination",
-            summary: outcome.meta.summary,
-            algorithmId: outcome.meta.divination.algorithmId,
-          });
-        } catch (e) {
-          toolContent = `起课失败：${(e as Error).message}`;
+        const cached = divinationCache.get(key);
+        if (cached) {
+          // 相同参数重复请求：复用上次结果，不再重复起课
+          toolContent = `${cached.context}\n（注：此询问与前面已算的课参数完全相同，已复用该课，无需重复起卦。）`;
+          lastMeta = cached.meta;
+        } else {
+          try {
+            const outcome = await executeDivinate(call, question, now);
+            lastMeta = outcome.meta;
+            toolContent = outcome.context;
+            divinationCache.set(key, { context: outcome.context, meta: outcome.meta });
+            onEvent({
+              type: "divination",
+              summary: outcome.meta.summary,
+              algorithmId: outcome.meta.divination.algorithmId,
+            });
+          } catch (e) {
+            toolContent = `起课失败：${(e as Error).message}`;
+          }
         }
         messages.push({ role: "tool", content: toolContent, tool_call_id: call.id });
       }
