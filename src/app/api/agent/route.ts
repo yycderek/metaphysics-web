@@ -6,6 +6,7 @@ import { resolveAIConfig, chatCompletion } from "@/lib/aiProvider";
 import { buildAgentSystem, divinateTool, askClarificationTool } from "@/lib/agent/prompt";
 import { runAgentLoop } from "@/lib/agent/loop";
 import { derivePersona } from "@/lib/agent/params";
+import { guardAI, guardResponse, baseUrlAllowed } from "@/lib/guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,6 +51,14 @@ export async function POST(req: NextRequest) {
     body = (await req.json()) as typeof body;
   } catch {
     return Response.json({ ok: false, error: "请求体不是合法 JSON" }, { status: 400 });
+  }
+
+  const g = guardAI(req, 30, 300);
+  const denied = guardResponse(g);
+  if (denied) return denied;
+  const aiConfig = body.aiConfig;
+  if (aiConfig?.baseUrl && !baseUrlAllowed(aiConfig.baseUrl)) {
+    return Response.json({ ok: false, error: "该 Base URL 不在允许名单内" }, { status: 403 });
   }
 
   const question = body.question?.trim() ?? "";

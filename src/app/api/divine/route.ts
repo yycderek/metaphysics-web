@@ -6,6 +6,7 @@ import { resolveAIConfig, streamChat, type UserAIConfig } from "@/lib/aiProvider
 import type { ChatMessage } from "@/lib/aiTypes";
 import "@/lib/divine"; // 副作用导入：注册内置断课模板
 import { getDivineTemplate, genericDivineTemplate, type Season } from "@/lib/divine";
+import { guardAI, guardResponse, baseUrlAllowed } from "@/lib/guard";
 import type { StepResult } from "@/lib/algorithms/types";
 
 export const runtime = "nodejs";
@@ -38,6 +39,13 @@ export async function POST(req: NextRequest) {
 
   const { algorithmId, algorithmName, input, raw, question, season, steps, history, aiConfig } =
     body;
+
+  const g = guardAI(req, 30, 300);
+  const denied = guardResponse(g);
+  if (denied) return denied;
+  if (aiConfig?.baseUrl && !baseUrlAllowed(aiConfig.baseUrl)) {
+    return Response.json({ error: "该 Base URL 不在允许名单内" }, { status: 403 });
+  }
 
   // 输入护栏：防止超长/滥用请求消耗 token（长度上限为保守值）
   const MAX_QUESTION_LEN = 2000;

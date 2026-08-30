@@ -23,6 +23,8 @@
   - 远程算法服务：页面「🔌 远程算法服务」配置 HTTP 端点即可（任意语言实现，协议见 `docs/PLUGIN-GUIDE.md`，含 Python 示例服务）
 - **易学公库** `src/lib/algorithms/yijing.ts`：六十四卦（上下卦→卦名）、八宫世应、纳甲、先天八卦数，六爻/梅花复用
 - **断课模板** `src/lib/divine/`：每种算法一个模板产生"课式上下文"——大六壬/小六壬/六爻/梅花/通用；六爻/梅花均含专业断法（用神/体用/本互变/动爻）
+- **断例 RAG** `src/lib/agent/duanli.ts`：按课名/卦名/六亲/事类检索古籍断例，注入上下文供模型引用真实出处（《六壬指南》《六壬粹言》《卜筮正宗》《梅花易数》等）
+- **术语释义** `src/lib/glossary.ts` + `src/components/Term.tsx`：断语中的官鬼/天将/旬空等术语可悬停释义，另有速查面板
 - **专属可视化**：六爻排盘（本卦/变卦卦象 + 纳甲六亲六神表 + 世应旬空）、梅花卦象（本/互/变卦）
 - **通用步骤模型** `DivinationResult.steps`：任意算法的推导过程结构化（title/desc/data），推导模式自动渲染；大六壬步骤有专属视图，未知算法回退通用 JSON 树
 - **AI Provider 抽象** `src/lib/aiProvider.ts`：OpenAI 兼容协议配置化，见下节
@@ -40,7 +42,7 @@
 ```bash
 npm install
 npm run dev          # http://localhost:3000
-npm test             # vitest 单元/组件测试（106 项，含易学/六爻/梅花/天文/Agent/应验/历史/评估评分）
+npm test             # vitest 单元/组件测试（112 项，含易学/六爻/梅花/天文/Agent/应验/历史/评估/限流/断例）
 npm run typecheck    # TypeScript 类型检查
 npm run lint         # ESLint（eslint-config-next）
 npm run format       # Prettier 格式化

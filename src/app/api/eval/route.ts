@@ -2,6 +2,7 @@
 import { NextRequest } from "next/server";
 import "@/plugins"; // 注册本地算法供引擎起课
 import { resolveAIConfig } from "@/lib/aiProvider";
+import { guardAI, guardResponse } from "@/lib/guard";
 import { runEvalCase, type EvalCaseResult } from "@/lib/eval/run";
 import { EVAL_CASES } from "@/lib/eval/cases";
 
@@ -40,6 +41,9 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
+  const g = guardAI(req, 5, 50);
+  const denied = guardResponse(g);
+  if (denied) return denied;
   const base = resolveAIConfig(body.aiConfig);
   if (!base.apiKey) {
     return Response.json({ ok: false, error: "未配置 AI API Key" }, { status: 500 });

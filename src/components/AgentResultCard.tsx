@@ -16,6 +16,7 @@ import ShareCard from "@/components/ShareCard";
 import LiuyaoPan from "@/components/LiuyaoPan";
 import MeihuaPan from "@/components/MeihuaPan";
 import ChangyanTrack from "@/components/ChangyanTrack";
+import { TermText } from "@/components/Term";
 
 interface Props {
   divination: DivinationResult | undefined;
@@ -92,7 +93,11 @@ export default function AgentResultCard({
       {interpretation.出处 && (
         <div className="text-xs text-ash/70">出处：{interpretation.出处}</div>
       )}
-      {facts && <div className="text-xs text-ash/70">依据（已核对引擎）：{facts}</div>}
+      {facts && (
+        <div className="text-xs text-ash/70">
+          <TermText text={`依据（已核对引擎）：${facts}`} />
+        </div>
+      )}
 
       {isMulti ? (
         <MultiPan interpretation={interpretation} divinations={divinations} />
@@ -101,15 +106,15 @@ export default function AgentResultCard({
           <div className="space-y-2 text-sm leading-relaxed">
             <div>
               <span className="text-gold font-bold mr-2">总断</span>
-              {interpretation.结论.总断}
+              <TermText text={interpretation.结论.总断} />
             </div>
             <div>
               <span className="text-gold font-bold mr-2">现状</span>
-              {interpretation.结论.现状}
+              <TermText text={interpretation.结论.现状} />
             </div>
             <div>
               <span className="text-jade font-bold mr-2">建议</span>
-              {interpretation.结论.建议}
+              <TermText text={interpretation.结论.建议} />
             </div>
             {interpretation.结论.风险 && (
               <div>
@@ -163,7 +168,7 @@ export default function AgentResultCard({
                     <div className="text-xs text-ash mt-0.5">{s.desc}</div>
                     <div className="mt-2 text-sm text-paper/90">
                       <span className="text-jade font-bold mr-2">占断</span>
-                      {interp?.解读 || "(无特别断义)"}
+                      <TermText text={interp?.解读 || "(无特别断义)"} />
                     </div>
                   </div>
                 );

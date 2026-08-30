@@ -7,6 +7,7 @@ import type { AlgorithmInput, DivinationResult } from "@/lib/algorithms/types";
 import type { ToolCall } from "@/lib/aiTypes";
 import { seasonFromNow, yuejiangFromDate } from "./params";
 import { trueSolarShizhi } from "@/lib/astro";
+import { duanliContext } from "./duanli";
 import type { Season } from "@/lib/divine/types";
 import type { AgentFacts, AgentMeta, DivinateParams } from "./types";
 
@@ -70,6 +71,8 @@ export function keShiContext(result: DivinationResult, question: string, season:
       "\n\n【推导步骤】\n" +
       result.steps.map((s, i) => `${i + 1}. ${s.title}（key: ${s.key}）：${s.desc}`).join("\n");
   }
+  // 注入参考断例（RAG），供模型引经据典、注明真出处
+  context += duanliContext(result.algorithmId, result.raw, question);
   return context;
 }
 
