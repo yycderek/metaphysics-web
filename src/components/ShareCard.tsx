@@ -9,10 +9,10 @@ interface Props {
 
 const WIDTH = 620;
 const HEIGHT = 820;
-const GOLD = "#c9a227";
-const PAPER = "#f0e6d0";
-const ASH = "#8a8071";
-const INK = "#16130f";
+const GOLD = "#b98d3a"; // 古铜
+const PAPER = "#e9dec8"; // 宣纸
+const ASH = "#82796a";
+const INK = "#121210"; // 玄墨
 
 /** 按每行字数折行，超出上限截断 */
 function wrap(text: string, per: number, maxLines: number): string[] {
