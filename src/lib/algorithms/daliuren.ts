@@ -58,13 +58,21 @@ function buildSteps(params: {
     {
       key: "tian",
       title: "二、安天盘",
-      desc: `月将加占时：把${yuejiang}将放在${shizhi}时支的位置上，其余十一支顺时针环排，天盘即成。`,
+      desc: `月将加时：把${yuejiang}将按在${shizhi}时支之位，其余十一支顺时针环排。由此得到天地盘对应（地盘→天盘）：${Object.entries(
+        tianpan,
+      )
+        .map(([di, ti]) => `${di}→${ti}`)
+        .join("，")}。`,
       data: { tianpan, yuejiang, shizhi },
     },
     {
       key: "sike",
       title: "三、排四课",
-      desc: `以日干${rigan}寄宫${GAN_JIGONG[rigan]}与日支${rizhi}为下神，逐课取天盘上神；第二课以下一课的上神为下神。`,
+      desc: `以日干${rigan}寄宫${GAN_JIGONG[rigan]}为初课下神、日支${rizhi}为三课下神，逐课先定下神、再取天盘上神（后课下神取前课上神）。四课为：${sike
+        .map(([b, t]) => `${b}（下）→${t}（上）`)
+        .join(
+          "，",
+        )}。各课生克：${sikeEntries.map((s) => `第${s.index}课 ${s.relation}`).join("；")}。`,
       data: { sike: sikeEntries },
     },
     {

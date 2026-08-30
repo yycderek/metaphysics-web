@@ -1,13 +1,11 @@
 "use client";
 // 首页：主区 = 智能占卜（对话框 + 算法选择）+ 高级用法（手动精确起课，用户主动开启）；
 // 侧边栏 = 术语速查 + 历史对话；主题切换固定在右上角。
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import "@/plugins"; // 副作用导入：注册本地算法插件
 import type { DivinationResult, AlgorithmInput, AlgorithmAdapter } from "@/lib/algorithms/types";
-import { buildDivination, listAdapters, registerAdapter } from "@/lib/algorithms/registry";
+import { buildDivination, listAdapters } from "@/lib/algorithms/registry";
 import { DALIUREN_ID, rawKeShi } from "@/lib/algorithms/daliuren";
-import { createRemoteAdapter, type RemoteServiceConfig } from "@/lib/algorithms/remote";
-import { loadRemoteServices, saveRemoteServices } from "@/lib/algorithms/storage";
 import DivineForm from "@/components/DivineForm";
 import KeShiHeader from "@/components/KeShiHeader";
 import TianPanDisk from "@/components/TianPanDisk";
@@ -23,7 +21,6 @@ import MeihuaPan from "@/components/MeihuaPan";
 import SimpleResult from "@/components/SimpleResult";
 import GlossaryPanel from "@/components/GlossaryPanel";
 import HistoryPanel from "@/components/HistoryPanel";
-import EvalPanel from "@/components/EvalPanel";
 import { chuanTianjiang } from "@/lib/shike";
 
 type Mode = "result" | "derive";
@@ -32,16 +29,8 @@ export default function HomePage() {
   const [result, setResult] = useState<DivinationResult | null>(null);
   const [mode, setMode] = useState<Mode>("result");
   const [selectedId, setSelectedId] = useState<string>(DALIUREN_ID);
-  const [adapters, setAdapters] = useState<AlgorithmAdapter[]>(() => listAdapters());
-  const [services, setServices] = useState<RemoteServiceConfig[]>([]);
+  const adapters: AlgorithmAdapter[] = listAdapters();
   const [advanced, setAdvanced] = useState(false);
-
-  useEffect(() => {
-    const svc = loadRemoteServices();
-    setServices(svc);
-    for (const s of svc) registerAdapter(createRemoteAdapter(s));
-    setAdapters(listAdapters());
-  }, []);
 
   const ks = result && result.algorithmId === DALIUREN_ID ? rawKeShi(result) : null;
   const chuan = ks ? chuanTianjiang(ks) : [];
@@ -49,15 +38,6 @@ export default function HomePage() {
   const onDivine = async (input: AlgorithmInput) => {
     setResult(await buildDivination(selectedId, input));
     setMode("result");
-  };
-
-  const onServicesChange = (next: RemoteServiceConfig[]) => {
-    setServices(next);
-    saveRemoteServices(next);
-    for (const s of next) registerAdapter(createRemoteAdapter(s));
-    setAdapters(listAdapters());
-    if (next.every((s) => s.id !== selectedId) && selectedId !== DALIUREN_ID)
-      setSelectedId(DALIUREN_ID);
   };
 
   const onSelect = (id: string) => {
@@ -106,8 +86,6 @@ export default function HomePage() {
                   selectedId={selectedId}
                   onSelect={onSelect}
                   onDivine={onDivine}
-                  services={services}
-                  onServicesChange={onServicesChange}
                 />
 
                 {result ? (
@@ -207,14 +185,6 @@ export default function HomePage() {
         <aside className="space-y-6">
           <GlossaryPanel />
           <HistoryPanel />
-          <details className="rounded-xl border border-ash/30 bg-ink-2 p-4">
-            <summary className="cursor-pointer text-sm text-ash hover:text-paper">
-              🛠 开发调试 · 模型评估（可忽略）
-            </summary>
-            <div className="mt-3">
-              <EvalPanel />
-            </div>
-          </details>
         </aside>
       </div>
 

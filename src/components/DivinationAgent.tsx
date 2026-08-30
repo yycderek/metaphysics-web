@@ -5,6 +5,7 @@
 import { useRef, useState } from "react";
 import AgentResultCard from "@/components/AgentResultCard";
 import ChangyanReview from "@/components/ChangyanReview";
+import ApiSettings from "@/components/ApiSettings";
 import { toPriorDivination } from "@/lib/agent/divinate";
 import { loadHistory, pushHistoryEntry, saveHistory } from "@/lib/history";
 import { changyanStats, loadChangyan } from "@/lib/changyan";
@@ -201,9 +202,12 @@ export default function DivinationAgent() {
     <section className="rounded-xl border border-gold/40 bg-ink-2 p-4">
       <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
         <h3 className="text-gold font-bold">🔮 智能占卜</h3>
-        <span className="text-xs text-ash">
-          直接描述问题，AI 自动起课并解卦；可追问、换时辰对比
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-ash">
+            直接描述问题，AI 自动起课并解卦；可追问、换时辰对比
+          </span>
+          <ApiSettings />
+        </div>
       </div>
 
       <div className="mb-3 space-y-2">

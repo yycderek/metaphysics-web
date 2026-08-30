@@ -42,8 +42,6 @@ function renderForm(overrides: Record<string, unknown> = {}) {
       selectedId="daliuren"
       onSelect={vi.fn()}
       onDivine={onDivine}
-      services={[]}
-      onServicesChange={vi.fn()}
       {...overrides}
     />,
   );
