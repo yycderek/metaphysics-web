@@ -25,6 +25,8 @@ interface Props {
   divinations?: DivinationResult[];
   /** 应验追踪条目标识（由父级生成，稳定 per 卦） */
   entryId?: string;
+  /** 问事事类（应验复盘用） */
+  topic?: string;
 }
 
 export default function AgentResultCard({
@@ -32,6 +34,7 @@ export default function AgentResultCard({
   interpretation,
   divinations,
   entryId,
+  topic,
 }: Props) {
   const isDaliuren = divination?.algorithmId === "daliuren";
   const ks = isDaliuren ? rawKeShi(divination!) : null;
@@ -184,6 +187,7 @@ export default function AgentResultCard({
         <ChangyanTrack
           id={entryId}
           algorithmId={divination.algorithmId}
+          topic={topic}
           卦象={interpretation.卦象}
           总结={interpretation.结论.总断}
         />

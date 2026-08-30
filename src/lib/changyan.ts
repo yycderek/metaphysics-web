@@ -4,6 +4,8 @@ export type ChangyanOutcome = "应验" | "未应验" | "待验证";
 export interface ChangyanEntry {
   id: string;
   algorithmId: string;
+  /** 问事事类（技能路由名，如 事业部 / 感情·婚姻），用于按事类复盘 */
+  topic?: string;
   卦象: string;
   总结: string;
   outcome: ChangyanOutcome;
@@ -53,32 +55,58 @@ export interface ChangyanStats {
   verified: number;
   acc: number | null;
   byAlgo: Record<string, AlgoStat>;
+  byTopic: Record<string, AlgoStat>;
 }
 
 function roundAcc(practiced: number, verified: number): number | null {
   return verified ? Math.round((practiced / verified) * 100) : null;
 }
 
-/** 统计：acc = 应验 / (应验+未应验) */
+/** 统计：acc = 应验 / (应验+未应验)；同时按算法与事类分组 */
 export function changyanStats(list: ChangyanEntry[]): ChangyanStats {
   const byAlgo: Record<string, AlgoStat & { practiced: number }> = {};
+  const byTopic: Record<string, AlgoStat & { practiced: number }> = {};
   let verified = 0;
   let practiced = 0;
-  for (const e of list) {
-    const a = (byAlgo[e.algorithmId] ??= { total: 0, verified: 0, practiced: 0, acc: null });
+  const inc = (
+    bucket: Record<string, AlgoStat & { practiced: number }>,
+    key: string,
+    ev: ChangyanEntry,
+  ) => {
+    const a = (bucket[key] ??= { total: 0, verified: 0, practiced: 0, acc: null });
     a.total += 1;
+    if (ev.outcome === "应验" || ev.outcome === "未应验") {
+      a.verified += 1;
+      if (ev.outcome === "应验") a.practiced += 1;
+    }
+  };
+  for (const e of list) {
+    inc(byAlgo, e.algorithmId, e);
+    inc(byTopic, e.topic || "未分类", e);
     if (e.outcome === "应验" || e.outcome === "未应验") {
       verified += 1;
-      a.verified += 1;
-      if (e.outcome === "应验") {
-        practiced += 1;
-        a.practiced += 1;
-      }
+      if (e.outcome === "应验") practiced += 1;
     }
   }
-  const algoClean: Record<string, AlgoStat> = {};
-  for (const [k, v] of Object.entries(byAlgo)) {
-    algoClean[k] = { total: v.total, verified: v.verified, acc: roundAcc(v.practiced, v.verified) };
-  }
-  return { total: list.length, verified, acc: roundAcc(practiced, verified), byAlgo: algoClean };
+  const clean = (b: Record<string, AlgoStat & { practiced: number }>): Record<string, AlgoStat> => {
+    const out: Record<string, AlgoStat> = {};
+    for (const [k, v] of Object.entries(b))
+      out[k] = { total: v.total, verified: v.verified, acc: roundAcc(v.practiced, v.verified) };
+    return out;
+  };
+  return {
+    total: list.length,
+    verified,
+    acc: roundAcc(practiced, verified),
+    byAlgo: clean(byAlgo),
+    byTopic: clean(byTopic),
+  };
+}
+
+/** 可靠性分级 */
+export function reliability(acc: number | null): { label: string; tone: "ok" | "mid" | "low" } {
+  if (acc == null) return { label: "样本不足", tone: "low" };
+  if (acc >= 75) return { label: "可靠", tone: "ok" };
+  if (acc >= 50) return { label: "中等", tone: "mid" };
+  return { label: "谨慎", tone: "low" };
 }

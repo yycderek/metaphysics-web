@@ -29,6 +29,7 @@ export async function runEvalCase(
   config: AIProviderConfig,
   evalCase: EvalCase,
   now = new Date(),
+  realEvi?: number | null,
 ): Promise<EvalCaseResult> {
   let divination;
   try {
@@ -79,7 +80,9 @@ export async function runEvalCase(
     };
   }
   const grounding = scoreGrounding(divination, interpretation, evalCase);
-  const quality = interpretation ? await judgeQuality(config, evalCase, interpretation) : null;
+  const quality = interpretation
+    ? await judgeQuality(config, evalCase, interpretation, realEvi)
+    : null;
   return {
     caseId: evalCase.id,
     title: evalCase.title,

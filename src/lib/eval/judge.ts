@@ -17,8 +17,13 @@ export async function judgeQuality(
   config: AIProviderConfig,
   evalCase: EvalCase,
   interpretation: AgentDivination,
+  realEvi?: number | null,
 ): Promise<JudgeResult | null> {
   const rubric = evalCase.rubric.map((r, i) => `${i + 1}. ${r}`).join("\n");
+  const eviNote =
+    realEvi != null
+      ? `\n（补充：同类问事在真实使用中的历史应验率为 ${realEvi}%——请据此对断语的"可信度/是否过度断言"从严或从宽打分。）`
+      : "";
   const messages: ChatMessage[] = [
     { role: "system", content: JUDGE_SYSTEM },
     {
@@ -28,7 +33,7 @@ export async function judgeQuality(
 关键事实：${evalCase.关键.join("；")}
 评判标准：
 ${rubric}
-
+${eviNote}
 【断语】
 ${JSON.stringify(interpretation)}`,
     },

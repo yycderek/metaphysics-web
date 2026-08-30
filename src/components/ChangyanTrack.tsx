@@ -12,13 +12,14 @@ import {
 interface Props {
   id: string;
   algorithmId: string;
+  topic?: string;
   卦象: string;
   总结: string;
 }
 
 const OPTIONS: ChangyanOutcome[] = ["应验", "未应验", "待验证"];
 
-export default function ChangyanTrack({ id, algorithmId, 卦象, 总结 }: Props) {
+export default function ChangyanTrack({ id, algorithmId, topic, 卦象, 总结 }: Props) {
   const [entries, setEntries] = useState(loadChangyan);
   const current = entries.find((e) => e.id === id)?.outcome;
   const stats = changyanStats(entries);
@@ -27,6 +28,7 @@ export default function ChangyanTrack({ id, algorithmId, 卦象, 总结 }: Props
     const entry = {
       id,
       algorithmId,
+      topic,
       卦象,
       总结,
       outcome: o,

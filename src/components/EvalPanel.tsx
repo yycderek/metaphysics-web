@@ -1,6 +1,7 @@
 "use client";
 // 断课质量评估面板：对一个 provider 切多个 model 跑黄金题库，SSE 展示进度 + 评分矩阵。
 import { useState } from "react";
+import { changyanStats, loadChangyan } from "@/lib/changyan";
 
 interface Row {
   model: string;
@@ -45,7 +46,7 @@ export default function EvalPanel() {
       const resp = await fetch("/api/eval", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ models: list }),
+        body: JSON.stringify({ models: list, 应验: changyanStats(loadChangyan()).acc }),
       });
       if (!resp.ok) {
         const j = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));

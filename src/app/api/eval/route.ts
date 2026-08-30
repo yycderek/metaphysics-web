@@ -28,7 +28,7 @@ function sanitizeModels(raw: unknown): string[] {
 }
 
 export async function POST(req: NextRequest) {
-  let body: { models?: unknown; aiConfig?: Parameters<typeof resolveAIConfig>[0] };
+  let body: { models?: unknown; 应验?: unknown; aiConfig?: Parameters<typeof resolveAIConfig>[0] };
   try {
     body = (await req.json()) as typeof body;
   } catch {
@@ -62,7 +62,15 @@ export async function POST(req: NextRequest) {
           send({ type: "progress", text: `评估模型 ${model}：共 ${EVAL_CASES.length} 题` });
           for (const c of EVAL_CASES) {
             send({ type: "progress", text: `→ ${c.title}` });
-            const row = { ...(await runEvalCase({ ...base, model }, c)), model };
+            const row = {
+              ...(await runEvalCase(
+                { ...base, model },
+                c,
+                new Date(),
+                typeof body.应验 === "number" ? body.应验 : null,
+              )),
+              model,
+            };
             rows.push(row);
             totals[model].push(row.total);
             send({ type: "case", row });

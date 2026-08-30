@@ -5,8 +5,11 @@
 import { useRef, useState } from "react";
 import AgentResultCard from "@/components/AgentResultCard";
 import HistoryPanel from "@/components/HistoryPanel";
+import ChangyanReview from "@/components/ChangyanReview";
 import { toPriorDivination } from "@/lib/agent/divinate";
 import { loadHistory, pushHistoryEntry, saveHistory } from "@/lib/history";
+import { changyanStats, loadChangyan } from "@/lib/changyan";
+import { detectSkill } from "@/lib/agent/skills";
 import type { AgentDivination, AgentMeta } from "@/lib/agent/types";
 import type { DivinationResult } from "@/lib/algorithms/types";
 
@@ -27,6 +30,7 @@ interface AgentTurn {
   divination?: DivinationResult;
   divinations?: DivinationResult[];
   entryId?: string;
+  topic?: string;
   error?: string;
 }
 
@@ -72,6 +76,10 @@ export default function DivinationAgent() {
           history: threadRef.current,
           divinations: divinationsRef.current,
           profile: profile.trim() || undefined,
+          calibration: (() => {
+            const s = changyanStats(loadChangyan());
+            return { overallAcc: s.acc, verified: s.verified, byTopic: s.byTopic };
+          })(),
           aiConfig: loadAIConfig(),
         }),
       });
@@ -126,6 +134,7 @@ export default function DivinationAgent() {
             { role: "assistant", content: recap },
           ];
           const entryId = `${ev.result.卦象}-${Date.now()}`;
+          const topic = detectSkill(text)?.name;
           setTurns((t) => [
             ...t,
             {
@@ -134,6 +143,7 @@ export default function DivinationAgent() {
               divination: ev.meta?.divination,
               divinations: ev.meta?.divinations,
               entryId,
+              topic,
             },
           ]);
           // 写入历史（回看用）
@@ -290,12 +300,14 @@ export default function DivinationAgent() {
                 interpretation={t.interpretation}
                 divinations={t.divinations}
                 entryId={t.entryId}
+                topic={t.topic}
               />
             ) : null}
           </div>
         ))}
       </div>
 
+      <ChangyanReview />
       <HistoryPanel />
 
       <p className="text-xs text-ash/60 pt-1">仅供文化娱乐参考，不构成医疗/法律/财务等专业建议。</p>

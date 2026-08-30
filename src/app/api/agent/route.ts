@@ -7,6 +7,7 @@ import { buildAgentSystem, divinateTool, askClarificationTool } from "@/lib/agen
 import { runAgentLoop } from "@/lib/agent/loop";
 import { derivePersona } from "@/lib/agent/params";
 import { detectSkill } from "@/lib/agent/skills";
+import type { AgentCalibration } from "@/lib/agent/prompt";
 import { guardAI, guardResponse, baseUrlAllowed } from "@/lib/guard";
 import { classifyQuery } from "@/lib/safety";
 
@@ -41,12 +42,35 @@ function sanitizeDivinations(raw: unknown): { summary: string; facts: string }[]
     }));
 }
 
+/** 客户端历史应验 → 校准上下文（全为数值，宽松校验） */
+function sanitizeCalibration(raw: unknown): AgentCalibration {
+  const c = (raw ?? {}) as {
+    overallAcc?: unknown;
+    verified?: unknown;
+    byTopic?: Record<string, { acc?: unknown; total?: unknown }>;
+  };
+  const byTopic: Record<string, { acc: number | null; total: number }> = {};
+  if (c.byTopic && typeof c.byTopic === "object") {
+    for (const [k, v] of Object.entries(c.byTopic)) {
+      const acc = typeof v?.acc === "number" ? Math.round(v.acc) : null;
+      const total = typeof v?.total === "number" ? Math.round(v.total) : 0;
+      if (k && total > 0) byTopic[k.slice(0, 20)] = { acc, total };
+    }
+  }
+  return {
+    overallAcc: typeof c.overallAcc === "number" ? Math.round(c.overallAcc) : null,
+    verified: typeof c.verified === "number" ? Math.round(c.verified) : 0,
+    byTopic,
+  };
+}
+
 export async function POST(req: NextRequest) {
   let body: {
     question?: string;
     history?: unknown;
     divinations?: unknown;
     profile?: string;
+    calibration?: unknown;
     aiConfig?: Parameters<typeof resolveAIConfig>[0];
   };
   try {
@@ -112,8 +136,9 @@ export async function POST(req: NextRequest) {
         const prior = sanitizeDivinations(body.divinations);
         const persona = derivePersona(body.profile);
         const skill = detectSkill(question);
+        const calibration = sanitizeCalibration(body.calibration);
         const result = await runAgentLoop({
-          system: buildAgentSystem(prior, persona, skill),
+          system: buildAgentSystem(prior, persona, skill, calibration),
           question,
           history: sanitizeHistory(body.history),
           callLLM: (messages) =>

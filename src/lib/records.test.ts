@@ -1,6 +1,6 @@
 // 应验追踪与历史（纯函数）测试
 import { describe, it, expect } from "vitest";
-import { changyanStats, upsertChangyan, type ChangyanEntry } from "./changyan";
+import { changyanStats, upsertChangyan, reliability, type ChangyanEntry } from "./changyan";
 import { pushHistoryEntry, removeHistoryEntry, type HistoryEntry } from "./history";
 
 const e = (over: Partial<ChangyanEntry> = {}): ChangyanEntry => ({
@@ -38,6 +38,23 @@ describe("应验追踪", () => {
     expect(s.acc).toBe(Math.round((2 / 3) * 100));
     expect(s.byAlgo.daliuren.acc).toBe(Math.round((2 / 3) * 100));
     expect(s.byAlgo.meihua.acc).toBeNull(); // 无已验证
+  });
+
+  it("按事类分组统计 + 可靠性分级", () => {
+    const list = [
+      e({ id: "1", outcome: "应验", topic: "事业" }),
+      e({ id: "2", outcome: "应验", topic: "事业" }),
+      e({ id: "3", outcome: "未应验", topic: "事业" }),
+      e({ id: "4", outcome: "应验", topic: "感情" }),
+      e({ id: "5", outcome: "应验", topic: "感情" }),
+    ];
+    const s = changyanStats(list);
+    expect(s.byTopic["事业"].acc).toBe(Math.round((2 / 3) * 100));
+    expect(s.byTopic["感情"].acc).toBe(100);
+    expect(reliability(80).label).toBe("可靠");
+    expect(reliability(55).label).toBe("中等");
+    expect(reliability(40).label).toBe("谨慎");
+    expect(reliability(null).label).toBe("样本不足");
   });
 });
 

@@ -4,6 +4,7 @@ import { rateLimit, resetRateLimits } from "./ratelimit";
 import { searchDuanli, duanliContext } from "./agent/duanli";
 import { detectSkill } from "./agent/skills";
 import { classifyQuery } from "./safety";
+import { buildAgentSystem } from "./agent/prompt";
 
 describe("rateLimit", () => {
   beforeEach(() => resetRateLimits());
@@ -81,5 +82,19 @@ describe("内容安全", () => {
   });
   it("正常问事不拦截", () => {
     expect(classifyQuery("看看我事业会怎样").blocked).toBe(false);
+  });
+});
+
+describe("agent 系统提示组合", () => {
+  it("注入历史应验校准 + 技能路由", () => {
+    const sys = buildAgentSystem(
+      undefined,
+      undefined,
+      { name: "事业·官讼", hint: "以官鬼为用" },
+      { overallAcc: 60, verified: 10, byTopic: { "事业·官讼": { acc: 80, total: 5 } } },
+    );
+    expect(sys).toContain("历史应验校准");
+    expect(sys).toContain("事业·官讼");
+    expect(sys).toContain("80%（5 例）");
   });
 });
