@@ -88,6 +88,7 @@ function buildContext(ks: KeShi, req: DivineRequest): string {
 ${sikeLines}
 三传：
 ${chuanLines}
+应期：旬空${ks.xunkong[0]}${ks.xunkong[1]}待出空填实；三传递生则速、递克则缓，末传值事之终期。
 占时季节：${req.season}（${seasonHint}）
 
 【问事】

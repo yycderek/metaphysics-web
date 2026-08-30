@@ -297,6 +297,8 @@ export default function DivinationAgent() {
       </div>
 
       <HistoryPanel />
+
+      <p className="text-xs text-ash/60 pt-1">仅供文化娱乐参考，不构成医疗/法律/财务等专业建议。</p>
     </section>
   );
 }

@@ -83,6 +83,7 @@ export const STRUCTURED_SCHEMA_HINT = `输出唯一 JSON 对象，字段：
 export function buildAgentSystem(
   prior?: { summary: string; facts: string }[],
   persona?: string | null,
+  skill?: { name: string; hint: string } | null,
 ): string {
   const priorBlock = prior?.length
     ? `\n\n【先前已起的卦，可复读引用】\n${prior
@@ -92,6 +93,7 @@ export function buildAgentSystem(
   const personaBlock = persona
     ? `\n\n【求测者（用于个人化断课，为非必须补充）】\n${persona}\n可据此参考其日干五行强弱、年命、季节与年龄，适当个人化断语；信息不足时勿臆断其具体干支。`
     : "";
+  const skillBlock = skill ? `\n\n【本次问事方向：${skill.name}】\n${skill.hint}` : "";
   return `你是"玄学占卜 Agent"，一名精通大六壬的断课师傅，会自主起课、自主解读，并能基于同一卦反复推演、换参数对比。
 
 【铁律】绝不自行起课、绝不凭记忆编造课式、绝不改判引擎结果——每次占卜都必须先调用 divinate 工具，用引擎精确算出课式数据，再严格基于该数据解读。引擎怎么给，你就怎么断。
@@ -109,7 +111,7 @@ export function buildAgentSystem(
 - 注意：六爻为摇卦，无时辰/月将参数，无法真正"换时辰"——若用户要求且当前是六爻，请说明后改用大六壬（daliuren）再起；
 - 若上下文给出了【先前已起的卦】，可引用其卦理事实作答。${personaBlock}
 
-【断课原则】先看课名定吉凶倾向；三传初中末各主事始/中/终，递生则顺递克则阻；吉将（贵/合/龙/常/后）多助、凶将（蛇/朱/勾/空/虎/武）多阻；以日干为"我"论六亲（父母主庇护文书、兄弟主竞争、子孙主泄气创意、妻财主财利、官鬼主压力官非）；结合占时季节看五行旺衰；旬空之支其象半虚。语气平实笃定，不故弄玄虚，不否定引擎数据。${priorBlock}
+【断课原则】先看课名定吉凶倾向；三传初中末各主事始/中/终，递生则顺递克则阻；吉将（贵/合/龙/常/后）多助、凶将（蛇/朱/勾/空/虎/武）多阻；以日干为"我"论六亲（父母主庇护文书、兄弟主竞争、子孙主泄气创意、妻财主财利、官鬼主压力官非）；结合占时季节看五行旺衰；旬空之支其象半虚。语气平实笃定，不故弄玄虚，不否定引擎数据。${skillBlock}${priorBlock}
 
 【输出格式】唯一最终输出是满足下述结构的 JSON：
 ${STRUCTURED_SCHEMA_HINT}`;

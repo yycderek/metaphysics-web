@@ -4,10 +4,12 @@ import type { AlgorithmAdapter, AlgorithmInput, DivinationResult, StepResult } f
 import {
   TRIGRAM_BINARY,
   TRIGRAM_ORDER,
+  TRIGRAM_WX,
   hexagram,
   trigramFromBinary,
   type TrigramName,
 } from "./yijing";
+import { sheng, ke } from "@/lib/data";
 
 export const MEIHUA_ID = "meihua";
 
@@ -38,6 +40,23 @@ function buildRaw(num1: number, num2: number) {
   const huLower = trigramFromBinary([bin[1], bin[2], bin[3]] as [number, number, number]);
   const huUpper = trigramFromBinary([bin[2], bin[3], bin[4]] as [number, number, number]);
   const hu = hexagram(huUpper, huLower);
+  // 体用：无动爻之卦为体（自己），有动爻之卦为用（所测之事）；动爻在下卦则下卦为用，上卦为用则反之
+  const ti = dong <= 3 ? upper : lower;
+  const yong = dong <= 3 ? lower : upper;
+  const tiWx = TRIGRAM_WX[ti];
+  const yongWx = TRIGRAM_WX[yong];
+  const rel =
+    yongWx === tiWx
+      ? "体用比和（吉）"
+      : sheng(yongWx, tiWx)
+        ? "用生体（吉，事来助我）"
+        : sheng(tiWx, yongWx)
+          ? "体生用（泄，我费心力）"
+          : ke(tiWx, yongWx)
+            ? "体克用（小吉，我可制事）"
+            : ke(yongWx, tiWx)
+              ? "用克体（凶，事克我）"
+              : "互不制（平）";
   return {
     上卦: `${upper}（${TRIGRAM_BINARY[upper].join("")}）`,
     下卦: `${lower}（${TRIGRAM_BINARY[lower].join("")}）`,
@@ -45,6 +64,10 @@ function buildRaw(num1: number, num2: number) {
     本卦: `${ben.name}（${ben.upper}上${ben.lower}下）`,
     变卦: bian,
     互卦: hu.name,
+    体卦: `${ti}（${tiWx}）`,
+    用卦: `${yong}（${yongWx}）`,
+    体用关系: rel,
+    应期: `动爻在${dong}位，其事多应于动爻之期；${rel.includes("凶") ? "凶应速、宜慎" : "吉应渐、可待"}`,
     报数: [num1, num2],
   };
 }
@@ -63,16 +86,22 @@ function buildSteps(num1: number, num2: number, raw: ReturnType<typeof buildRaw>
       desc: "两数之和被6除取余定动爻，动爻所在卦性随变。",
       data: { 动爻: raw.动爻 },
     },
-    { key: "ben", title: "三、得本卦", desc: "上卦与下卦相叠成本卦。", data: { 本卦: raw.本卦 } },
+    {
+      key: "tiyong",
+      title: "三、别体用",
+      desc: "无动爻之卦为体（我），有动爻之卦为用（所测之事），以五行生克断吉凶。",
+      data: { 体卦: raw.体卦, 用卦: raw.用卦, 体用关系: raw.体用关系 },
+    },
+    { key: "ben", title: "四、得本卦", desc: "上卦与下卦相叠成本卦。", data: { 本卦: raw.本卦 } },
     {
       key: "hu",
-      title: "四、取互卦",
+      title: "五、取互卦",
       desc: "本卦二三四爻为下卦、三四五爻为上卦，成互卦以观事之中间。",
       data: { 互卦: raw.互卦 },
     },
     {
       key: "bian",
-      title: "五、得变卦",
+      title: "六、得变卦",
       desc: "动爻阴阳互变，成变卦以观事之结局。",
       data: { 变卦: raw.变卦 },
     },

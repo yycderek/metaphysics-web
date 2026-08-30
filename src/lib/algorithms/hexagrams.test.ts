@@ -82,6 +82,16 @@ describe("梅花易数适配器", () => {
     expect(typeof raw.动爻).toBe("string");
   });
 
+  it("体用自动判定：动爻在上用上卦，用生体断吉", () => {
+    const r = meihuaAdapter.build({ num1: 3, num2: 7 }) as DivinationResult;
+    const raw = r.raw as { 体卦: string; 用卦: string; 体用关系: string; 应期: string };
+    // 3,7 → 动爻=4（上卦为用=离），下卦为体=艮；火生土 = 用生体
+    expect(raw.体卦).toContain("艮");
+    expect(raw.用卦).toContain("离");
+    expect(raw.体用关系).toContain("用生体");
+    expect(raw.应期).toContain("动爻");
+  });
+
   it("非法输入拒绝", () => {
     expect(() => meihuaAdapter.build({ num1: 0, num2: 13 })).toThrow();
   });

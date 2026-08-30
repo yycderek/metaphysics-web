@@ -110,7 +110,13 @@ function buildRaw(tosses: Toss[], now: Date) {
     世位: hex.shi,
     应位: yingOf(hex.shi),
     旬空: kong,
-    用神: `以卦宫${palaceWx}（${hex.palace}宫）为"我"论六亲，请按所测事类取用神`,
+    用神: `以卦宫${palaceWx}（${hex.palace}宫）为"我"论六亲。取用神：占事业/官讼/职守取官鬼，占财取妻财，占父母/文书/房产/长辈取父母，占子女/福泽取子孙，占兄弟/同辈/竞争取兄弟，占婚姻男取妻财、女取官鬼。`,
+    应期: (() => {
+      const moving = ys.filter((y) => y.moving).map((y) => y.zhi);
+      return moving.length
+        ? `动爻在${moving.join("、")}，应期看动爻所值之日；若涉旬空（${kong.join("")}），则待出空填实之期。`
+        : `静卦，应期较缓，看用神旺衰与其值日。`;
+    })(),
     日柱: rizhu,
     爻: ys.map((y) => ({
       爻位: `${nth(y.pos)}${y.yang ? "阳" : "阴"}`,

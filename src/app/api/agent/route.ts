@@ -6,7 +6,9 @@ import { resolveAIConfig, chatCompletion } from "@/lib/aiProvider";
 import { buildAgentSystem, divinateTool, askClarificationTool } from "@/lib/agent/prompt";
 import { runAgentLoop } from "@/lib/agent/loop";
 import { derivePersona } from "@/lib/agent/params";
+import { detectSkill } from "@/lib/agent/skills";
 import { guardAI, guardResponse, baseUrlAllowed } from "@/lib/guard";
+import { classifyQuery } from "@/lib/safety";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,6 +62,23 @@ export async function POST(req: NextRequest) {
   if (aiConfig?.baseUrl && !baseUrlAllowed(aiConfig.baseUrl)) {
     return Response.json({ ok: false, error: "该 Base URL 不在允许名单内" }, { status: 403 });
   }
+  const safety = classifyQuery(body.question ?? "");
+  if (safety.blocked) {
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({ type: "done", ok: false, error: safety.message })}\n\n`,
+          ),
+        );
+        controller.close();
+      },
+    });
+    return new Response(stream, {
+      headers: { "Content-Type": "text/event-stream; charset=utf-8" },
+    });
+  }
 
   const question = body.question?.trim() ?? "";
   if (!question) {
@@ -92,8 +111,9 @@ export async function POST(req: NextRequest) {
       try {
         const prior = sanitizeDivinations(body.divinations);
         const persona = derivePersona(body.profile);
+        const skill = detectSkill(question);
         const result = await runAgentLoop({
-          system: buildAgentSystem(prior, persona),
+          system: buildAgentSystem(prior, persona, skill),
           question,
           history: sanitizeHistory(body.history),
           callLLM: (messages) =>
