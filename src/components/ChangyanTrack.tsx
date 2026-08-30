@@ -1,12 +1,13 @@
 "use client";
 // 应验追踪：为这一卦标记应验/未应验，并展示历史准确率。
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   changyanStats,
   loadChangyan,
   saveChangyan,
   upsertChangyan,
   type ChangyanOutcome,
+  type ChangyanEntry,
 } from "@/lib/changyan";
 
 interface Props {
@@ -20,9 +21,14 @@ interface Props {
 const OPTIONS: ChangyanOutcome[] = ["应验", "未应验", "待验证"];
 
 export default function ChangyanTrack({ id, algorithmId, topic, 卦象, 总结 }: Props) {
-  const [entries, setEntries] = useState(loadChangyan);
+  const [entries, setEntries] = useState<ChangyanEntry[]>([]);
   const current = entries.find((e) => e.id === id)?.outcome;
   const stats = changyanStats(entries);
+
+  // 挂载后从 localStorage 载入，避免与 SSR 首帧不一致（hydration 错误）
+  useEffect(() => {
+    setEntries(loadChangyan());
+  }, []);
 
   const pick = (o: ChangyanOutcome) => {
     const entry = {

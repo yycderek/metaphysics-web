@@ -1,12 +1,17 @@
 "use client";
 // 应验复盘：按算法 × 事类聚合应验率，标注可靠区间。反馈给 agent 校准断语置信度。
-import { useState } from "react";
-import { changyanStats, loadChangyan, reliability } from "@/lib/changyan";
+import { useEffect, useState } from "react";
+import { changyanStats, loadChangyan, reliability, type ChangyanEntry } from "@/lib/changyan";
 
 export default function ChangyanReview() {
-  const [entries] = useState(loadChangyan);
+  const [entries, setEntries] = useState<ChangyanEntry[]>([]);
   const [show, setShow] = useState(false);
   const stats = changyanStats(entries);
+
+  // 挂载后从 localStorage 载入，避免与 SSR 首帧不一致（hydration 错误）
+  useEffect(() => {
+    setEntries(loadChangyan());
+  }, []);
 
   const byAlgo = Object.entries(stats.byAlgo);
   const byTopic = Object.entries(stats.byTopic);

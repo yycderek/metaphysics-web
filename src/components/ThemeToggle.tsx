@@ -1,15 +1,17 @@
 "use client";
-// 主题切换：亮色（默认）/ 暗色，localStorage 持久化
-import { useState } from "react";
+// 主题切换：亮色 / 暗色，localStorage 持久化；默认暗色（墨底）。
+import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "metaphysics-theme";
 const LEGACY_KEY = "liuren-theme";
 
 export default function ThemeToggle() {
-  // 首帧 class 已由 layout 内联脚本设置；默认暗色。此处惰性读取，SSR 时守卫 document 不存在
-  const [dark, setDark] = useState(
-    () => typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
-  );
+  // 首次渲染与 SSR 一致（false），挂载后再读 document 主题，避免 hydration 不一致
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains("dark"));
+  }, []);
 
   const toggle = () => {
     const next = !dark;

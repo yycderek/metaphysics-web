@@ -1,13 +1,18 @@
 "use client";
 // 历史回看：列出 localStorage 中此前的占卜，可展开查看/删除。
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AgentResultCard from "./AgentResultCard";
 import { loadHistory, removeHistoryEntry, saveHistory, type HistoryEntry } from "@/lib/history";
 
 export default function HistoryPanel() {
-  const [entries, setEntries] = useState<HistoryEntry[]>(loadHistory);
+  const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [show, setShow] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
+
+  // 挂载后从 localStorage 载入，避免与 SSR 首帧不一致（hydration 错误）
+  useEffect(() => {
+    setEntries(loadHistory());
+  }, []);
 
   const del = (id: string) => {
     const next = removeHistoryEntry(entries, id);
