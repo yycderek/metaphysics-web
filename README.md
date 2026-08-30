@@ -1,6 +1,6 @@
 # metaphysics-web · 玄学占卜平台
 
-多算法玄学占卜平台。内置大六壬起课引擎（天地盘、四课、三传、天将六亲可视化 + AI 断课），支持小六壬插件与远程算法服务扩展。深色玄学风（墨底 · 朱砂 · 金），Next.js 16 + Tailwind 4 + framer-motion。
+多算法玄学占卜平台。内置大六壬起课引擎（天地盘、四课、三传、天将六亲可视化 + AI 智能起课解卦），并内置小六壬、六爻、梅花易数。中式「青花 · 玄」配色（亮=青白瓷·黛蓝·朱砂，暗=玄青墨·月白蓝，默认亮色），Next.js 16 + Tailwind 4 + framer-motion。
 
 ## 功能
 
@@ -10,7 +10,7 @@
 - ✅ **应验追踪 + 历史回看**：每卦标记 应验/未应验/待验证，累计**准确率**；占卜记录保存在浏览器（localStorage），可回看/删除
 - 🧭 **技能路由**：按问事意图路由到专属断法（事业/感情/求财/健康/出行/学业/择日），并智能注入断法提示
 - 🛡️ **内容安全与合规**：敏感/有害问事拦截；结果带"仅供娱乐参考，不构成医疗/法律/财务建议"免责
-- 🧪 **断课质量评估**（`/api/eval`）：黄金题库（大六壬/梅花）× 多模型对比——硬指标（卦象一致/自校验/步骤）+ LLM-as-judge 质量分，SSE 产出评分矩阵
+- 🧪 **断课质量评估**（开发/内部，非用户界面）：黄金题库（大六壬/梅花）× 多模型对比——硬指标（卦象一致/自校验/步骤）+ LLM-as-judge 质量分，SSE 产出评分矩阵（`/api/eval`）
 - 📤 **分享卡**：每卦可一键生成玄学风竖版图片（下载 PNG / 复制图片）
 - 🦉 **AI 断课**（起课结果下方）：基于引擎精确起好的课式，由 AI 流式断课——总断→分述→建议；支持快捷提问（事业/感情/财运）、自由追问、思考过程折叠、课式变化自动清空对话
 - 🌓 **主题切换**：亮色（默认）/ 暗色双主题，右上角一键切换，localStorage 持久化
@@ -20,8 +20,8 @@
 
 - **算法注册表** `src/lib/algorithms/registry.ts`：`AlgorithmAdapter` 接口（`id/name/build/parseInput`）。当前内置 **大六壬、小六壬、六爻、梅花易数**（小六壬为本地插件，六爻/梅花在 `algorithms/liuyao.ts`、`algorithms/meihua.ts`）；新算法实现同一接口即可接入
 - **两种插件形态**：
-  - 本地插件：`src/plugins/` 写适配器 → `plugins/index.ts` 注册
-  - 远程算法服务：页面「🔌 远程算法服务」配置 HTTP 端点即可（任意语言实现，协议见 `docs/PLUGIN-GUIDE.md`，含 Python 示例服务）
+  - 本地插件：`src/plugins/` 写适配器 → `plugins/index.ts` 注册（内置 小六壬/六爻/梅花）
+  - 远程算法服务（开发可扩展，未在 UI 暴露）：配置 HTTP 端点即可接入，协议见 `docs/PLUGIN-GUIDE.md`
 - **易学公库** `src/lib/algorithms/yijing.ts`：六十四卦（上下卦→卦名）、八宫世应、纳甲、先天八卦数，六爻/梅花复用
 - **断课模板** `src/lib/divine/`：每种算法一个模板产生"课式上下文"——大六壬/小六壬/六爻/梅花/通用；六爻/梅花均含专业断法（用神/体用/本互变/动爻）
 - **断例 RAG** `src/lib/agent/duanli.ts`：按课名/卦名/六亲/事类检索古籍断例，注入上下文供模型引用真实出处（《六壬指南》《六壬粹言》《卜筮正宗》《梅花易数》等），**只可引用已检索断例、不得杜撰出处**
@@ -37,7 +37,7 @@
 - **智能 Agent**（`/api/agent` + `src/lib/agent/`）：模型通过 `divinate` 工具调用引擎（function-calling），自主决定算法/参数；信息不足会先 `ask_clarification` 澄清；已算过的卦作为记忆可复读对比；最终输出结构化断语并**自校验**（大六壬比对三传/天将/六亲、其它算法比对卦名，不符重试）；**SSE 流式**返回过程；默认取**真太阳时 + 节气精确月将**（可选经度，见 `lib/astro.ts`）；同参数 divinate 去重
 - 流式 SSE：`/api/divine` 透传 AI 聊天补全，思考过程（`reasoning_content`）与正文（`content`）分开展示
 - 断课原则内置：课名 → 三传 → 天将 → 六亲 → 旺衰 → 旬空逐层分析，追问只答追问
-- **可替换 AI API**：断课面板 ⚙️ 设置支持任意 OpenAI 兼容服务（DeepSeek/通义/豆包/Kimi/智谱/硅基流动/Ollama/vLLM），配置 baseUrl / apiKey / model / temperature，localStorage 持久化；留空回退服务端默认（环境变量 `AI_API_KEY` / `AI_BASE_URL` / `AI_MODEL`，旧名 `DEEPSEEK_*` 兼容；本地开发自动读 `~/.hermes/.env`）
+- **可替换 AI API**：首页智能占卜右上角「⚙️ 自定义 AI API」（首页面板），高级用法内 AI 解读面板亦支持——任意 OpenAI 兼容服务（DeepSeek/通义/豆包/Kimi/智谱/硅基流动/Ollama/vLLM），配置 baseUrl / apiKey / model / temperature，localStorage 持久化；留空回退服务端默认（环境变量 `AI_API_KEY` / `AI_BASE_URL` / `AI_MODEL`，旧名 `DEEPSEEK_*` 兼容；本地开发自动读 `~/.hermes/.env`）
 
 ## 开发
 
@@ -61,7 +61,7 @@ npm run build        # 生产构建
 | 算法    | `src/lib/*.ts`                                                                      | 天地盘 / 四课 / 九宗门 / 天将 / 六亲，与 liuren-py 同源 |
 | AI 断课 | `src/lib/prompt.ts` + `src/app/api/divine/route.ts` + `src/components/AiDuanke.tsx` | 断课提示词模板 / deepseek SSE 代理 / 对话面板           |
 | 组件    | `src/components/*.tsx`                                                              | 天盘圆盘 SVG、四课卡、三传链、表单、步骤演示            |
-| 页面    | `src/app/*`                                                                         | 起课工具页 + 学习演示页                                 |
+| 页面    | `src/app/*`                                                                         | 首页（智能占卜 + 高级起课）                             |
 
 ## 黄金课例
 
