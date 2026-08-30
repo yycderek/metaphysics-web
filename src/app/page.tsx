@@ -16,11 +16,11 @@ import SanchuanChain from "@/components/SanchuanChain";
 import AiDuanke from "@/components/AiDuanke";
 import DivinationAgent from "@/components/DivinationAgent";
 import StepRenderer from "@/components/StepRenderer";
-import DataTree from "@/components/DataTree";
 import SiteHeader from "@/components/SiteHeader";
 import ThemeToggle from "@/components/ThemeToggle";
 import LiuyaoPan from "@/components/LiuyaoPan";
 import MeihuaPan from "@/components/MeihuaPan";
+import SimpleResult from "@/components/SimpleResult";
 import GlossaryPanel from "@/components/GlossaryPanel";
 import HistoryPanel from "@/components/HistoryPanel";
 import EvalPanel from "@/components/EvalPanel";
@@ -175,10 +175,10 @@ export default function HomePage() {
                         </section>
                       ) : (
                         <section className="rounded-xl border border-ash/30 bg-ink p-4">
-                          <h3 className="text-gold font-bold mb-1">
+                          <h3 className="text-gold font-bold mb-2">
                             课式结果 · {result.algorithmName}
                           </h3>
-                          <DataTree data={result.raw} />
+                          <SimpleResult algorithmId={result.algorithmId} raw={result.raw} />
                         </section>
                       )
                     ) : (
@@ -219,7 +219,7 @@ export default function HomePage() {
       </div>
 
       <footer className="text-center text-xs text-ash pt-6 mt-8 border-t border-ash/20">
-        起课引擎与 liuren-py 同源 · 仅供文化娱乐参考，不构成专业建议
+        仅供文化娱乐参考，不构成医疗/法律/财务等专业建议
       </footer>
     </main>
   );

@@ -18,15 +18,41 @@ export default function TianPanDisk({ ks }: { ks: KeShi }) {
   return (
     <svg viewBox="0 0 420 420" className="w-full max-w-[440px] mx-auto">
       {/* 外环 */}
-      <circle cx={CX} cy={CY} r={R_OUTER} fill="#1e1914" stroke="#c9a227" strokeWidth="2" />
-      <circle cx={CX} cy={CY} r={R_TIAN + 18} fill="none" stroke="#4a3f2c" strokeWidth="1" />
-      <circle cx={CX} cy={CY} r={R_DI + 18} fill="none" stroke="#4a3f2c" strokeWidth="1" />
+      <circle
+        cx={CX}
+        cy={CY}
+        r={R_OUTER}
+        style={{ fill: "var(--ink-2)", stroke: "var(--gold)" }}
+        strokeWidth="2"
+      />
+      <circle
+        cx={CX}
+        cy={CY}
+        r={R_TIAN + 18}
+        fill="none"
+        style={{ stroke: "var(--ash)" }}
+        strokeWidth="1"
+      />
+      <circle
+        cx={CX}
+        cy={CY}
+        r={R_DI + 18}
+        fill="none"
+        style={{ stroke: "var(--ash)" }}
+        strokeWidth="1"
+      />
       {/* 中心 */}
-      <circle cx={CX} cy={CY} r={34} fill="#221d17" stroke="#c9a227" strokeWidth="1.5" />
-      <text x={CX} y={CY - 6} textAnchor="middle" fontSize="15" fill="#e8d9a8">
+      <circle
+        cx={CX}
+        cy={CY}
+        r={34}
+        style={{ fill: "var(--ink-2)", stroke: "var(--gold)" }}
+        strokeWidth="1.5"
+      />
+      <text x={CX} y={CY - 6} textAnchor="middle" fontSize="15" style={{ fill: "var(--paper)" }}>
         {ks.yuejiang}将
       </text>
-      <text x={CX} y={CY + 16} textAnchor="middle" fontSize="15" fill="#e8d9a8">
+      <text x={CX} y={CY + 16} textAnchor="middle" fontSize="15" style={{ fill: "var(--paper)" }}>
         {ks.shizhi}时
       </text>
 
@@ -41,7 +67,7 @@ export default function TianPanDisk({ ks }: { ks: KeShi }) {
             textAnchor="middle"
             dominantBaseline="central"
             fontSize="17"
-            fill="#f0e6d0"
+            style={{ fill: "var(--paper)" }}
           >
             {d}
           </text>
@@ -62,12 +88,18 @@ export default function TianPanDisk({ ks }: { ks: KeShi }) {
               dominantBaseline="central"
               fontSize="19"
               fontWeight={isGui ? 700 : 400}
-              fill={isGui ? "#c9a227" : "#d9b98c"}
+              style={{ fill: isGui ? "var(--gold)" : "var(--paper)" }}
             >
               {tian}
             </text>
             {isGui && (
-              <text x={x} y={y - 22} textAnchor="middle" fontSize="13" fill="#c9a227">
+              <text
+                x={x}
+                y={y - 22}
+                textAnchor="middle"
+                fontSize="13"
+                style={{ fill: "var(--gold)" }}
+              >
                 ★贵
               </text>
             )}

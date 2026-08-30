@@ -6,7 +6,7 @@ const STORAGE_KEY = "metaphysics-theme";
 const LEGACY_KEY = "liuren-theme";
 
 export default function ThemeToggle() {
-  // 首帧 class 已由 layout 内联脚本设置；此处惰性读取，SSR 时守卫 document 不存在
+  // 首帧 class 已由 layout 内联脚本设置；默认暗色。此处惰性读取，SSR 时守卫 document 不存在
   const [dark, setDark] = useState(
     () => typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
   );

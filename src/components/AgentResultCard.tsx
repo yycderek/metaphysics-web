@@ -11,10 +11,10 @@ import TianPanDisk from "@/components/TianPanDisk";
 import SikeCards from "@/components/SikeCards";
 import SanchuanChain from "@/components/SanchuanChain";
 import StepRenderer from "@/components/StepRenderer";
-import DataTree from "@/components/DataTree";
 import ShareCard from "@/components/ShareCard";
 import LiuyaoPan from "@/components/LiuyaoPan";
 import MeihuaPan from "@/components/MeihuaPan";
+import SimpleResult from "@/components/SimpleResult";
 import ChangyanTrack from "@/components/ChangyanTrack";
 import { TermText } from "@/components/Term";
 
@@ -152,7 +152,7 @@ export default function AgentResultCard({
             ) : divination.algorithmId === "meihua" ? (
               <MeihuaPan raw={divination.raw} />
             ) : (
-              <DataTree data={divination.raw} />
+              <SimpleResult algorithmId={divination.algorithmId} raw={divination.raw} />
             )
           ) : (
             <p className="text-xs text-ash">未返回课式（该轮未起课，直接基于上文解读）。</p>

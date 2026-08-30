@@ -1,26 +1,26 @@
 @import "tailwindcss";
 
-/* 主题色板（CSS 变量，支持亮/暗切换） */
+/* 主题色板（CSS 变量，支持亮/暗切换）——「绢本 · 朱砂 · 鎏金 · 青玉」中式玄学配色 */
 :root {
-  /* 亮色（默认） */
-  --ink: #f6f1e7; /* 页面底 · 暖米白 */
-  --ink-2: #fffdf8; /* 卡片底 */
-  --paper: #3d362c; /* 主文字 · 深墨棕 */
-  --vermilion: #b23a28; /* 朱砂（加深保证对比度） */
-  --gold: #9a7a12; /* 金（加深保证对比度） */
-  --jade: #2f7d5f; /* 青玉 */
-  --ash: #6d6355; /* 次要文字 */
+  /* 亮色（绢本米白，弱化成暖纸而非冷灰） */
+  --ink: #f3eee3; /* 页面底 · 绢本米白 */
+  --ink-2: #fbf7ef; /* 卡片底 · 宣纸 */
+  --paper: #2b2620; /* 主文字 · 墨青 */
+  --vermilion: #a6342a; /* 朱砂红 */
+  --gold: #8a5a1b; /* 鎏金褐金 */
+  --jade: #1c6a55; /* 黛青 · 青玉 */
+  --ash: #6f665a; /* 次要文字 · 岩灰 */
 }
 
 .dark {
-  /* 暗色（玄学风原色板） */
-  --ink: #16130f; /* 墨底 */
-  --ink-2: #221d17; /* 次级底 */
-  --paper: #f0e6d0; /* 宣纸 */
-  --vermilion: #c0442f; /* 朱砂 */
-  --gold: #c9a227; /* 金 */
-  --jade: #3f8f6d; /* 青玉 */
-  --ash: #8a8071; /* 灰 */
+  /* 暗色（玄学墨底） */
+  --ink: #12100c; /* 墨底 */
+  --ink-2: #1d1a15; /* 次级底 */
+  --paper: #ede2cf; /* 宣纸 */
+  --vermilion: #c8442e; /* 朱砂 */
+  --gold: #d6a63c; /* 鎏金 */
+  --jade: #3aa584; /* 青玉 */
+  --ash: #8b8172; /* 岩灰 */
 }
 
 @theme {
@@ -31,7 +31,7 @@
   --color-gold: var(--gold);
   --color-jade: var(--jade);
   --color-ash: var(--ash);
-  --font-serif-cn: "Songti SC", "Noto Serif SC", "STSong", serif;
+  --font-serif-cn: "Songti SC", "Noto Serif SC", "STSong", "SimSun", serif;
 }
 
 html,

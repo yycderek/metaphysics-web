@@ -28,10 +28,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
-      {/* 首帧前设置主题，避免闪烁；默认亮色，localStorage 无值时不动（亮）。
-          优先读 metaphysics-theme，回退旧键 liuren-theme（迁移期兼容）。 */}
+      {/* 首帧前设置主题，避免闪烁；默认暗色（玄学墨底），除非用户显式存过 light */}
       <Script id="theme-init" strategy="beforeInteractive">
-        {`(function(){try{var t=localStorage.getItem("metaphysics-theme");if(t==null)t=localStorage.getItem("liuren-theme");if(t==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})()`}
+        {`(function(){try{var t=localStorage.getItem("metaphysics-theme");if(t==null)t=localStorage.getItem("liuren-theme");if(t!=="light"){document.documentElement.classList.add("dark")}}catch(e){}})()`}
       </Script>
       <body suppressHydrationWarning>{children}</body>
     </html>
