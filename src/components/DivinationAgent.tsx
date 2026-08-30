@@ -255,18 +255,9 @@ export default function DivinationAgent() {
           <button
             onClick={() => run()}
             disabled={busy}
-            className="flex-1 rounded-lg bg-vermilion px-6 py-2 text-sm font-bold text-paper hover:bg-vermilion/80 transition-colors disabled:opacity-40"
+            className="flex-1 rounded-lg bg-gold px-6 py-2 text-sm font-bold text-ink hover:bg-gold/90 transition-colors disabled:opacity-40"
           >
             {busy ? "占卜中…" : pendingClarify ? "继续" : "开始占卜"}
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowProfile((s) => !s)}
-            aria-expanded={showProfile}
-            title="出生信息（可选，用于个人化）"
-            className="text-xs text-ash hover:text-gold transition-colors"
-          >
-            🧑
           </button>
         </div>
 
@@ -293,6 +284,12 @@ export default function DivinationAgent() {
               {q}
             </button>
           ))}
+          <span
+            className="text-xs text-ash/70 self-center cursor-pointer hover:text-gold"
+            onClick={() => setShowProfile((s) => !s)}
+          >
+            {showProfile ? "收起出生信息" : "✦ 出生信息（可选）"}
+          </span>
         </div>
       </div>
 

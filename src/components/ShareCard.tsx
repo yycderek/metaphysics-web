@@ -90,7 +90,7 @@ export default function ShareCard({ interpretation }: Props) {
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         width={WIDTH}
         height={HEIGHT}
-        style={{ fontFamily: `"Songti SC","Noto Serif SC","STSong","SimSun",serif` }}
+        style={{ fontFamily: `"Kaiti SC","STKaiti","KaiTi","LXGW WenKai","Noto Serif SC",serif` }}
         className="w-full max-w-[320px] mx-auto block"
       >
         <rect width={WIDTH} height={HEIGHT} fill={INK} />

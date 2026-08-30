@@ -356,7 +356,7 @@ export default function DivineForm({
         <button
           onClick={divine}
           disabled={busy}
-          className="rounded-lg bg-vermilion px-6 py-2 text-sm font-bold text-paper hover:bg-vermilion/80 transition-colors disabled:opacity-40"
+          className="rounded-lg bg-gold px-6 py-2 text-sm font-bold text-ink hover:bg-gold/90 transition-colors disabled:opacity-40"
         >
           {busy ? "起课中…" : "起课"}
         </button>

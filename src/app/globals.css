@@ -32,7 +32,8 @@
   --color-gold: var(--gold);
   --color-jade: var(--jade);
   --color-ash: var(--ash);
-  --font-serif-cn: "Songti SC", "Noto Serif SC", "STSong", "SimSun", serif;
+  --font-serif-cn:
+    "Kaiti SC", "STKaiti", "KaiTi", "LXGW WenKai", "Noto Serif SC", "Songti SC", "SimSun", serif;
 }
 
 html,

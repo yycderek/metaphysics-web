@@ -380,7 +380,7 @@ export default function AiDuanke({ result }: Props) {
         ) : (
           <button
             onClick={() => ask()}
-            className="rounded-lg bg-vermilion px-4 py-2 text-sm font-bold text-paper hover:bg-vermilion/80 transition-colors"
+            className="rounded-lg bg-gold px-4 py-2 text-sm font-bold text-ink hover:bg-gold/90 transition-colors"
           >
             断课
           </button>
