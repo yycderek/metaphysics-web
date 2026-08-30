@@ -20,6 +20,14 @@ interface Props {
 
 const DEFAULT = { rizhu: "庚子", shizhi: "午", yuejiang: "亥" };
 
+/** 六爻摇掷：随机 6 个（6/7/8/9） */
+function randomTosses(): string {
+  return Array.from({ length: 6 }, () => 6 + Math.floor(Math.random() * 4)).join(",");
+}
+
+const numCls =
+  "bg-ink-2 border border-ash/40 rounded-lg px-3 py-2 text-paper text-sm focus:border-gold outline-none";
+
 const inputCls =
   "bg-ink-2 border border-ash/40 rounded-lg px-3 py-2 text-paper text-sm focus:border-gold outline-none";
 
@@ -36,6 +44,13 @@ export default function DivineForm({
   const [shizhi, setShizhi] = useState(DEFAULT.shizhi);
   const [yuejiang, setYuejiang] = useState(DEFAULT.yuejiang);
   const [jsonInput, setJsonInput] = useState("");
+  // 各算法友好输入
+  const [xlMonth, setXlMonth] = useState("3");
+  const [xlDay, setXlDay] = useState("18");
+  const [xlHour, setXlHour] = useState("7");
+  const [yaoTosses, setYaoTosses] = useState(() => randomTosses());
+  const [mh1, setMh1] = useState("3");
+  const [mh2, setMh2] = useState("7");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -61,10 +76,16 @@ export default function DivineForm({
       let input: AlgorithmInput;
       if (isDaliuren) {
         input = { rizhu: gan + zhi, shizhi, yuejiang };
+      } else if (selectedId === "xiaoliuren") {
+        input = { month: Number(xlMonth), day: Number(xlDay), hour: Number(xlHour) };
+      } else if (selectedId === "liuyao") {
+        input = { tosses: yaoTosses };
+      } else if (selectedId === "meihua") {
+        input = { num1: Number(mh1), num2: Number(mh2) };
       } else {
         const parsed: unknown = JSON.parse(jsonInput || "{}");
         if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-          throw new Error('JSON 输入必须是对象，如 {"month": 3, "day": 18, "question": "出行"}');
+          throw new Error('JSON 输入必须是对象，如 {"month": 3}');
         }
         input = parsed as AlgorithmInput;
       }
@@ -250,15 +271,84 @@ export default function DivineForm({
             ⌚ 当前时间
           </button>
         </div>
+      ) : selectedId === "xiaoliuren" ? (
+        <div className="flex flex-wrap items-end gap-3">
+          {(["月", "日", "时"] as const).map((label, i) => (
+            <div key={label}>
+              <div className="text-xs text-ash mb-1">{label}</div>
+              <input
+                type="number"
+                min={1}
+                max={30}
+                className={`${numCls} w-20`}
+                value={[xlMonth, xlDay, xlHour][i]}
+                onChange={(e) =>
+                  i === 0
+                    ? setXlMonth(e.target.value)
+                    : i === 1
+                      ? setXlDay(e.target.value)
+                      : setXlHour(e.target.value)
+                }
+              />
+            </div>
+          ))}
+          <span className="text-xs text-ash pb-2">月/日/时（1-30 整数）</span>
+        </div>
+      ) : selectedId === "liuyao" ? (
+        <div>
+          <div className="text-xs text-ash mb-1">
+            六爻 · 铜钱摇卦（6 个值，6=老阴 7=少阳 8=少阴 9=老阳）
+          </div>
+          <div className="flex gap-2">
+            <input
+              className={`${inputCls} font-mono flex-1`}
+              value={yaoTosses}
+              onChange={(e) => setYaoTosses(e.target.value)}
+              placeholder="如 7,7,7,7,7,7"
+            />
+            <button
+              type="button"
+              onClick={() => setYaoTosses(randomTosses())}
+              className="rounded-lg border border-ash/40 px-3 py-2 text-sm text-ash hover:text-paper transition-colors"
+            >
+              🎲 随机摇卦
+            </button>
+          </div>
+        </div>
+      ) : selectedId === "meihua" ? (
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <div className="text-xs text-ash mb-1">报数一</div>
+            <input
+              type="number"
+              min={1}
+              className={`${numCls} w-20`}
+              value={mh1}
+              onChange={(e) => setMh1(e.target.value)}
+            />
+          </div>
+          <div>
+            <div className="text-xs text-ash mb-1">报数二</div>
+            <input
+              type="number"
+              min={1}
+              className={`${numCls} w-20`}
+              value={mh2}
+              onChange={(e) => setMh2(e.target.value)}
+            />
+          </div>
+          <span className="text-xs text-ash pb-2">两个正整数（报数起卦）</span>
+        </div>
       ) : (
         <div>
           <div className="text-xs text-ash mb-1">输入参数（JSON）</div>
           <textarea
             className={`${inputCls} w-full font-mono h-28 resize-y`}
-            placeholder={'{\n  "month": 3,\n  "day": 18,\n  "question": "出行"\n}'}
+            placeholder={'{\n  "key": "value"\n}'}
             value={jsonInput}
             onChange={(e) => setJsonInput(e.target.value)}
           />
+          <p className="text-xs text-ash/70 mt-1">远程/自定义算法需按协议传入 JSON。</p>
         </div>
       )}
 

@@ -4,7 +4,6 @@
 // 支持：澄清追问（信息不足时先问再算）、把已算的卦作为记忆复读、换时辰/参数对比。
 import { useRef, useState } from "react";
 import AgentResultCard from "@/components/AgentResultCard";
-import HistoryPanel from "@/components/HistoryPanel";
 import ChangyanReview from "@/components/ChangyanReview";
 import { toPriorDivination } from "@/lib/agent/divinate";
 import { loadHistory, pushHistoryEntry, saveHistory } from "@/lib/history";
@@ -17,6 +16,13 @@ const STORAGE_KEY = "metaphysics-ai-config";
 const LEGACY_STORAGE_KEY = "liuren-ai-config";
 
 const EXAMPLES = ["看看我最近的事业运势", "测测我明天出行的吉凶", "帮我看看这周换工作合不合适"];
+const ALGO_OPTIONS = [
+  { value: "auto", label: "自动（AI 选）" },
+  { value: "daliuren", label: "大六壬" },
+  { value: "xiaoliuren", label: "小六壬" },
+  { value: "liuyao", label: "六爻" },
+  { value: "meihua", label: "梅花易数" },
+];
 
 interface HistoryMsg {
   role: "user" | "assistant";
@@ -47,6 +53,7 @@ export default function DivinationAgent() {
   const [input, setInput] = useState("");
   const [turns, setTurns] = useState<AgentTurn[]>([]);
   const [pendingClarify, setPendingClarify] = useState<string | null>(null);
+  const [algo, setAlgo] = useState("auto");
   const [profile, setProfile] = useState("");
   const [showProfile, setShowProfile] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -76,6 +83,7 @@ export default function DivinationAgent() {
           history: threadRef.current,
           divinations: divinationsRef.current,
           profile: profile.trim() || undefined,
+          algorithm: algo === "auto" ? undefined : algo,
           calibration: (() => {
             const s = changyanStats(loadChangyan());
             return { overallAcc: s.acc, verified: s.verified, byTopic: s.byTopic };
@@ -192,36 +200,29 @@ export default function DivinationAgent() {
   return (
     <section className="rounded-xl border border-gold/40 bg-ink-2 p-4">
       <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
-        <h3 className="text-gold font-bold">🧬 智能占卜 Agent</h3>
-        <span className="text-xs text-ash">自主起课、追问澄清、可复读已算之卦、换参数对比</span>
+        <h3 className="text-gold font-bold">🔮 智能占卜</h3>
+        <span className="text-xs text-ash">
+          直接描述问题，AI 自动起课并解卦；可追问、换时辰对比
+        </span>
       </div>
 
-      <div className="mb-3">
+      <div className="mb-3 space-y-2">
         {pendingClarify && (
-          <div className="mb-2 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-sm text-gold">
+          <div className="rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-sm text-gold">
             🤔 请先回答：{pendingClarify}
           </div>
         )}
 
-        {/* 出生信息（可选，用于个人化断课） */}
-        <div className="mb-2">
-          <button
-            type="button"
-            onClick={() => setShowProfile((s) => !s)}
-            aria-expanded={showProfile}
-            className="text-xs text-ash hover:text-gold transition-colors"
-          >
-            🧑 出生信息（可选）{profile ? " •" : ""}
-          </button>
-          {showProfile && (
-            <input
-              value={profile}
-              onChange={(e) => setProfile(e.target.value)}
-              placeholder="如：1992-07-15 午时 男（用于个人化断课）"
-              className="mt-1 w-full bg-ink border border-ash/40 rounded-lg px-3 py-2 text-sm text-paper placeholder:text-ash/60 focus:border-gold outline-none"
-            />
-          )}
-        </div>
+        {/* 出生信息（可选，个人化用） */}
+        {showProfile && (
+          <input
+            value={profile}
+            onChange={(e) => setProfile(e.target.value)}
+            placeholder="出生信息（可选）：如 1992-07-15 午时 男"
+            className={`${inputCls} block`}
+          />
+        )}
+
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -233,26 +234,44 @@ export default function DivinationAgent() {
           }}
           rows={2}
           placeholder={
-            pendingClarify
-              ? "在这里回答上面的问题…"
-              : "如：帮我看看这周换工作合不合适（可指定日期/时辰）"
+            pendingClarify ? "在这里回答上面的问题…" : "把想问的事告诉我，如：这周换工作合适吗？"
           }
-          className={`${inputCls} h-20 resize-y`}
+          className={`${inputCls} h-20 resize-y w-full`}
         />
-        <div className="flex items-center gap-2 mt-2">
+
+        <div className="flex items-center gap-2">
+          <select
+            value={algo}
+            onChange={(e) => setAlgo(e.target.value)}
+            aria-label="选择算法"
+            className="bg-ink border border-ash/40 rounded-lg px-2 py-2 text-sm text-paper focus:border-gold outline-none"
+          >
+            {ALGO_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
           <button
             onClick={() => run()}
             disabled={busy}
-            className="rounded-lg bg-vermilion px-6 py-2 text-sm font-bold text-paper hover:bg-vermilion/80 transition-colors disabled:opacity-40"
+            className="flex-1 rounded-lg bg-vermilion px-6 py-2 text-sm font-bold text-paper hover:bg-vermilion/80 transition-colors disabled:opacity-40"
           >
-            {busy ? "起课中…" : pendingClarify ? "继续" : "开始占卜"}
+            {busy ? "占卜中…" : pendingClarify ? "继续" : "开始占卜"}
           </button>
-          {busy && (
-            <span className="text-xs text-ash animate-pulse">Agent 正在自主起课并解读…</span>
-          )}
+          <button
+            type="button"
+            onClick={() => setShowProfile((s) => !s)}
+            aria-expanded={showProfile}
+            title="出生信息（可选，用于个人化）"
+            className="text-xs text-ash hover:text-gold transition-colors"
+          >
+            🧑
+          </button>
         </div>
+
         {busy && progress.length > 0 && (
-          <div className="mt-2 rounded-lg border border-ash/30 bg-ink px-3 py-2 space-y-1">
+          <div className="rounded-lg border border-ash/30 bg-ink px-3 py-2 space-y-1">
             {progress.map((p, i) => (
               <div key={i} className="flex items-center gap-2 text-xs text-ash">
                 <span className="text-gold">{i === progress.length - 1 ? "●" : "✓"}</span>
@@ -261,7 +280,9 @@ export default function DivinationAgent() {
             ))}
           </div>
         )}
-        <div className="flex flex-wrap gap-2 mt-2">
+
+        <div className="flex flex-wrap gap-2">
+          <span className="text-xs text-ash/70 self-center">试试：</span>
           {EXAMPLES.map((q) => (
             <button
               key={q}
@@ -276,13 +297,6 @@ export default function DivinationAgent() {
       </div>
 
       {error && <div className="mb-3 text-sm text-vermilion">{error}</div>}
-
-      {turns.length === 0 && !busy && (
-        <p className="text-xs text-ash/70 leading-relaxed">
-          Agent
-          会自主选择算法与参数、调用引擎精确起课，再给出卦象与解读。信息不足时会先追问澄清，也可要求「换个时辰/参数」对比。
-        </p>
-      )}
 
       <div className="space-y-4">
         {turns.map((t, idx) => (
@@ -308,7 +322,6 @@ export default function DivinationAgent() {
       </div>
 
       <ChangyanReview />
-      <HistoryPanel />
 
       <p className="text-xs text-ash/60 pt-1">仅供文化娱乐参考，不构成医疗/法律/财务等专业建议。</p>
     </section>

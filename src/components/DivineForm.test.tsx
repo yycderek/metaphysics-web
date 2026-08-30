@@ -25,8 +25,14 @@ const xiaoliuren: AlgorithmAdapter = {
   description: "",
   build: dummyBuild,
 };
+const remote: AlgorithmAdapter = {
+  id: "remote",
+  name: "远程",
+  description: "",
+  build: dummyBuild,
+};
 
-const adapters = [daliuren, xiaoliuren];
+const adapters = [daliuren, xiaoliuren, remote];
 
 function renderForm(overrides: Record<string, unknown> = {}) {
   const onDivine = vi.fn().mockResolvedValue(undefined);
@@ -53,27 +59,45 @@ describe("DivineForm 输入/校验", () => {
     expect(screen.queryByText("输入参数（JSON）")).not.toBeInTheDocument();
   });
 
-  it("非大六壬模式切换为 JSON 输入框", () => {
+  it("小六壬模式显示 月/日/时 数字输入（非 JSON）", () => {
     renderForm({ selectedId: "xiaoliuren" });
+    expect(screen.getByText("月")).toBeInTheDocument();
+    expect(screen.getAllByRole("spinbutton").length).toBeGreaterThanOrEqual(3);
+    expect(screen.queryByText("输入参数（JSON）")).not.toBeInTheDocument();
+  });
+
+  it("六爻模式提供随机摇卦按钮", () => {
+    renderForm({ selectedId: "liuyao" });
+    expect(screen.getByText(/随机摇卦/)).toBeInTheDocument();
+  });
+
+  it("梅花易数显示两个报数输入", () => {
+    renderForm({ selectedId: "meihua" });
+    expect(screen.getByText("报数一")).toBeInTheDocument();
+    expect(screen.getByText("报数二")).toBeInTheDocument();
+  });
+
+  it("远程/自定义算法显示 JSON 输入框", () => {
+    renderForm({ selectedId: "remote" });
     expect(screen.getByText("输入参数（JSON）")).toBeInTheDocument();
     expect(screen.queryByText("日干")).not.toBeInTheDocument();
   });
 
-  it("JSON 输入非对象（数组）时报错且不触发起课", async () => {
-    const { onDivine } = renderForm({ selectedId: "xiaoliuren" });
-    const textarea = screen.getByPlaceholderText(/month/);
+  it("远程 JSON 输入非对象（数组）时报错且不触发起课", async () => {
+    const { onDivine } = renderForm({ selectedId: "remote" });
+    const textarea = screen.getByPlaceholderText(/key/);
     fireEvent.change(textarea, { target: { value: "[1,2,3]" } });
     fireEvent.click(screen.getByText("起课"));
     await waitFor(() => expect(screen.getByText(/JSON 输入必须是对象/)).toBeInTheDocument());
     expect(onDivine).not.toHaveBeenCalled();
   });
 
-  it("JSON 输入合法对象时以解析结果起课", async () => {
-    const { onDivine } = renderForm({ selectedId: "xiaoliuren" });
-    const textarea = screen.getByPlaceholderText(/month/);
-    fireEvent.change(textarea, { target: { value: '{"month": 3, "day": 18}' } });
+  it("远程 JSON 输入合法对象时以解析结果起课", async () => {
+    const { onDivine } = renderForm({ selectedId: "remote" });
+    const textarea = screen.getByPlaceholderText(/key/);
+    fireEvent.change(textarea, { target: { value: '{"month": 3}' } });
     fireEvent.click(screen.getByText("起课"));
     await waitFor(() => expect(onDivine).toHaveBeenCalled());
-    expect(onDivine).toHaveBeenCalledWith({ month: 3, day: 18 });
+    expect(onDivine).toHaveBeenCalledWith({ month: 3 });
   });
 });

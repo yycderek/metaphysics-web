@@ -211,7 +211,7 @@ export default function AiDuanke({ result }: Props) {
   return (
     <section className="rounded-xl border border-gold/40 bg-ink-2 p-4">
       <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
-        <h3 className="text-gold font-bold">🦉 AI 断课</h3>
+        <h3 className="text-gold font-bold">💬 AI 解读当前课盘</h3>
         <div className="flex items-center gap-2 text-xs text-ash">
           <button
             onClick={() => setShowSettings((s) => !s)}

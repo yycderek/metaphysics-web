@@ -1,11 +1,11 @@
 "use client";
-// 起课工具页：算法选择 → 注册表起课 → 双模式展示（课式结果 / 推导过程）
-// 阶段4：支持远程算法服务（localStorage 配置，客户端注册到注册表）
+// 首页：主区 = 智能占卜（对话框 + 算法选择）+ 高级用法（手动精确起课，用户主动开启）；
+// 侧边栏 = 术语速查 + 历史对话；主题切换固定在右上角。
 import { useEffect, useState } from "react";
-import "@/plugins"; // 副作用导入：注册本地算法插件（阶段4）
+import "@/plugins"; // 副作用导入：注册本地算法插件
 import type { DivinationResult, AlgorithmInput, AlgorithmAdapter } from "@/lib/algorithms/types";
 import { buildDivination, listAdapters, registerAdapter } from "@/lib/algorithms/registry";
-import { DALIUREN_ID, daliurenAdapter, rawKeShi } from "@/lib/algorithms/daliuren";
+import { DALIUREN_ID, rawKeShi } from "@/lib/algorithms/daliuren";
 import { createRemoteAdapter, type RemoteServiceConfig } from "@/lib/algorithms/remote";
 import { loadRemoteServices, saveRemoteServices } from "@/lib/algorithms/storage";
 import DivineForm from "@/components/DivineForm";
@@ -18,27 +18,24 @@ import DivinationAgent from "@/components/DivinationAgent";
 import StepRenderer from "@/components/StepRenderer";
 import DataTree from "@/components/DataTree";
 import SiteHeader from "@/components/SiteHeader";
+import ThemeToggle from "@/components/ThemeToggle";
 import LiuyaoPan from "@/components/LiuyaoPan";
 import MeihuaPan from "@/components/MeihuaPan";
-import EvalPanel from "@/components/EvalPanel";
 import GlossaryPanel from "@/components/GlossaryPanel";
+import HistoryPanel from "@/components/HistoryPanel";
+import EvalPanel from "@/components/EvalPanel";
 import { chuanTianjiang } from "@/lib/shike";
-
-const GOLDEN_INPUT: AlgorithmInput = { rizhu: "庚子", shizhi: "午", yuejiang: "亥" };
 
 type Mode = "result" | "derive";
 
 export default function HomePage() {
-  // 初始课式：大六壬黄金课例（同步构建；buildDivination 异步化后适配器直调）
-  const [result, setResult] = useState<DivinationResult>(
-    () => daliurenAdapter.build(GOLDEN_INPUT) as DivinationResult,
-  );
+  const [result, setResult] = useState<DivinationResult | null>(null);
   const [mode, setMode] = useState<Mode>("result");
   const [selectedId, setSelectedId] = useState<string>(DALIUREN_ID);
   const [adapters, setAdapters] = useState<AlgorithmAdapter[]>(() => listAdapters());
   const [services, setServices] = useState<RemoteServiceConfig[]>([]);
+  const [advanced, setAdvanced] = useState(false);
 
-  // 客户端加载：注册远程算法服务 + 恢复服务列表
   useEffect(() => {
     const svc = loadRemoteServices();
     setServices(svc);
@@ -46,12 +43,12 @@ export default function HomePage() {
     setAdapters(listAdapters());
   }, []);
 
-  const ks = rawKeShi(result);
-  // chuanTianjiang 依赖大六壬 KeShi 结构，仅大六壬结果时计算（远程/插件算法 raw 结构不同）
-  const chuan = result.algorithmId === DALIUREN_ID ? chuanTianjiang(ks) : [];
+  const ks = result && result.algorithmId === DALIUREN_ID ? rawKeShi(result) : null;
+  const chuan = ks ? chuanTianjiang(ks) : [];
 
   const onDivine = async (input: AlgorithmInput) => {
-    setResult(await buildDivination(selectedId, input)); // 错误向上冒泡给 DivineForm 展示
+    setResult(await buildDivination(selectedId, input));
+    setMode("result");
   };
 
   const onServicesChange = (next: RemoteServiceConfig[]) => {
@@ -59,9 +56,8 @@ export default function HomePage() {
     saveRemoteServices(next);
     for (const s of next) registerAdapter(createRemoteAdapter(s));
     setAdapters(listAdapters());
-    if (next.every((s) => s.id !== selectedId) && selectedId !== DALIUREN_ID) {
-      setSelectedId(DALIUREN_ID); // 所选算法被删除时回退大六壬
-    }
+    if (next.every((s) => s.id !== selectedId) && selectedId !== DALIUREN_ID)
+      setSelectedId(DALIUREN_ID);
   };
 
   const onSelect = (id: string) => {
@@ -77,113 +73,153 @@ export default function HomePage() {
     }`;
 
   return (
-    <main className="min-h-screen max-w-5xl mx-auto px-4 py-8 space-y-6">
-      <SiteHeader
-        title="玄学 · 占卜"
-        subtitle="多算法起课平台：大六壬（月将加时 · 天地盘 · 四课 · 三传） · 小六壬（数字起课） · 插件扩展"
-        active="divine"
-      />
-
-      <DivineForm
-        adapters={adapters}
-        selectedId={selectedId}
-        onSelect={onSelect}
-        onDivine={onDivine}
-        services={services}
-        onServicesChange={onServicesChange}
-      />
-
-      {/* 双模式切换 */}
-      <div className="flex gap-2">
-        <button
-          className={tabCls(mode === "result")}
-          onClick={() => setMode("result")}
-          aria-pressed={mode === "result"}
-        >
-          📊 课式结果
-        </button>
-        <button
-          className={tabCls(mode === "derive")}
-          onClick={() => setMode("derive")}
-          aria-pressed={mode === "derive"}
-        >
-          🧭 推导过程
-        </button>
+    <main className="min-h-screen max-w-6xl mx-auto px-4 py-6">
+      {/* 主题：固定右上角 */}
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle />
       </div>
 
-      {mode === "result" ? (
-        result.algorithmId === DALIUREN_ID ? (
-          <>
-            <KeShiHeader ks={ks} />
+      <SiteHeader
+        title="玄学 · 占卜"
+        subtitle="描述问题即可占课；想手动指定参数可开启下方「高级用法」"
+      />
 
-            <section className="grid md:grid-cols-2 gap-6 items-start">
-              <div className="rounded-xl border border-ash/30 bg-ink-2 p-4">
-                <h3 className="text-gold font-bold mb-3 text-center">天地盘</h3>
-                <TianPanDisk ks={ks} />
-              </div>
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_300px]">
+        {/* 主区 */}
+        <div className="space-y-6">
+          <DivinationAgent />
 
-              <div className="space-y-6">
-                <div className="rounded-xl border border-ash/30 bg-ink-2 p-4">
-                  <h3 className="text-gold font-bold mb-3">四课</h3>
-                  <SikeCards ks={ks} />
-                </div>
-                <div className="rounded-xl border border-ash/30 bg-ink-2 p-4">
-                  <h3 className="text-gold font-bold mb-3">三传</h3>
-                  <SanchuanChain ks={ks} />
-                  <div className="mt-4 border-t border-ash/20 pt-3 space-y-1.5 text-sm">
-                    {chuan.map((c) => (
-                      <div key={c.name} className="flex items-center gap-3">
-                        <span className="w-12 text-gold">{c.name}</span>
-                        <span className="w-8 text-xl text-paper">{c.zhi}</span>
-                        <span className="w-20">
-                          {c.tianjiang.short}·{c.tianjiang.full}
-                        </span>
-                        <span className="text-xs text-ash flex-1">{c.tianjiang.zhushi}</span>
-                        <span className="text-xs text-paper">六亲 {c.liuqin}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </section>
-          </>
-        ) : (
+          {/* 高级用法：用户主动开启后才展示 */}
           <section className="rounded-xl border border-ash/30 bg-ink-2 p-4">
-            <h3 className="text-gold font-bold mb-1">课式结果 · {result.algorithmName}</h3>
-            {result.algorithmId === "liuyao" ? (
-              <LiuyaoPan raw={result.raw} />
-            ) : result.algorithmId === "meihua" ? (
-              <MeihuaPan raw={result.raw} />
-            ) : (
-              <>
-                <p className="text-xs text-ash mb-3">
-                  该算法无专属展示视图，以下为原始结果（raw）数据。
-                </p>
-                <DataTree data={result.raw} />
-              </>
+            <button
+              type="button"
+              onClick={() => setAdvanced((s) => !s)}
+              aria-expanded={advanced}
+              className="text-sm font-bold text-gold"
+            >
+              {advanced ? "▲ 收起" : "🔧 高级用法 · 手动精确起课"}
+            </button>
+            {advanced && (
+              <div className="mt-4 space-y-4">
+                <DivineForm
+                  adapters={adapters}
+                  selectedId={selectedId}
+                  onSelect={onSelect}
+                  onDivine={onDivine}
+                  services={services}
+                  onServicesChange={onServicesChange}
+                />
+
+                {result ? (
+                  <>
+                    <div className="flex gap-2">
+                      <button
+                        className={tabCls(mode === "result")}
+                        onClick={() => setMode("result")}
+                        aria-pressed={mode === "result"}
+                      >
+                        📊 课式结果
+                      </button>
+                      <button
+                        className={tabCls(mode === "derive")}
+                        onClick={() => setMode("derive")}
+                        aria-pressed={mode === "derive"}
+                      >
+                        🧭 推导过程
+                      </button>
+                    </div>
+
+                    {mode === "result" ? (
+                      ks ? (
+                        <>
+                          <KeShiHeader ks={ks} />
+                          <section className="grid md:grid-cols-2 gap-6 items-start">
+                            <div className="rounded-xl border border-ash/30 bg-ink p-4">
+                              <h3 className="text-gold font-bold mb-3 text-center">天地盘</h3>
+                              <TianPanDisk ks={ks} />
+                            </div>
+                            <div className="space-y-6">
+                              <div className="rounded-xl border border-ash/30 bg-ink p-4">
+                                <h3 className="text-gold font-bold mb-3">四课</h3>
+                                <SikeCards ks={ks} />
+                              </div>
+                              <div className="rounded-xl border border-ash/30 bg-ink p-4">
+                                <h3 className="text-gold font-bold mb-3">三传</h3>
+                                <SanchuanChain ks={ks} />
+                                <div className="mt-4 border-t border-ash/20 pt-3 space-y-1.5 text-sm">
+                                  {chuan.map((c) => (
+                                    <div key={c.name} className="flex items-center gap-3">
+                                      <span className="w-12 text-gold">{c.name}</span>
+                                      <span className="w-8 text-xl text-paper">{c.zhi}</span>
+                                      <span className="w-20">
+                                        {c.tianjiang.short}·{c.tianjiang.full}
+                                      </span>
+                                      <span className="text-xs text-ash flex-1">
+                                        {c.tianjiang.zhushi}
+                                      </span>
+                                      <span className="text-xs text-paper">六亲 {c.liuqin}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </section>
+                        </>
+                      ) : result.algorithmId === "liuyao" ? (
+                        <section className="rounded-xl border border-ash/30 bg-ink p-4">
+                          <LiuyaoPan raw={result.raw} />
+                        </section>
+                      ) : result.algorithmId === "meihua" ? (
+                        <section className="rounded-xl border border-ash/30 bg-ink p-4">
+                          <MeihuaPan raw={result.raw} />
+                        </section>
+                      ) : (
+                        <section className="rounded-xl border border-ash/30 bg-ink p-4">
+                          <h3 className="text-gold font-bold mb-1">
+                            课式结果 · {result.algorithmName}
+                          </h3>
+                          <DataTree data={result.raw} />
+                        </section>
+                      )
+                    ) : (
+                      <section className="rounded-xl border border-ash/30 bg-ink p-6">
+                        <h3 className="text-gold font-bold mb-1">完整推导过程</h3>
+                        <p className="text-xs text-ash mb-4">
+                          一步步还原这课式的诞生过程（{result.algorithmName}）。
+                        </p>
+                        <StepRenderer result={result} />
+                      </section>
+                    )}
+
+                    <AiDuanke result={result} />
+                  </>
+                ) : (
+                  <p className="text-xs text-ash">
+                    选择算法与参数后点击「起课」，课盘与解读将在此展示。
+                  </p>
+                )}
+              </div>
             )}
           </section>
-        )
-      ) : (
-        <section className="rounded-xl border border-ash/30 bg-ink-2 p-6">
-          <h3 className="text-gold font-bold mb-1">完整推导过程</h3>
-          <p className="text-xs text-ash mb-4">
-            一步步还原这课式的诞生过程（{result.algorithmName}）。
-          </p>
-          <StepRenderer result={result} />
-        </section>
-      )}
+        </div>
 
-      <DivinationAgent />
+        {/* 侧边栏 */}
+        <aside className="space-y-6">
+          <GlossaryPanel />
+          <HistoryPanel />
+          <details className="rounded-xl border border-ash/30 bg-ink-2 p-4">
+            <summary className="cursor-pointer text-sm text-ash hover:text-paper">
+              🛠 开发调试 · 模型评估（可忽略）
+            </summary>
+            <div className="mt-3">
+              <EvalPanel />
+            </div>
+          </details>
+        </aside>
+      </div>
 
-      <EvalPanel />
-
-      <GlossaryPanel />
-
-      <AiDuanke result={result} />
-
-      <footer className="text-center text-xs text-ash pt-4 border-t border-ash/20">
-        起课引擎与 liuren-py 同源 · 黄金课例：庚子日 午时 亥将 → 重审课（巳戌卯）
+      <footer className="text-center text-xs text-ash pt-6 mt-8 border-t border-ash/20">
+        起课引擎与 liuren-py 同源 · 仅供文化娱乐参考，不构成专业建议
       </footer>
     </main>
   );

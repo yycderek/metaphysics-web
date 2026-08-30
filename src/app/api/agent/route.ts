@@ -70,6 +70,7 @@ export async function POST(req: NextRequest) {
     history?: unknown;
     divinations?: unknown;
     profile?: string;
+    algorithm?: string;
     calibration?: unknown;
     aiConfig?: Parameters<typeof resolveAIConfig>[0];
   };
@@ -137,8 +138,11 @@ export async function POST(req: NextRequest) {
         const persona = derivePersona(body.profile);
         const skill = detectSkill(question);
         const calibration = sanitizeCalibration(body.calibration);
+        const forced = ["daliuren", "xiaoliuren", "liuyao", "meihua"].includes(body.algorithm ?? "")
+          ? (body.algorithm ?? "")
+          : null;
         const result = await runAgentLoop({
-          system: buildAgentSystem(prior, persona, skill, calibration),
+          system: buildAgentSystem(prior, persona, skill, calibration, forced),
           question,
           history: sanitizeHistory(body.history),
           callLLM: (messages) =>
