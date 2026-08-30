@@ -27,10 +27,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
-      {/* 首帧前设置主题，避免闪烁；默认暗色（玄学墨底），除非用户显式存过 light */}
+    <html lang="zh-CN" className="dark" suppressHydrationWarning>
+      {/* 默认暗色（墨底）。仅当用户显式存过 light 才移除 dark；SSR 就已带 dark，确保默认生效 */}
       <Script id="theme-init" strategy="beforeInteractive">
-        {`(function(){try{var t=localStorage.getItem("metaphysics-theme");if(t==null)t=localStorage.getItem("liuren-theme");if(t!=="light"){document.documentElement.classList.add("dark")}}catch(e){}})()`}
+        {`(function(){try{var t=localStorage.getItem("metaphysics-theme");if(t==null)t=localStorage.getItem("liuren-theme");if(t==="light"){document.documentElement.classList.remove("dark")}}catch(e){}})()`}
       </Script>
       <body suppressHydrationWarning>{children}</body>
     </html>
