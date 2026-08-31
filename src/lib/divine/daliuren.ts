@@ -13,6 +13,8 @@ import {
   CHANGSHENG_STAGES,
   TIANJIANG_JIXIONG,
   TIANJIANG_ZHUSHI,
+  sheng,
+  ke,
 } from "../data";
 
 const SEASON_HINT: Record<Season, string> = {
@@ -45,6 +47,7 @@ const SYSTEM_PROMPT = `你是研习大六壬多年的断课师傅，精通《大
 - 若追问：只回答追问本身，不重复整课断语；
 - 语气平实笃定，不故弄玄虚，不用"或许""可能"堆砌；不否定引擎给出的课式信息。
 - 【通俗】面向普通用户，用大白话；专业词第一次出现用括号白话解释（官鬼=工作压力权威，父母=文书长辈庇护，妻财=钱财利益，兄弟=同辈竞争，子孙=子女福气化解，旬空=暂时落空时机未到），讲清"为什么"，不要只堆口诀。
+- 【勿抱怨】不要在结果里说"引擎没给/缺少/无法断出"之类；引擎已给出课式与日主旺衰/旬空，请直接据此断。确需说明局限，一句话带过即可。
 - 【思考过程从简】只需快速梳理要点，不要长篇推演，把篇幅留给最终断语正文。
 
 参考表（旺衰、长生、天将取用）：
@@ -63,6 +66,17 @@ function formatChuan(c: ChuanDetail): string {
   return `${c.name}：${c.zhi}（${zhiWx}）· ${c.tianjiang.short}${c.tianjiang.full}（${c.tianjiang.jixiong}，${c.tianjiang.zhushi}）· 六亲${c.liuqin}`;
 }
 
+/** 日主旺衰：以日干五行为"我"，与当令五行比较 */
+const SEASON_LING: Record<Season, string> = { 春: "木", 夏: "火", 秋: "金", 冬: "水", 四季: "土" };
+function wangShuai(wo: string, ling: string): string {
+  if (wo === ling) return "旺（身强）";
+  if (sheng(ling, wo)) return "相（得令生，有力）";
+  if (sheng(wo, ling)) return "休（泄气）";
+  if (ke(ling, wo)) return "囚（受制）";
+  if (ke(wo, ling)) return "死（耗竭）";
+  return "平";
+}
+
 /** 课式 → 用户侧断课上下文（含完整课式信息，供 LLM 引用） */
 function buildContext(ks: KeShi, req: DivineRequest): string {
   const sike = sikeEntries(ks);
@@ -78,9 +92,11 @@ function buildContext(ks: KeShi, req: DivineRequest): string {
     .join("，");
   const riGanWx = TIANGAN_WUXING[ks.rigan];
   const riZhiWx = DIZHI_WUXING[ks.rizhi];
+  const riZhuWangShuai = wangShuai(riGanWx, SEASON_LING[req.season]);
 
   return `【本课课式（程序起课，勿改）】
 日柱：${ks.rizhu}日（日干${ks.rigan}属${riGanWx}，日支${ks.rizhi}属${riZhiWx}）
+日主旺衰：日干${ks.rigan}（${riGanWx}）值${req.season}（当令${SEASON_LING[req.season]}）为【${riZhuWangShuai}】——旺相则身强可为，休囚则身弱宜守。
 占时：${ks.shizhi}时 · 月将：${ks.yuejiang}将
 课名：${ks.kename}（${ks.method}）
 贵人：${ks.guiren}（${ks.guirenMode}）· 旬空：${ks.xunkong[0]}${ks.xunkong[1]}
@@ -89,7 +105,7 @@ function buildContext(ks: KeShi, req: DivineRequest): string {
 ${sikeLines}
 三传：
 ${chuanLines}
-应期：旬空${ks.xunkong[0]}${ks.xunkong[1]}待出空填实；三传递生则速、递克则缓，末传值事之终期。
+应期参考：旬空${ks.xunkong[0]}${ks.xunkong[1]}主事虚迟，出空填实可应；三传所值之日为应期线索（递生则速、递克则缓）。
 占时季节：${req.season}（${seasonHint}）
 
 【问事】

@@ -58,6 +58,7 @@ function loadAIConfig(): Record<string, unknown> | undefined {
 
 export default function DivinationAgent() {
   const [input, setInput] = useState("");
+  const [followText, setFollowText] = useState("");
   const [turns, setTurns] = useState<AgentTurn[]>([]);
   const [pendingClarify, setPendingClarify] = useState<string | null>(null);
   const [algo, setAlgo] = useState("auto");
@@ -70,9 +71,14 @@ export default function DivinationAgent() {
   const threadRef = useRef<HistoryMsg[]>([]);
   const divinationsRef = useRef<{ summary: string; facts: string }[]>([]);
 
-  const run = async (q?: string) => {
+  const run = async (q?: string, fresh = false) => {
     const text = (q ?? input).trim();
     if (!text || busy) return;
+    // 新起一卦：清空上下文；追问/回答澄清则保留
+    if (fresh && !pendingClarify) {
+      threadRef.current = [];
+      divinationsRef.current = [];
+    }
     setInput("");
     setBusy(true);
     setError("");
@@ -233,13 +239,16 @@ export default function DivinationAgent() {
           />
         )}
 
+        {/* 新起一卦（追问请在下方每个结果旁的追问框） */}
+        <div className="text-xs text-ash/60">✨ 新起一卦：输入想问的（在此会开启全新一卦）</div>
+
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
               e.preventDefault();
-              run();
+              run(undefined, !pendingClarify);
             }
           }}
           rows={2}
@@ -263,11 +272,11 @@ export default function DivinationAgent() {
             ))}
           </select>
           <button
-            onClick={() => run()}
+            onClick={() => run(undefined, !pendingClarify)}
             disabled={busy}
             className="flex-1 rounded-lg bg-gold px-6 py-2 text-sm font-bold text-ink hover:bg-gold/90 transition-colors disabled:opacity-40"
           >
-            {busy ? "占卜中…" : pendingClarify ? "继续" : "开始占卜"}
+            {busy ? "占卜中…" : pendingClarify ? "继续" : "✨ 开始占卜"}
           </button>
         </div>
 
@@ -289,7 +298,7 @@ export default function DivinationAgent() {
           {(turns.length > 0 ? FOLLOW_UPS : EXAMPLES).map((q) => (
             <button
               key={q}
-              onClick={() => run(q)}
+              onClick={() => run(q, turns.length === 0)}
               disabled={busy}
               className="rounded-full border border-ash/40 px-3 py-1 text-xs text-ash hover:text-gold hover:border-gold transition-colors disabled:opacity-40"
             >
@@ -297,7 +306,9 @@ export default function DivinationAgent() {
             </button>
           ))}
           {turns.length > 0 && (
-            <span className="text-xs text-ash/70 self-center">（也可继续在上方输入）</span>
+            <span className="text-xs text-ash/70 self-center">
+              （想重新算一卦，用上面「✨ 开始占卜」）
+            </span>
           )}
           <span
             className="text-xs text-ash/70 self-center cursor-pointer hover:text-gold"
@@ -332,6 +343,36 @@ export default function DivinationAgent() {
           </div>
         ))}
       </div>
+
+      {/* 结果下的追问对话框（追问当前卦，可问更细，不必新起） */}
+      {turns.length > 0 && (
+        <div className="mt-4 border-t border-ash/20 pt-3">
+          <div className="text-xs text-ash mb-1">
+            💬 追问此卦：想问得更细、或换个角度，直接输入（可要求「换个时辰/参数/算法」再对比）
+          </div>
+          <div className="flex gap-2">
+            <input
+              value={followText}
+              onChange={(e) => setFollowText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  run(followText, false);
+                }
+              }}
+              placeholder="如：为什么三传这样断？"
+              className={`${inputCls} h-9 flex-1`}
+            />
+            <button
+              onClick={() => run(followText, false)}
+              disabled={busy}
+              className="rounded-lg bg-gold px-5 py-2 text-sm font-bold text-ink hover:bg-gold/90 disabled:opacity-40"
+            >
+              追问
+            </button>
+          </div>
+        </div>
+      )}
 
       <ChangyanReview />
 
