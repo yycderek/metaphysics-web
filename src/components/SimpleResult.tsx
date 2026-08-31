@@ -1,5 +1,7 @@
 "use client";
 // 友好结果卡：为没有专属视图的算法（小六壬 / 通用）展示醒目、可读的结果，而不是 raw JSON 树。
+import DataView from "./DataView";
+
 interface XiaoRaw {
   palm?: string;
   auspicious?: "吉" | "中" | "凶" | string;
@@ -31,39 +33,14 @@ function XiaoLiuRenCard({ raw }: { raw: XiaoRaw }) {
   );
 }
 
-/** 通用：把 top-level 字段渲染成清晰的名值对（嵌套对象折叠为代码块） */
-function GenericCard({ raw }: { raw: Record<string, unknown> }) {
-  const rows = Object.entries(raw);
-  return (
-    <div className="rounded-xl border border-ash/30 bg-ink p-4 space-y-2">
-      {rows.length === 0 && <p className="text-sm text-ash">（无结果数据）</p>}
-      {rows.map(([k, v]) => {
-        const isPrimitive =
-          typeof v === "string" || typeof v === "number" || typeof v === "boolean";
-        return (
-          <div
-            key={k}
-            className="flex gap-3 text-sm border-b border-ash/10 pb-2 last:border-0 last:pb-0"
-          >
-            <span className="w-20 shrink-0 text-gold">{k}</span>
-            {isPrimitive ? (
-              <span className="text-paper/90">{String(v)}</span>
-            ) : (
-              <code className="bg-ink-2 rounded px-2 py-0.5 text-xs text-paper/80 whitespace-pre-wrap break-all">
-                {JSON.stringify(v)}
-              </code>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 export default function SimpleResult({ algorithmId, raw }: { algorithmId: string; raw: unknown }) {
   const r = (raw ?? {}) as Record<string, unknown>;
   if (algorithmId === "xiaoliuren") {
     return <XiaoLiuRenCard raw={r as XiaoRaw} />;
   }
-  return <GenericCard raw={r} />;
+  return (
+    <div className="rounded-xl border border-ash/30 bg-ink p-4">
+      <DataView data={r} />
+    </div>
+  );
 }

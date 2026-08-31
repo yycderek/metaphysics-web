@@ -13,7 +13,7 @@ import { sikeEntries } from "@/lib/shike";
 import TianPanDisk from "./TianPanDisk";
 import SikeCards from "./SikeCards";
 import SanchuanChain from "./SanchuanChain";
-import DataTree from "./DataTree";
+import DataView from "./DataView";
 
 /** 大六壬专属步骤视图 */
 function DaliurenStepView({ step, ks }: { step: StepResult; ks: KeShi }) {
@@ -97,7 +97,7 @@ function DaliurenStepView({ step, ks }: { step: StepResult; ks: KeShi }) {
       );
     }
     default:
-      return <DataTree data={step.data} />;
+      return <DataView data={step.data} />;
   }
 }
 
@@ -216,7 +216,7 @@ export default function StepRenderer({ result, autoPlay = false }: Props) {
           {viewKind === "daliuren" && ks ? (
             <DaliurenStepView step={cur} ks={ks} />
           ) : (
-            <DataTree data={cur.data} />
+            <DataView data={cur.data} />
           )}
         </motion.div>
       </AnimatePresence>
