@@ -14,6 +14,7 @@ import TianPanDisk from "./TianPanDisk";
 import SikeCards from "./SikeCards";
 import SanchuanChain from "./SanchuanChain";
 import DataView from "./DataView";
+import { LiuyaoDemo, MeihuaDemo } from "./StepDemos";
 
 /** 大六壬专属步骤视图 */
 function DaliurenStepView({ step, ks }: { step: StepResult; ks: KeShi }) {
@@ -215,6 +216,10 @@ export default function StepRenderer({ result, autoPlay = false }: Props) {
         >
           {viewKind === "daliuren" && ks ? (
             <DaliurenStepView step={cur} ks={ks} />
+          ) : viewKind === "liuyao" ? (
+            <LiuyaoDemo step={cur} raw={result.raw} />
+          ) : viewKind === "meihua" ? (
+            <MeihuaDemo step={cur} raw={result.raw} />
           ) : (
             <DataView data={cur.data} />
           )}

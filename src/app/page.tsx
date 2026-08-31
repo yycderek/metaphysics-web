@@ -21,6 +21,7 @@ import MeihuaPan from "@/components/MeihuaPan";
 import SimpleResult from "@/components/SimpleResult";
 import GlossaryPanel from "@/components/GlossaryPanel";
 import HistoryPanel from "@/components/HistoryPanel";
+import BackupPanel from "@/components/BackupPanel";
 import { chuanTianjiang } from "@/lib/shike";
 
 type Mode = "result" | "derive";
@@ -31,6 +32,7 @@ export default function HomePage() {
   const [selectedId, setSelectedId] = useState<string>(DALIUREN_ID);
   const adapters: AlgorithmAdapter[] = listAdapters();
   const [advanced, setAdvanced] = useState(false);
+  const [view, setView] = useState<"divine" | "help" | "history">("divine");
 
   const ks = result && result.algorithmId === DALIUREN_ID ? rawKeShi(result) : null;
   const chuan = ks ? chuanTianjiang(ks) : [];
@@ -64,9 +66,30 @@ export default function HomePage() {
         subtitle="描述问题即可占课；想手动指定参数可开启下方「高级用法」"
       />
 
+      {/* 移动端：占卜 / 术语 / 历史 切换（桌面隐藏） */}
+      <div className="lg:hidden mt-4 flex gap-2">
+        {(
+          [
+            ["divine", "🔮 占卜"],
+            ["help", "📖 术语"],
+            ["history", "📜 历史"],
+          ] as const
+        ).map(([k, label]) => (
+          <button
+            key={k}
+            onClick={() => setView(k)}
+            className={`px-4 py-2 rounded-lg text-sm border transition-colors ${
+              view === k ? "border-gold/60 bg-gold/10 text-gold" : "border-ash/40 text-ash"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_300px]">
         {/* 主区 */}
-        <div className="space-y-6">
+        <div className={`space-y-6 ${view === "divine" ? "" : "hidden lg:block"}`}>
           <DivinationAgent />
 
           {/* 高级用法：用户主动开启后才展示 */}
@@ -181,10 +204,17 @@ export default function HomePage() {
           </section>
         </div>
 
-        {/* 侧边栏 */}
-        <aside className="space-y-6">
-          <GlossaryPanel />
-          <HistoryPanel />
+        {/* 侧边栏（移动端按 tab 显示，桌面全显） */}
+        <aside className={`space-y-6 ${view === "divine" ? "hidden lg:block" : ""}`}>
+          <div className={view === "help" ? "" : "hidden lg:block"}>
+            <GlossaryPanel />
+          </div>
+          <div className={view === "history" ? "" : "hidden lg:block"}>
+            <HistoryPanel />
+            <div className="mt-4">
+              <BackupPanel />
+            </div>
+          </div>
         </aside>
       </div>
 

@@ -170,8 +170,11 @@ export default function ShareCard({ interpretation }: Props) {
           </text>
         )}
 
+        <text x={WIDTH / 2} y={HEIGHT - 76} textAnchor="middle" fontSize={11} fill={ASH}>
+          仅供文化娱乐参考，不构成医疗/法律/财务等专业建议
+        </text>
         <text x={WIDTH / 2} y={HEIGHT - 44} textAnchor="middle" fontSize={12} fill={ASH}>
-          metaphysics-web · 可复现引擎起课
+          metaphysics-web · 玄学占卜
         </text>
       </svg>
 
