@@ -17,6 +17,12 @@ const STORAGE_KEY = "metaphysics-ai-config";
 const LEGACY_STORAGE_KEY = "liuren-ai-config";
 
 const EXAMPLES = ["看看我最近的事业运势", "测测我明天出行的吉凶", "帮我看看这周换工作合不合适"];
+const FOLLOW_UPS = [
+  "具体讲讲这个结果",
+  "换个时辰/参数再占对比",
+  "那换成梅花易数看看",
+  "我再问一句",
+];
 const ALGO_OPTIONS = [
   { value: "auto", label: "自动（AI 选）" },
   { value: "daliuren", label: "大六壬" },
@@ -277,8 +283,10 @@ export default function DivinationAgent() {
         )}
 
         <div className="flex flex-wrap gap-2">
-          <span className="text-xs text-ash/70 self-center">试试：</span>
-          {EXAMPLES.map((q) => (
+          <span className="text-xs text-ash/70 self-center">
+            {turns.length > 0 ? "💬 接着追问：" : "试试："}
+          </span>
+          {(turns.length > 0 ? FOLLOW_UPS : EXAMPLES).map((q) => (
             <button
               key={q}
               onClick={() => run(q)}
@@ -288,6 +296,9 @@ export default function DivinationAgent() {
               {q}
             </button>
           ))}
+          {turns.length > 0 && (
+            <span className="text-xs text-ash/70 self-center">（也可继续在上方输入）</span>
+          )}
           <span
             className="text-xs text-ash/70 self-center cursor-pointer hover:text-gold"
             onClick={() => setShowProfile((s) => !s)}

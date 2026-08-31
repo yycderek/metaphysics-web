@@ -142,7 +142,14 @@ export async function POST(req: NextRequest) {
           ? (body.algorithm ?? "")
           : null;
         const result = await runAgentLoop({
-          system: buildAgentSystem(prior, persona, skill, calibration, forced),
+          system: buildAgentSystem(
+            prior,
+            persona,
+            skill,
+            calibration,
+            forced,
+            Array.isArray(body.history) && body.history.length > 0,
+          ),
           question,
           history: sanitizeHistory(body.history),
           callLLM: (messages) =>
