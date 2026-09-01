@@ -38,12 +38,17 @@ export default function HistoryPanel() {
           )}
           {entries.map((h) => (
             <div key={h.id} className="rounded-lg border border-ash/30 bg-ink p-3 space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <div className="text-sm">
-                  <span className="text-gold">问：{h.question}</span>
-                  <span className="ml-2 text-xs text-ash">{h.卦象}</span>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-sm">
+                    <span className="text-gold">问：{h.question}</span>
+                    <span className="ml-2 text-xs text-ash">{h.卦象}</span>
+                  </div>
+                  <div className="mt-1 text-xs text-paper/80 leading-relaxed line-clamp-2">
+                    {h.interpretation.结论?.总断 ?? ""}
+                  </div>
                 </div>
-                <div className="flex gap-2 text-xs">
+                <div className="flex gap-2 text-xs shrink-0">
                   <button
                     onClick={() => setOpenId((v) => (v === h.id ? null : h.id))}
                     className="border border-ash/40 px-2 py-0.5 rounded text-ash hover:text-paper"
@@ -62,7 +67,7 @@ export default function HistoryPanel() {
                 <AgentResultCard
                   divination={h.divination}
                   interpretation={h.interpretation}
-                  divinations={h.divination ? [h.divination] : undefined}
+                  divinations={h.divinations}
                 />
               )}
             </div>

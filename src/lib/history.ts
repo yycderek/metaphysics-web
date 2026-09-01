@@ -8,6 +8,8 @@ export interface HistoryEntry {
   卦象: string;
   interpretation: AgentDivination;
   divination?: DivinationResult;
+  /** 多卦综断时保留全部卦（对比表） */
+  divinations?: DivinationResult[];
   ts: number;
 }
 

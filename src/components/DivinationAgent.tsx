@@ -174,6 +174,7 @@ export default function DivinationAgent() {
             卦象: ev.result.卦象,
             interpretation: ev.result!,
             divination: ev.meta?.divination,
+            divinations: ev.meta?.divinations,
             ts: Date.now(),
           };
           saveHistory(pushHistoryEntry(loadHistory(), h));
