@@ -2,6 +2,7 @@
 // 铁律：不自行起卦，只基于引擎排好的盘；本卦看现状、变卦看结局、动爻为关键。
 import type { DivineRequest, DivineTemplate } from "./types";
 import { registerDivineTemplate } from "./registry";
+import { yongShenFor, liuyaoYongShen } from "./yongshen";
 
 interface SixYao {
   爻位?: string;
@@ -49,6 +50,9 @@ function formatContext(req: DivineRequest): string {
   lines.push(
     `世爻：${raw?.世爻 ?? ""}　应爻：${raw?.应爻 ?? ""}　旬空：${(raw?.旬空 ?? []).join("")}　占日：${raw?.日柱 ?? ""}`,
   );
+  // 用神（引擎按问事锚定）：找对应六亲之爻及其旺衰/动/世应/旬空
+  const ys = yongShenFor("liuyao", req.question);
+  if (ys) lines.push(liuyaoYongShen(raw, ys, req.season));
   if (raw?.爻?.length) {
     lines.push(`六爻：`);
     for (const y of raw.爻) {

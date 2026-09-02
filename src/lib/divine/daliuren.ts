@@ -5,6 +5,7 @@ import type { DivineRequest, DivineTemplate, Season } from "./types";
 import { registerDivineTemplate } from "./registry";
 import { chuanTianjiang, sikeEntries } from "../shike";
 import { yingqiLine } from "@/lib/yingqi";
+import { yongShenFor, daliurenYongShen } from "./yongshen";
 import { genericDivineTemplate } from "./generic";
 import {
   DIZHI_WUXING,
@@ -102,6 +103,9 @@ function buildContext(ks: KeShi, req: DivineRequest): string {
     { label: `${ks.xunkong[0]}出空`, zhis: [ks.xunkong[0]] },
     { label: `${ks.xunkong[1]}出空`, zhis: [ks.xunkong[1]] },
   ]);
+  // 用神（引擎按问事锚定）：大六壬取三传中的用神六亲及其旺衰/旬空
+  const ys = yongShenFor("daliuren", req.question);
+  const yongShenLine = ys ? daliurenYongShen(chuan, ks.xunkong, ys, req.season) : "";
 
   return `【本课课式（程序起课，勿改）】
 日柱：${ks.rizhu}日（日干${ks.rigan}属${riGanWx}，日支${ks.rizhi}属${riZhiWx}）
@@ -114,7 +118,7 @@ function buildContext(ks: KeShi, req: DivineRequest): string {
 ${sikeLines}
 三传：
 ${chuanLines}
-应期（引擎推算，供参考）：${yingqi || "无明显值日/出空线索"}
+${yongShenLine ? yongShenLine + "\n" : ""}应期（引擎推算，供参考）：${yingqi || "无明显值日/出空线索"}
 占时季节：${req.season}（${seasonHint}）
 
 【问事】
