@@ -209,7 +209,7 @@ export default function DivinationAgent() {
   };
 
   const inputCls =
-    "flex-1 bg-ink border border-ash/40 rounded-lg px-3 py-2 text-sm text-paper placeholder:text-ash/60 focus:border-gold outline-none";
+    "flex-1 bg-ink border border-ash/40 rounded-lg px-3 py-2 text-sm text-paper placeholder:text-ash/85 focus:border-gold outline-none";
 
   return (
     <section className="rounded-xl border border-gold/40 bg-ink-2 p-4">
@@ -241,7 +241,7 @@ export default function DivinationAgent() {
         )}
 
         {/* 新起一卦（追问请在下方每个结果旁的追问框） */}
-        <div className="text-xs text-ash/60">✨ 新起一卦：输入想问的（在此会开启全新一卦）</div>
+        <div className="text-xs text-ash/85">✨ 新起一卦：输入想问的（在此会开启全新一卦）</div>
 
         <textarea
           value={input}
@@ -293,7 +293,7 @@ export default function DivinationAgent() {
         )}
 
         <div className="flex flex-wrap gap-2">
-          <span className="text-xs text-ash/70 self-center">
+          <span className="text-xs text-ash/85 self-center">
             {turns.length > 0 ? "💬 接着追问：" : "试试："}
           </span>
           {(turns.length > 0 ? FOLLOW_UPS : EXAMPLES).map((q) => (
@@ -307,12 +307,12 @@ export default function DivinationAgent() {
             </button>
           ))}
           {turns.length > 0 && (
-            <span className="text-xs text-ash/70 self-center">
+            <span className="text-xs text-ash/85 self-center">
               （想重新算一卦，用上面「✨ 开始占卜」）
             </span>
           )}
           <span
-            className="text-xs text-ash/70 self-center cursor-pointer hover:text-gold"
+            className="text-xs text-ash/85 self-center cursor-pointer hover:text-gold"
             onClick={() => setShowProfile((s) => !s)}
           >
             {showProfile ? "收起出生信息" : "✦ 出生信息（可选）"}
@@ -377,7 +377,7 @@ export default function DivinationAgent() {
 
       <ChangyanReview />
 
-      <p className="text-xs text-ash/60 pt-1">仅供文化娱乐参考，不构成医疗/法律/财务等专业建议。</p>
+      <p className="text-xs text-ash/85 pt-1">仅供文化娱乐参考，不构成医疗/法律/财务等专业建议。</p>
     </section>
   );
 }

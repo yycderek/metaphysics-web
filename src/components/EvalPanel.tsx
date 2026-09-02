@@ -97,7 +97,7 @@ export default function EvalPanel() {
           value={models}
           onChange={(e) => setModels(e.target.value)}
           placeholder="模型名，逗号分隔：deepseek-v4-flash, deepseek-chat"
-          className="flex-1 min-w-[240px] bg-ink border border-ash/40 rounded-lg px-3 py-2 text-sm text-paper placeholder:text-ash/60 focus:border-gold outline-none"
+          className="flex-1 min-w-[240px] bg-ink border border-ash/40 rounded-lg px-3 py-2 text-sm text-paper placeholder:text-ash/85 focus:border-gold outline-none"
         />
         <button
           onClick={run}

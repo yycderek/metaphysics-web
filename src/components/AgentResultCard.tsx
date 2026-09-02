@@ -94,10 +94,10 @@ export default function AgentResultCard({
       {share && <ShareCard interpretation={interpretation} />}
 
       {interpretation.出处 && (
-        <div className="text-xs text-ash/70">出处：{interpretation.出处}</div>
+        <div className="text-xs text-ash/85">出处：{interpretation.出处}</div>
       )}
       {facts && (
-        <div className="text-xs text-ash/70">
+        <div className="text-xs text-ash/85">
           <TermText text={`依据（已核对引擎）：${facts}`} />
         </div>
       )}

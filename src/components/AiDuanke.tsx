@@ -205,7 +205,7 @@ export default function AiDuanke({ result }: Props) {
   const stop = () => abortRef.current?.abort();
 
   const inputCls =
-    "w-full bg-ink border border-ash/40 rounded-lg px-2 py-1.5 text-sm text-paper placeholder:text-ash/50 focus:border-gold outline-none";
+    "w-full bg-ink border border-ash/40 rounded-lg px-2 py-1.5 text-sm text-paper placeholder:text-ash/80 focus:border-gold outline-none";
   const labelCls = "block text-xs text-ash mb-1";
 
   return (
@@ -325,7 +325,7 @@ export default function AiDuanke({ result }: Props) {
 
       <div className="space-y-3 max-h-96 overflow-y-auto pr-1 mb-3">
         {history.length === 0 && (
-          <p className="text-xs text-ash/70 leading-relaxed">
+          <p className="text-xs text-ash/85 leading-relaxed">
             基于上方程序精确算出的占卜结果（{result.algorithmName}，AI
             只负责解读），可问事业、感情、财运等。
           </p>
@@ -341,7 +341,7 @@ export default function AiDuanke({ result }: Props) {
               }
             >
               {m.role === "assistant" && m.reasoning && (
-                <details className="mb-2 text-xs text-ash/70 border-b border-ash/20 pb-1">
+                <details className="mb-2 text-xs text-ash/85 border-b border-ash/20 pb-1">
                   <summary className="cursor-pointer select-none">🧠 思考过程</summary>
                   <div className="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap">
                     {m.reasoning}
@@ -368,7 +368,7 @@ export default function AiDuanke({ result }: Props) {
             if (e.key === "Enter" && !e.nativeEvent.isComposing) ask();
           }}
           placeholder="输入想问的事，如：最近换工作合适吗？"
-          className="flex-1 bg-ink border border-ash/40 rounded-lg px-3 py-2 text-sm text-paper placeholder:text-ash/60 focus:border-gold outline-none"
+          className="flex-1 bg-ink border border-ash/40 rounded-lg px-3 py-2 text-sm text-paper placeholder:text-ash/85 focus:border-gold outline-none"
         />
         {streaming ? (
           <button

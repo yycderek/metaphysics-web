@@ -13,10 +13,10 @@ function Inline({ v }: { v: string | number | boolean }) {
 
 /** 递归渲染 */
 function render(v: unknown, depth: number): ReactNode {
-  if (v === null || v === undefined) return <span className="text-ash/60">—</span>;
+  if (v === null || v === undefined) return <span className="text-ash/85">—</span>;
   if (isPrimitive(v)) return <Inline v={v as string | number | boolean} />;
   if (Array.isArray(v)) {
-    if (v.length === 0) return <span className="text-ash/60">（无）</span>;
+    if (v.length === 0) return <span className="text-ash/85">（无）</span>;
     // 全原始值 → 一行列出；否则逐项小卡
     if (v.every(isPrimitive)) {
       return <span className="text-paper/90">{v.map(String).join("、")}</span>;
@@ -33,7 +33,7 @@ function render(v: unknown, depth: number): ReactNode {
   }
   if (typeof v === "object") {
     const entries = Object.entries(v as Record<string, unknown>);
-    if (entries.length === 0) return <span className="text-ash/60">（空）</span>;
+    if (entries.length === 0) return <span className="text-ash/85">（空）</span>;
     return (
       <div className="space-y-1">
         {entries.map(([k, val]) => (

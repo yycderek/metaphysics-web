@@ -46,7 +46,7 @@ export default function BackupPanel() {
 
   return (
     <div className="text-xs">
-      <span className="text-ash/70 mr-2">数据备份：</span>
+      <span className="text-ash/85 mr-2">数据备份：</span>
       <button type="button" onClick={exportJson} className={inputCls}>
         导出
       </button>

@@ -2,6 +2,7 @@
 // 输入：可选 { tosses?: number[] }（6 个 6/7/8/9，缺省则随机摇掷）。
 import { rizhuFromDate } from "@/lib/calendar";
 import { DIZHI_WUXING, xunkong } from "@/lib/data";
+import { yingqiLine } from "@/lib/yingqi";
 import type { KeShi } from "@/lib/types";
 import type { AlgorithmAdapter, AlgorithmInput, DivinationResult, StepResult } from "./types";
 import {
@@ -113,9 +114,15 @@ function buildRaw(tosses: Toss[], now: Date) {
     用神: `以卦宫${palaceWx}（${hex.palace}宫）为"我"论六亲。取用神：占事业/官讼/职守取官鬼，占财取妻财，占父母/文书/房产/长辈取父母，占子女/福泽取子孙，占兄弟/同辈/竞争取兄弟，占婚姻男取妻财、女取官鬼。`,
     应期: (() => {
       const moving = ys.filter((y) => y.moving).map((y) => y.zhi);
-      return moving.length
-        ? `动爻在${moving.join("、")}，应期看动爻所值之日；若涉旬空（${kong.join("")}），则待出空填实之期。`
+      const dates = yingqiLine(now, [
+        ...(moving.length ? [{ label: "动爻值日", zhis: moving }] : []),
+        { label: `${kong[0]}出空`, zhis: [kong[0]] },
+        { label: `${kong[1]}出空`, zhis: [kong[1]] },
+      ]);
+      const base = moving.length
+        ? `动爻在${moving.join("、")}，应期看动爻所值之日；若涉旬空（${kong.join("")}）则待出空填实。`
         : `静卦，应期较缓，看用神旺衰与其值日。`;
+      return dates ? `${base}（引擎推算：${dates}）` : base;
     })(),
     日柱: rizhu,
     爻: ys.map((y) => ({

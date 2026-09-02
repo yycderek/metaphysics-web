@@ -32,7 +32,7 @@ export default function ChangyanReview() {
       {show && (
         <div className="mt-3 space-y-3">
           {!stats.verified && (
-            <p className="text-xs text-ash/70">
+            <p className="text-xs text-ash/85">
               暂无已验证数据。给每卦打「应验/未应验」标记后，这里会汇总并反哺 agent 校准。
             </p>
           )}
@@ -78,7 +78,7 @@ export default function ChangyanReview() {
               </div>
             </div>
           )}
-          <p className="text-xs text-ash/60">
+          <p className="text-xs text-ash/85">
             这些数据会随每次占卜自动注入 agent（见「历史应验校准」），让高可靠处敢断、低可靠处收敛。
           </p>
         </div>

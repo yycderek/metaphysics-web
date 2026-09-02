@@ -4,6 +4,7 @@ import type { ChuanDetail, KeShi } from "../types";
 import type { DivineRequest, DivineTemplate, Season } from "./types";
 import { registerDivineTemplate } from "./registry";
 import { chuanTianjiang, sikeEntries } from "../shike";
+import { yingqiLine } from "@/lib/yingqi";
 import { genericDivineTemplate } from "./generic";
 import {
   DIZHI_WUXING,
@@ -93,6 +94,14 @@ function buildContext(ks: KeShi, req: DivineRequest): string {
   const riGanWx = TIANGAN_WUXING[ks.rigan];
   const riZhiWx = DIZHI_WUXING[ks.rizhi];
   const riZhuWangShuai = wangShuai(riGanWx, SEASON_LING[req.season]);
+  // 引擎推算具体应期：三传值日 + 旬空填实（从占日往后推日支命中的日期）
+  const yingqi = yingqiLine(new Date(), [
+    { label: "初传值日", zhis: [ks.sanchuan[0]] },
+    { label: "中传值日", zhis: [ks.sanchuan[1]] },
+    { label: "末传值日", zhis: [ks.sanchuan[2]] },
+    { label: `${ks.xunkong[0]}出空`, zhis: [ks.xunkong[0]] },
+    { label: `${ks.xunkong[1]}出空`, zhis: [ks.xunkong[1]] },
+  ]);
 
   return `【本课课式（程序起课，勿改）】
 日柱：${ks.rizhu}日（日干${ks.rigan}属${riGanWx}，日支${ks.rizhi}属${riZhiWx}）
@@ -105,7 +114,7 @@ function buildContext(ks: KeShi, req: DivineRequest): string {
 ${sikeLines}
 三传：
 ${chuanLines}
-应期参考：旬空${ks.xunkong[0]}${ks.xunkong[1]}主事虚迟，出空填实可应；三传所值之日为应期线索（递生则速、递克则缓）。
+应期（引擎推算，供参考）：${yingqi || "无明显值日/出空线索"}
 占时季节：${req.season}（${seasonHint}）
 
 【问事】

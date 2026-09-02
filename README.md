@@ -47,7 +47,7 @@ AI 会自主选算法、调用引擎精确起课，再给出解卦。信息不�
 
 ```bash
 npm run dev          # 本地运行
-npm test             # vitest 测试（124 项）
+npm test             # vitest 测试（134 项）
 npm run typecheck    # 类型检查
 npm run lint         # ESLint
 npm run format       # Prettier

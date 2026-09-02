@@ -66,7 +66,7 @@ export default function ChangyanTrack({ id, algorithmId, topic, 卦象, 总结 }
         </button>
       ))}
       {stats.acc !== null && (
-        <span className="text-ash/70">
+        <span className="text-ash/85">
           已验证 {stats.verified} · 准确率 {stats.acc}%
         </span>
       )}

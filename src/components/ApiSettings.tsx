@@ -62,7 +62,7 @@ export default function ApiSettings() {
   };
 
   const inputCls =
-    "bg-ink border border-ash/40 rounded-lg px-2 py-1.5 text-sm text-paper placeholder:text-ash/50 focus:border-gold outline-none";
+    "bg-ink border border-ash/40 rounded-lg px-2 py-1.5 text-sm text-paper placeholder:text-ash/80 focus:border-gold outline-none";
 
   return (
     <div className="text-xs">
@@ -77,7 +77,7 @@ export default function ApiSettings() {
 
       {show && (
         <div className="mt-2 rounded-lg border border-ash/30 bg-ink p-3 space-y-2">
-          <p className="text-ash/70 leading-relaxed">
+          <p className="text-ash/85 leading-relaxed">
             使用 OpenAI 兼容服务（DeepSeek/通义/豆包/Kimi/智谱/Ollama/vLLM
             均可）。留空则用服务端默认模型。
           </p>

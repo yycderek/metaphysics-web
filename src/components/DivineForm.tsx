@@ -238,7 +238,7 @@ export default function DivineForm({ adapters, selectedId, onSelect, onDivine }:
             value={jsonInput}
             onChange={(e) => setJsonInput(e.target.value)}
           />
-          <p className="text-xs text-ash/70 mt-1">远程/自定义算法需按协议传入 JSON。</p>
+          <p className="text-xs text-ash/85 mt-1">远程/自定义算法需按协议传入 JSON。</p>
         </div>
       )}
 

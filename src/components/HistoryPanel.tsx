@@ -34,7 +34,7 @@ export default function HistoryPanel() {
       {show && (
         <div className="mt-3 space-y-3">
           {entries.length === 0 && (
-            <p className="text-xs text-ash/70">暂无历史（每次 Agent 占卜会保存在本浏览器）。</p>
+            <p className="text-xs text-ash/85">暂无历史（每次 Agent 占卜会保存在本浏览器）。</p>
           )}
           {entries.map((h) => (
             <div key={h.id} className="rounded-lg border border-ash/30 bg-ink p-3 space-y-2">
