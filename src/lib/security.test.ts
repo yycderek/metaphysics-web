@@ -57,6 +57,16 @@ describe("断例检索（RAG）", () => {
     expect(res.some((d) => d.卦 === "元首课")).toBe(true);
   });
 
+  it("课名精确命中应排第一（加权）", () => {
+    const res = searchDuanli(
+      "daliuren",
+      { kename: "伏吟课", sanchuan: ["子", "巳", "卯"] },
+      "感情",
+      5,
+    );
+    expect(res[0]?.卦).toBe("伏吟课");
+  });
+
   it("无匹配时 duanliContext 也约束不杜撰出处", () => {
     const ctx = duanliContext("xiaoliuren", { palm: "大安" }, "xx");
     expect(ctx).toContain("勿杜撰");

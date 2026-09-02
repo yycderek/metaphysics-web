@@ -260,21 +260,45 @@ function queryTokens(question: string, raw: unknown): string[] {
   return [...tokens].filter((t) => t.length >= 2);
 }
 
-/** 检索最相关断例（最多 n 条） */
+/** 检索最相关断例（最多 n 条）：加权——课名精确命中(强) > 算法类型 > 关键词匹配 */
 export function searchDuanli(algorithmId: string, raw: unknown, question: string, n = 3): Duanli[] {
   const tokens = queryTokens(question, raw);
+  const rawHex =
+    ((raw as { kename?: string })?.kename ?? "") ||
+    String(((raw as { 本卦?: string })?.本卦 ?? "").split("（")[0] ?? "");
   const scored = DUANLI.map((d) => {
     let score = 0;
+    // 关键词匹配：精确=3，子串=2
     for (const k of d.keywords) {
-      if (tokens.some((t) => t === k || t.includes(k) || k.includes(t))) score += 1;
+      for (const t of tokens) {
+        if (t && k) {
+          if (t === k) {
+            score += 3;
+            break;
+          }
+          if (t.includes(k) || k.includes(t)) {
+            score += 2;
+            break;
+          }
+        }
+      }
     }
-    if (d.类型 === "六壬" && algorithmId === "daliuren") score += 1;
-    if (d.类型 === "梅花" && algorithmId === "meihua") score += 1;
-    if (d.类型 === "六爻" && algorithmId === "liuyao") score += 1;
+    // 算法类型命中 = 强信号 +2
+    if (
+      (d.类型 === "六壬" && algorithmId === "daliuren") ||
+      (d.类型 === "梅花" && algorithmId === "meihua") ||
+      (d.类型 === "六爻" && algorithmId === "liuyao")
+    ) {
+      score += 2;
+    }
+    // 课名/卦名精确命中 = 最强信号 +4
+    if (rawHex && d.卦 && (d.卦 === rawHex || rawHex.includes(d.卦) || d.卦.includes(rawHex))) {
+      score += 4;
+    }
     return { d, score };
   })
     .filter((x) => x.score > 0)
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) => b.score - a.score || DUANLI.indexOf(a.d) - DUANLI.indexOf(b.d));
   return scored.slice(0, n).map((x) => x.d);
 }
 
