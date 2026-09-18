@@ -2,6 +2,7 @@
 // 三传链：初→中→末，节点含地支/天将/六亲
 import type { KeShi } from "@/lib/types";
 import { chuanTianjiang } from "@/lib/shike";
+import { IconCheck, IconMinus, IconWarning } from "@/components/icons";
 
 const JIXIONG_COLOR: Record<string, string> = {
   吉: "text-jade border-jade/60",
@@ -22,9 +23,17 @@ export default function SanchuanChain({ ks }: { ks: KeShi }) {
             >
               <div className="text-xs text-ash mb-1">{c.name}</div>
               <div className="text-3xl text-paper">{c.zhi}</div>
-              <div className="mt-1 text-sm">
+              <div className="mt-1 flex items-center justify-center gap-1 text-sm">
                 {c.tianjiang.short}
-                {c.tianjiang.jixiong === "吉" ? "🌟" : c.tianjiang.jixiong === "凶" ? "⚠️" : "➖"}
+                <span className="inline-flex">
+                  {c.tianjiang.jixiong === "吉" ? (
+                    <IconCheck size={13} />
+                  ) : c.tianjiang.jixiong === "凶" ? (
+                    <IconWarning size={13} />
+                  ) : (
+                    <IconMinus size={13} />
+                  )}
+                </span>
               </div>
               <div className="text-xs text-ash mt-0.5">{c.liuqin}</div>
             </div>

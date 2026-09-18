@@ -1,6 +1,7 @@
 "use client";
 // 应验复盘：按算法 × 事类聚合应验率，标注可靠区间。反馈给 agent 校准断语置信度。
 import { useEffect, useState } from "react";
+import { IconChart } from "@/components/icons";
 import { changyanStats, loadChangyan, reliability, type ChangyanEntry } from "@/lib/changyan";
 
 export default function ChangyanReview() {
@@ -25,9 +26,10 @@ export default function ChangyanReview() {
         type="button"
         onClick={() => setShow((s) => !s)}
         aria-expanded={show}
-        className="text-gold font-bold text-sm"
+        className="flex items-center gap-2 text-sm font-bold text-gold"
       >
-        📊 应验复盘{stats.verified ? ` · 应验率 ${stats.acc}%` : ""}
+        <IconChart size={15} />
+        应验复盘{stats.verified ? ` · 应验率 ${stats.acc}%` : ""}
       </button>
       {show && (
         <div className="mt-3 space-y-3">

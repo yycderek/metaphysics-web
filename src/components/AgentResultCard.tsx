@@ -1,6 +1,7 @@
 "use client";
 // Agent 结果卡：展示一次自主起课的卦象与解读。
-// 单卦 = 简略(天地盘/四课/三传+结论) / 详细(推导过程+逐步占断)；多卦 = 综断 + 对比表 + 逐卦解读。
+// 层次：卦象题头 → 引擎已核对依据 → 总断（视觉峰值 + 朱砂印）→ 课盘（弱化）→ 应验追踪。
+// 单卦 = 简略(结论+课盘) / 详细(推导过程+逐步占断)；多卦 = 综断 + 对比表 + 逐卦解读。
 import { useState } from "react";
 import type { AgentDivination } from "@/lib/agent/types";
 import type { DivinationResult } from "@/lib/algorithms/types";
@@ -16,6 +17,8 @@ import LiuyaoPan from "@/components/LiuyaoPan";
 import MeihuaPan from "@/components/MeihuaPan";
 import SimpleResult from "@/components/SimpleResult";
 import ChangyanTrack from "@/components/ChangyanTrack";
+import Seal from "@/components/Seal";
+import { IconCheck, IconCompass, IconShare } from "@/components/icons";
 import { TermText } from "@/components/Term";
 
 interface Props {
@@ -43,7 +46,7 @@ export default function AgentResultCard({
   const isMulti = !!(interpretation.卦组?.length || (divinations && divinations.length > 1));
 
   const tabCls = (active: boolean) =>
-    `px-3 py-1 rounded-lg text-xs border transition-colors ${
+    `inline-flex items-center gap-1 rounded-lg border px-3 py-1 text-xs transition-colors ${
       active ? "border-gold/60 bg-gold/10 text-gold" : "border-ash/40 text-ash hover:text-paper"
     }`;
 
@@ -59,16 +62,21 @@ export default function AgentResultCard({
     : "";
 
   return (
-    <div className="rounded-lg border border-ash/30 bg-ink p-4 space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="text-sm">
-          <span className="text-gold font-bold">{interpretation.卦象}</span>
-          {interpretation.吉凶 && (
-            <span className="ml-2 text-ash">吉凶 · {interpretation.吉凶}</span>
-          )}
-          <span className="ml-2 text-xs text-ash">
-            {interpretation.算法} · 置信度 {interpretation.置信度}
-          </span>
+    <div className="rise-in space-y-5 rounded-2xl border border-ash/30 bg-ink p-5">
+      {/* 题头 */}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-baseline gap-2">
+            <span className="text-lg font-bold text-gold">{interpretation.卦象}</span>
+            {interpretation.吉凶 && (
+              <span className="rounded-full border border-ash/40 px-2 py-0.5 text-xs text-ash">
+                吉凶 · {interpretation.吉凶}
+              </span>
+            )}
+          </div>
+          <div className="mt-0.5 text-xs text-ash">
+            {interpretation.算法} · 置信度 {interpretation.置信度}（AI 自评）
+          </div>
         </div>
         <div className="flex gap-2">
           {!isMulti && (
@@ -86,6 +94,7 @@ export default function AgentResultCard({
             aria-expanded={share}
             onClick={() => setShare((s) => !s)}
           >
+            <IconShare size={12} />
             分享
           </button>
         </div>
@@ -93,84 +102,112 @@ export default function AgentResultCard({
 
       {share && <ShareCard interpretation={interpretation} />}
 
-      {interpretation.出处 && (
-        <div className="text-xs text-ash/85">出处：{interpretation.出处}</div>
-      )}
-      {facts && (
-        <div className="text-xs text-ash/85">
-          <TermText text={`依据（已核对引擎）：${facts}`} />
+      {/* 信任层：引擎已核对的硬依据，抬升为可读信息 */}
+      {(facts || interpretation.出处) && (
+        <div className="rounded-lg border border-jade/25 bg-jade/5 px-3 py-2">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-jade">
+            <IconCheck size={12} />
+            引擎已核对 · 依据
+          </div>
+          {facts && (
+            <div className="mt-1 text-sm leading-relaxed text-paper/90">
+              <TermText text={facts} />
+            </div>
+          )}
+          {interpretation.出处 && (
+            <div className="mt-1 text-xs text-ash">出处：{interpretation.出处}</div>
+          )}
         </div>
       )}
 
       {isMulti ? (
         <MultiPan interpretation={interpretation} divinations={divinations} />
       ) : mode === "brief" ? (
-        <div className="space-y-4">
-          <div className="space-y-2 text-sm leading-relaxed">
-            <div>
-              <span className="text-gold font-bold mr-2">总断</span>
-              <TermText text={interpretation.结论.总断} />
+        <div className="space-y-5">
+          {/* 总断：视觉峰值 */}
+          <div className="flex items-start gap-4">
+            <Seal char="断" size={54} stamp className="shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] tracking-[0.2em] text-ash">总断</div>
+              <p className="mt-1 text-lg leading-relaxed text-paper md:text-xl">
+                <TermText text={interpretation.结论.总断} />
+              </p>
             </div>
-            <div>
-              <span className="text-gold font-bold mr-2">现状</span>
-              <TermText text={interpretation.结论.现状} />
+          </div>
+
+          <dl className="space-y-2 text-sm leading-relaxed">
+            <div className="flex gap-3">
+              <dt className="w-10 shrink-0 pt-0.5 text-xs text-ash">现状</dt>
+              <dd className="text-paper/90">
+                <TermText text={interpretation.结论.现状} />
+              </dd>
             </div>
-            <div>
-              <span className="text-jade font-bold mr-2">建议</span>
-              <TermText text={interpretation.结论.建议} />
+            <div className="flex gap-3">
+              <dt className="w-10 shrink-0 pt-0.5 text-xs text-jade">建议</dt>
+              <dd className="text-paper/90">
+                <TermText text={interpretation.结论.建议} />
+              </dd>
             </div>
             {interpretation.结论.风险 && (
-              <div>
-                <span className="text-vermilion font-bold mr-2">风险</span>
-                {interpretation.结论.风险}
+              <div className="flex gap-3">
+                <dt className="w-10 shrink-0 pt-0.5 text-xs text-vermilion">风险</dt>
+                <dd className="text-paper/90">{interpretation.结论.风险}</dd>
               </div>
             )}
-          </div>
-          {divination ? (
-            isDaliuren && ks ? (
-              <>
-                <KeShiHeader ks={ks} />
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="rounded-lg border border-ash/30 bg-ink-2 p-4">
-                    <div className="text-gold font-bold text-center mb-2 text-sm">天地盘</div>
-                    <TianPanDisk ks={ks} />
-                  </div>
-                  <div className="space-y-4">
-                    <div className="rounded-lg border border-ash/30 bg-ink-2 p-4">
-                      <div className="text-gold font-bold mb-2 text-sm">四课</div>
-                      <SikeCards ks={ks} />
+          </dl>
+
+          {/* 课盘：弱化处理，让总断成为焦点 */}
+          <div className="space-y-4 border-t border-ash/15 pt-4">
+            <div className="flex items-center gap-1.5 text-[11px] tracking-wide text-ash">
+              <IconCompass size={13} />
+              课盘
+            </div>
+            {divination ? (
+              isDaliuren && ks ? (
+                <>
+                  <KeShiHeader ks={ks} />
+                  <div className="grid items-start gap-5 md:grid-cols-2">
+                    <div>
+                      <div className="mb-2 text-xs text-ash">天地盘</div>
+                      <TianPanDisk ks={ks} />
                     </div>
-                    <div className="rounded-lg border border-ash/30 bg-ink-2 p-4">
-                      <div className="text-gold font-bold mb-2 text-sm">三传</div>
-                      <SanchuanChain ks={ks} />
+                    <div className="space-y-5">
+                      <div>
+                        <div className="mb-2 text-xs text-ash">四课</div>
+                        <SikeCards ks={ks} />
+                      </div>
+                      <div>
+                        <div className="mb-2 text-xs text-ash">三传</div>
+                        <SanchuanChain ks={ks} />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </>
-            ) : divination.algorithmId === "liuyao" ? (
-              <LiuyaoPan raw={divination.raw} />
-            ) : divination.algorithmId === "meihua" ? (
-              <MeihuaPan raw={divination.raw} />
+                </>
+              ) : divination.algorithmId === "liuyao" ? (
+                <LiuyaoPan raw={divination.raw} />
+              ) : divination.algorithmId === "meihua" ? (
+                <MeihuaPan raw={divination.raw} />
+              ) : (
+                <SimpleResult algorithmId={divination.algorithmId} raw={divination.raw} />
+              )
             ) : (
-              <SimpleResult algorithmId={divination.algorithmId} raw={divination.raw} />
-            )
-          ) : (
-            <p className="text-xs text-ash">未返回课式（该轮未起课，直接基于上文解读）。</p>
-          )}
+              <p className="text-xs text-ash">未返回课式（该轮未起课，直接基于上文解读）。</p>
+            )}
+          </div>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 border-t border-ash/15 pt-4">
           {divination && <StepRenderer result={divination} />}
           {divination?.steps.length ? (
             <div className="space-y-3">
               {divination.steps.map((s, i) => {
                 const interp = interpretation.逐步[i];
                 return (
-                  <div key={s.key} className="rounded-lg border border-ash/30 bg-ink-2 p-3">
+                  <div key={s.key} className="border-l-2 border-ash/25 pl-3">
                     <div className="text-sm font-bold text-gold">{s.title}</div>
-                    <div className="text-xs text-ash mt-0.5">{s.desc}</div>
+                    <div className="mt-0.5 text-xs text-ash">{s.desc}</div>
                     <div className="mt-2 text-sm text-paper/90">
-                      <span className="text-jade font-bold mr-2">占断</span>
+                      <span className="mr-2 font-bold text-jade">占断</span>
                       <TermText text={interp?.解读 || "(无特别断义)"} />
                     </div>
                   </div>
@@ -222,46 +259,49 @@ function MultiPan({
       }));
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-lg border border-gold/40 bg-ink-2 p-3 space-y-1 text-sm">
-        <div>
-          <span className="text-gold font-bold mr-2">综断</span>
-          {interpretation.结论.总断}
-        </div>
-        <div>
-          <span className="text-gold font-bold mr-2">现状</span>
-          {interpretation.结论.现状}
-        </div>
-        <div>
-          <span className="text-jade font-bold mr-2">建议</span>
-          {interpretation.结论.建议}
-        </div>
-        {interpretation.结论.风险 && (
+    <div className="space-y-5">
+      <div className="flex items-start gap-4">
+        <Seal char="综" size={54} stamp className="shrink-0" />
+        <div className="min-w-0 flex-1 space-y-2 text-sm leading-relaxed">
           <div>
-            <span className="text-vermilion font-bold mr-2">风险</span>
-            {interpretation.结论.风险}
+            <span className="mr-2 text-xs text-ash">综断</span>
+            {interpretation.结论.总断}
           </div>
-        )}
+          <div>
+            <span className="mr-2 text-xs text-ash">现状</span>
+            {interpretation.结论.现状}
+          </div>
+          <div>
+            <span className="mr-2 text-xs text-jade">建议</span>
+            {interpretation.结论.建议}
+          </div>
+          {interpretation.结论.风险 && (
+            <div>
+              <span className="mr-2 text-xs text-vermilion">风险</span>
+              {interpretation.结论.风险}
+            </div>
+          )}
+        </div>
       </div>
 
       {rows.length > 1 && (
-        <div className="rounded-lg border border-ash/30 bg-ink-2 overflow-x-auto">
+        <div className="overflow-x-auto rounded-lg border border-ash/20">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-ash border-b border-ash/20">
-                <th className="px-2 py-1 text-left w-28">卦象</th>
-                <th className="px-2 py-1 text-left w-16">吉凶</th>
-                <th className="px-2 py-1 text-left">要点</th>
-                <th className="px-2 py-1 text-left">结论</th>
+              <tr className="border-b border-ash/20 text-ash">
+                <th className="w-28 px-2 py-1.5 text-left">卦象</th>
+                <th className="w-16 px-2 py-1.5 text-left">吉凶</th>
+                <th className="px-2 py-1.5 text-left">要点</th>
+                <th className="px-2 py-1.5 text-left">结论</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r, i) => (
                 <tr key={i} className="border-b border-ash/10 align-top">
-                  <td className="px-2 py-1 text-gold">{r.卦象}</td>
-                  <td className="px-2 py-1">{r.吉凶 ?? "-"}</td>
-                  <td className="px-2 py-1 text-paper/90">{r.要点}</td>
-                  <td className="px-2 py-1 text-paper/90">{r.结论}</td>
+                  <td className="px-2 py-1.5 text-gold">{r.卦象}</td>
+                  <td className="px-2 py-1.5">{r.吉凶 ?? "-"}</td>
+                  <td className="px-2 py-1.5 text-paper/90">{r.要点}</td>
+                  <td className="px-2 py-1.5 text-paper/90">{r.结论}</td>
                 </tr>
               ))}
             </tbody>
@@ -270,11 +310,11 @@ function MultiPan({
       )}
 
       {groups.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {groups.map((g, i) => (
-            <div key={i} className="rounded-lg border border-ash/30 bg-ink-2 p-3 text-sm space-y-1">
-              <span className="text-gold font-bold mr-2">{g.卦象}</span>
-              {g.吉凶 && <span className="text-ash text-xs">{g.吉凶}</span>}
+            <div key={i} className="border-l-2 border-ash/25 pl-3 text-sm">
+              <span className="mr-2 font-bold text-gold">{g.卦象}</span>
+              {g.吉凶 && <span className="text-xs text-ash">{g.吉凶}</span>}
               <div className="text-paper/90">{g.结论}</div>
               {g.建议 && <div className="text-xs text-jade">建议：{g.建议}</div>}
             </div>

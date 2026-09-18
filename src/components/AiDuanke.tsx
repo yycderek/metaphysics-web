@@ -3,6 +3,7 @@
 // 阶段5：支持任意算法（按算法 ID 分发断课模板，服务端选择 system prompt）
 // 支持用户自定义 AI API（OpenAI 兼容协议），设置存 localStorage
 import { useEffect, useRef, useState } from "react";
+import { IconChat, IconSliders } from "@/components/icons";
 import { consumeSSE, parseSSEEvent } from "@/lib/sse";
 import type { DivinationResult } from "@/lib/algorithms/types";
 import type { UserAIConfig } from "@/lib/aiTypes";
@@ -211,16 +212,20 @@ export default function AiDuanke({ result }: Props) {
   return (
     <section className="rounded-xl border border-gold/40 bg-ink-2 p-4">
       <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
-        <h3 className="text-gold font-bold">💬 AI 解读当前课盘</h3>
+        <h3 className="flex items-center gap-2 font-bold text-gold">
+          <IconChat size={16} />
+          AI 解读当前课盘
+        </h3>
         <div className="flex items-center gap-2 text-xs text-ash">
           <button
             onClick={() => setShowSettings((s) => !s)}
             title="API 设置"
             aria-expanded={showSettings}
             aria-controls="ai-duanke-settings"
-            className="px-2 py-1 rounded-lg border border-ash/40 hover:border-gold hover:text-gold transition-colors"
+            className="inline-flex items-center gap-1 rounded-lg border border-ash/40 px-2 py-1 transition-colors hover:border-gold hover:text-gold"
           >
-            ⚙️ {aiConfig.baseUrl || aiConfig.model || aiConfig.apiKey ? "自定义 API" : "API 设置"}
+            <IconSliders size={12} />
+            {aiConfig.baseUrl || aiConfig.model || aiConfig.apiKey ? "自定义 API" : "API 设置"}
           </button>
           {isDaliuren && (
             <>
@@ -342,7 +347,7 @@ export default function AiDuanke({ result }: Props) {
             >
               {m.role === "assistant" && m.reasoning && (
                 <details className="mb-2 text-xs text-ash/85 border-b border-ash/20 pb-1">
-                  <summary className="cursor-pointer select-none">🧠 思考过程</summary>
+                  <summary className="cursor-pointer select-none">思考过程</summary>
                   <div className="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap">
                     {m.reasoning}
                   </div>

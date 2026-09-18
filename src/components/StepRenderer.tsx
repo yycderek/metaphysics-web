@@ -14,6 +14,7 @@ import TianPanDisk from "./TianPanDisk";
 import SikeCards from "./SikeCards";
 import SanchuanChain from "./SanchuanChain";
 import DataView from "./DataView";
+import { IconChevronLeft, IconChevronRight, IconPause, IconPlay } from "@/components/icons";
 import { LiuyaoDemo, MeihuaDemo } from "./StepDemos";
 
 /** 大六壬专属步骤视图 */
@@ -177,31 +178,34 @@ export default function StepRenderer({ result, autoPlay = false }: Props) {
         <div className="flex gap-2">
           <button
             onClick={() => setPlaying((p) => !p)}
-            className="rounded-lg border border-ash/40 px-4 py-2 text-sm text-ash hover:border-gold hover:text-paper transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-ash/40 px-4 py-2 text-sm text-ash transition-colors hover:border-gold hover:text-paper"
           >
-            {playing ? "⏸ 暂停" : "▶ 自动演示"}
+            {playing ? <IconPause size={14} /> : <IconPlay size={14} />}
+            {playing ? "暂停" : "自动演示"}
           </button>
           <button
             onClick={() => setStep((s) => Math.max(0, s - 1))}
             disabled={step === 0}
-            className="rounded-lg border border-ash/40 px-4 py-2 text-sm disabled:opacity-30 hover:border-gold"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-ash/40 px-4 py-2 text-sm disabled:opacity-30 hover:border-gold"
           >
-            ← 上一步
+            <IconChevronLeft size={14} />
+            上一步
           </button>
           <button
             onClick={() => setStep((s) => Math.min(steps.length - 1, s + 1))}
             disabled={step === steps.length - 1}
-            className="rounded-lg bg-vermilion px-4 py-2 text-sm disabled:opacity-30"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-vermilion px-4 py-2 text-sm disabled:opacity-30"
           >
-            下一步 →
+            下一步
+            <IconChevronRight size={14} />
           </button>
         </div>
       </div>
 
       {/* 步骤标题 */}
-      <div className="border-l-4 border-gold pl-4">
+      <div>
         <h3 className="text-2xl font-bold text-gold">{cur.title}</h3>
-        <p className="mt-1 text-sm text-ash leading-relaxed">{cur.desc}</p>
+        <p className="mt-1 text-sm leading-relaxed text-ash">{cur.desc}</p>
       </div>
 
       {/* 步骤内容 */}

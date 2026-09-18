@@ -2,6 +2,7 @@
 // AI API 设置：自定义 OpenAI 兼容服务（baseUrl / apiKey / model / temperature）。
 // 存 localStorage，Agent 与 AI 解读共享读取；留空则用服务端默认。
 import { useState } from "react";
+import { IconCheck, IconSliders } from "@/components/icons";
 import type { UserAIConfig } from "@/lib/aiTypes";
 
 const STORAGE_KEY = "metaphysics-ai-config";
@@ -70,9 +71,10 @@ export default function ApiSettings() {
         type="button"
         onClick={() => setShow((s) => !s)}
         aria-expanded={show}
-        className="text-ash hover:text-gold transition-colors"
+        className="inline-flex items-center gap-1 text-ash transition-colors hover:text-gold"
       >
-        {configured ? "✓ 自定义 AI" : "⚙️ 自定义 AI API"}
+        {configured ? <IconCheck size={12} /> : <IconSliders size={12} />}
+        {configured ? "自定义 AI" : "自定义 AI API"}
       </button>
 
       {show && (

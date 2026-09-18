@@ -2,10 +2,13 @@
 // 智能占卜 Agent 面板（多轮）：用户直接说意图 → Agent 自主决定算法/参数并调用 divinate 起课
 // → 引擎精确算课 → 输出结构化断语（卦象 + 简略结论 + 逐步详细解读 + 依据）。
 // 支持：澄清追问（信息不足时先问再算）、把已算的卦作为记忆复读、换时辰/参数对比。
+// 交互：单一输入区 + 显式「新起一卦 / 追问此卦」模式，澄清态为独立模式；起课中以罗盘仪式呈现。
 import { useRef, useState } from "react";
 import AgentResultCard from "@/components/AgentResultCard";
 import ChangyanReview from "@/components/ChangyanReview";
 import ApiSettings from "@/components/ApiSettings";
+import CastingRitual from "@/components/CastingRitual";
+import { IconChat, IconSpark, IconTrigram, IconUser, IconWarning } from "@/components/icons";
 import { toPriorDivination } from "@/lib/agent/divinate";
 import { loadHistory, pushHistoryEntry, saveHistory } from "@/lib/history";
 import { changyanStats, loadChangyan } from "@/lib/changyan";
@@ -58,9 +61,9 @@ function loadAIConfig(): Record<string, unknown> | undefined {
 
 export default function DivinationAgent() {
   const [input, setInput] = useState("");
-  const [followText, setFollowText] = useState("");
   const [turns, setTurns] = useState<AgentTurn[]>([]);
   const [pendingClarify, setPendingClarify] = useState<string | null>(null);
+  const [composerMode, setComposerMode] = useState<"new" | "follow">("new");
   const [algo, setAlgo] = useState("auto");
   const [profile, setProfile] = useState("");
   const [showProfile, setShowProfile] = useState(false);
@@ -167,6 +170,7 @@ export default function DivinationAgent() {
               topic,
             },
           ]);
+          setComposerMode("follow");
           // 写入历史（回看用）
           const h = {
             id: entryId,
@@ -208,29 +212,120 @@ export default function DivinationAgent() {
     }
   };
 
+  const hasTurns = turns.length > 0;
+  const mode: "new" | "follow" = pendingClarify ? "follow" : composerMode;
+  const submit = () => run(undefined, mode === "new");
+  const submitChip = (q: string) => run(q, mode === "new");
+
   const inputCls =
     "flex-1 bg-ink border border-ash/40 rounded-lg px-3 py-2 text-sm text-paper placeholder:text-ash/85 focus:border-gold outline-none";
 
+  const segCls = (active: boolean) =>
+    `inline-flex items-center gap-1 rounded-md px-2.5 py-1 transition-colors ${
+      active ? "bg-gold/15 text-gold" : "text-ash hover:text-paper"
+    }`;
+
   return (
     <section className="rounded-xl border border-gold/40 bg-ink-2 p-4">
-      <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
-        <h3 className="text-gold font-bold">🔮 智能占卜</h3>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h3 className="flex items-center gap-2 font-bold text-gold">
+          <IconCompassMark />
+          智能占卜
+        </h3>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-ash">
-            直接描述问题，AI 自动起课并解卦；可追问、换时辰对比
-          </span>
+          <span className="text-xs text-ash">直接描述问题，AI 自动起课并解卦</span>
           <ApiSettings />
         </div>
       </div>
 
       <div className="mb-3 space-y-2">
+        {/* 澄清态：独立模式，输入框直接作答 */}
         {pendingClarify && (
-          <div className="rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-sm text-gold">
-            🤔 请先回答：{pendingClarify}
+          <div className="flex items-start gap-2 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-sm text-gold">
+            <IconChat size={15} className="mt-0.5 shrink-0" />
+            <span>请先回答：{pendingClarify}</span>
           </div>
         )}
 
-        {/* 出生信息（可选，个人化用） */}
+        {/* 模式切换：仅在已有卦象且非澄清态时出现 */}
+        {hasTurns && !pendingClarify && (
+          <div className="inline-flex rounded-lg border border-ash/30 p-0.5 text-xs">
+            <button
+              type="button"
+              onClick={() => setComposerMode("new")}
+              aria-pressed={composerMode === "new"}
+              className={segCls(composerMode === "new")}
+            >
+              <IconSpark size={13} />
+              新起一卦
+            </button>
+            <button
+              type="button"
+              onClick={() => setComposerMode("follow")}
+              aria-pressed={composerMode === "follow"}
+              className={segCls(composerMode === "follow")}
+            >
+              <IconChat size={13} />
+              追问此卦
+            </button>
+          </div>
+        )}
+
+        <p className="text-xs text-ash/85">
+          {pendingClarify
+            ? "回答上面的问题，Agent 会继续为你起课。"
+            : mode === "new"
+              ? "写下想问的事，Agent 会为你择法起课。"
+              : "就当前这一卦追问，可要求换时辰 / 参数 / 算法再对比。"}
+        </p>
+
+        <textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+              e.preventDefault();
+              submit();
+            }
+          }}
+          rows={2}
+          placeholder={
+            pendingClarify
+              ? "在这里回答上面的问题…"
+              : mode === "new"
+                ? "把想问的事告诉我，如：这周换工作合适吗？"
+                : "如：为什么三传这样断？"
+          }
+          className={`${inputCls} h-20 w-full resize-y`}
+        />
+
+        <div className="flex items-center gap-2">
+          {mode === "new" ? (
+            <select
+              value={algo}
+              onChange={(e) => setAlgo(e.target.value)}
+              aria-label="选择算法"
+              className="bg-ink border border-ash/40 rounded-lg px-2 py-2 text-sm text-paper focus:border-gold outline-none"
+            >
+              {ALGO_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span className="hidden text-xs text-ash sm:inline">沿用当前卦象</span>
+          )}
+          <button
+            onClick={submit}
+            disabled={busy}
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gold px-6 py-2 text-sm font-bold text-ink transition-colors hover:bg-gold/90 disabled:opacity-40"
+          >
+            {!busy && (mode === "new" ? <IconSpark size={15} /> : <IconChat size={15} />)}
+            {busy ? "起课中…" : pendingClarify ? "作答并继续" : mode === "new" ? "起卦" : "追问"}
+          </button>
+        </div>
+
         {showProfile && (
           <input
             value={profile}
@@ -240,95 +335,53 @@ export default function DivinationAgent() {
           />
         )}
 
-        {/* 新起一卦（追问请在下方每个结果旁的追问框） */}
-        <div className="text-xs text-ash/85">✨ 新起一卦：输入想问的（在此会开启全新一卦）</div>
-
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-              e.preventDefault();
-              run(undefined, !pendingClarify);
-            }
-          }}
-          rows={2}
-          placeholder={
-            pendingClarify ? "在这里回答上面的问题…" : "把想问的事告诉我，如：这周换工作合适吗？"
-          }
-          className={`${inputCls} h-20 resize-y w-full`}
-        />
-
-        <div className="flex items-center gap-2">
-          <select
-            value={algo}
-            onChange={(e) => setAlgo(e.target.value)}
-            aria-label="选择算法"
-            className="bg-ink border border-ash/40 rounded-lg px-2 py-2 text-sm text-paper focus:border-gold outline-none"
-          >
-            {ALGO_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={() => run(undefined, !pendingClarify)}
-            disabled={busy}
-            className="flex-1 rounded-lg bg-gold px-6 py-2 text-sm font-bold text-ink hover:bg-gold/90 transition-colors disabled:opacity-40"
-          >
-            {busy ? "占卜中…" : pendingClarify ? "继续" : "✨ 开始占卜"}
-          </button>
-        </div>
-
-        {busy && progress.length > 0 && (
-          <div className="rounded-lg border border-ash/30 bg-ink px-3 py-2 space-y-1">
-            {progress.map((p, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs text-ash">
-                <span className="text-gold">{i === progress.length - 1 ? "●" : "✓"}</span>
-                <span className={i === progress.length - 1 ? "text-paper/90" : ""}>{p}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
         <div className="flex flex-wrap gap-2">
-          <span className="text-xs text-ash/85 self-center">
-            {turns.length > 0 ? "💬 接着追问：" : "试试："}
+          <span className="self-center text-xs text-ash/85">
+            {mode === "new" ? "试试：" : "接着问："}
           </span>
-          {(turns.length > 0 ? FOLLOW_UPS : EXAMPLES).map((q) => (
+          {(mode === "new" ? EXAMPLES : FOLLOW_UPS).map((q) => (
             <button
               key={q}
-              onClick={() => run(q, turns.length === 0)}
+              onClick={() => submitChip(q)}
               disabled={busy}
-              className="rounded-full border border-ash/40 px-3 py-1 text-xs text-ash hover:text-gold hover:border-gold transition-colors disabled:opacity-40"
+              className="rounded-full border border-ash/40 px-3 py-1 text-xs text-ash transition-colors hover:border-gold hover:text-gold disabled:opacity-40"
             >
               {q}
             </button>
           ))}
-          {turns.length > 0 && (
-            <span className="text-xs text-ash/85 self-center">
-              （想重新算一卦，用上面「✨ 开始占卜」）
-            </span>
-          )}
-          <span
-            className="text-xs text-ash/85 self-center cursor-pointer hover:text-gold"
+          <button
+            type="button"
             onClick={() => setShowProfile((s) => !s)}
+            aria-expanded={showProfile}
+            className="inline-flex items-center gap-1 self-center text-xs text-ash/85 transition-colors hover:text-gold"
           >
-            {showProfile ? "收起出生信息" : "✦ 出生信息（可选）"}
-          </span>
+            <IconUser size={12} />
+            {showProfile ? "收起出生信息" : "出生信息（可选）"}
+          </button>
         </div>
       </div>
 
-      {error && <div className="mb-3 text-sm text-vermilion">{error}</div>}
+      {busy && (
+        <div className="mb-3" aria-live="polite">
+          <CastingRitual progress={progress.length ? progress : ["正在择法起课…"]} />
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-3 flex items-start gap-2 text-sm text-vermilion" role="alert">
+          <IconWarning size={15} className="mt-0.5 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
 
       <div className="space-y-4">
         {turns.map((t, idx) => (
           <div key={idx} className="space-y-2">
             <div className="text-sm text-gold">问：{t.question}</div>
             {t.clarify ? (
-              <div className="rounded-lg border border-gold/40 bg-ink px-3 py-2 text-sm text-gold">
-                🤔 Agent 追问：{t.clarify}
+              <div className="flex items-start gap-2 rounded-lg border border-gold/40 bg-ink px-3 py-2 text-sm text-gold">
+                <IconChat size={15} className="mt-0.5 shrink-0" />
+                <span>Agent 追问：{t.clarify}</span>
               </div>
             ) : t.error ? (
               <div className="text-sm text-vermilion">{t.error}</div>
@@ -345,39 +398,18 @@ export default function DivinationAgent() {
         ))}
       </div>
 
-      {/* 结果下的追问对话框（追问当前卦，可问更细，不必新起） */}
-      {turns.length > 0 && (
-        <div className="mt-4 border-t border-ash/20 pt-3">
-          <div className="text-xs text-ash mb-1">
-            💬 追问此卦：想问得更细、或换个角度，直接输入（可要求「换个时辰/参数/算法」再对比）
-          </div>
-          <div className="flex gap-2">
-            <input
-              value={followText}
-              onChange={(e) => setFollowText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.nativeEvent.isComposing) {
-                  e.preventDefault();
-                  run(followText, false);
-                }
-              }}
-              placeholder="如：为什么三传这样断？"
-              className={`${inputCls} h-9 flex-1`}
-            />
-            <button
-              onClick={() => run(followText, false)}
-              disabled={busy}
-              className="rounded-lg bg-gold px-5 py-2 text-sm font-bold text-ink hover:bg-gold/90 disabled:opacity-40"
-            >
-              追问
-            </button>
-          </div>
-        </div>
-      )}
-
       <ChangyanReview />
 
-      <p className="text-xs text-ash/85 pt-1">仅供文化娱乐参考，不构成医疗/法律/财务等专业建议。</p>
+      <p className="pt-1 text-xs text-ash/85">仅供文化娱乐参考，不构成医疗/法律/财务等专业建议。</p>
     </section>
+  );
+}
+
+/** 面板标题的卦象标记 */
+function IconCompassMark() {
+  return (
+    <span className="text-gold">
+      <IconTrigram size={16} />
+    </span>
   );
 }

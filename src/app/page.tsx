@@ -23,8 +23,23 @@ import GlossaryPanel from "@/components/GlossaryPanel";
 import HistoryPanel from "@/components/HistoryPanel";
 import BackupPanel from "@/components/BackupPanel";
 import { chuanTianjiang } from "@/lib/shike";
+import {
+  IconBook,
+  IconChart,
+  IconChevronDown,
+  IconCompass,
+  IconHistory,
+  IconRoute,
+  IconSliders,
+} from "@/components/icons";
 
 type Mode = "result" | "derive";
+
+const MOBILE_TABS = [
+  { key: "divine", label: "占卜", Icon: IconCompass },
+  { key: "help", label: "术语", Icon: IconBook },
+  { key: "history", label: "历史", Icon: IconHistory },
+] as const;
 
 export default function HomePage() {
   const [result, setResult] = useState<DivinationResult | null>(null);
@@ -48,7 +63,7 @@ export default function HomePage() {
   };
 
   const tabCls = (active: boolean) =>
-    `px-4 py-2 rounded-lg text-sm border transition-colors ${
+    `inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm border transition-colors ${
       active
         ? "border-gold/60 bg-gold/10 text-gold"
         : "border-ash/40 text-ash hover:border-gold hover:text-paper"
@@ -67,21 +82,18 @@ export default function HomePage() {
       />
 
       {/* 移动端：占卜 / 术语 / 历史 切换（桌面隐藏） */}
-      <div className="lg:hidden mt-4 flex gap-2">
-        {(
-          [
-            ["divine", "🔮 占卜"],
-            ["help", "📖 术语"],
-            ["history", "📜 历史"],
-          ] as const
-        ).map(([k, label]) => (
+      <div className="mt-4 flex gap-2 lg:hidden">
+        {MOBILE_TABS.map(({ key: k, label, Icon }) => (
           <button
             key={k}
             onClick={() => setView(k)}
-            className={`px-4 py-2 rounded-lg text-sm border transition-colors ${
-              view === k ? "border-gold/60 bg-gold/10 text-gold" : "border-ash/40 text-ash"
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2 text-sm transition-colors ${
+              view === k
+                ? "border-gold/60 bg-gold/10 text-gold"
+                : "border-ash/40 text-ash hover:border-gold hover:text-paper"
             }`}
           >
+            <Icon size={15} />
             {label}
           </button>
         ))}
@@ -98,9 +110,14 @@ export default function HomePage() {
               type="button"
               onClick={() => setAdvanced((s) => !s)}
               aria-expanded={advanced}
-              className="text-sm font-bold text-gold"
+              className="inline-flex items-center gap-2 text-sm font-bold text-gold"
             >
-              {advanced ? "▲ 收起" : "🔧 高级用法 · 手动精确起课"}
+              <IconSliders size={15} />
+              高级用法 · 手动精确起课
+              <IconChevronDown
+                size={15}
+                className={`transition-transform ${advanced ? "rotate-180" : ""}`}
+              />
             </button>
             {advanced && (
               <div className="mt-4 space-y-4">
@@ -119,14 +136,16 @@ export default function HomePage() {
                         onClick={() => setMode("result")}
                         aria-pressed={mode === "result"}
                       >
-                        📊 课式结果
+                        <IconChart size={15} />
+                        课式结果
                       </button>
                       <button
                         className={tabCls(mode === "derive")}
                         onClick={() => setMode("derive")}
                         aria-pressed={mode === "derive"}
                       >
-                        🧭 推导过程
+                        <IconRoute size={15} />
+                        推导过程
                       </button>
                     </div>
 

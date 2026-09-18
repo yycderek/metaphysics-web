@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { DIZHI, TIANGAN, YUEJIANG_NAME, shizhiFromHour } from "@/lib/data";
 import { rizhuFromDate } from "@/lib/calendar";
+import { IconClock, IconDice } from "@/components/icons";
+import YaoLines from "@/components/YaoLines";
 import type { AlgorithmAdapter, AlgorithmInput } from "@/lib/algorithms/types";
 
 interface Props {
@@ -36,12 +38,21 @@ export default function DivineForm({ adapters, selectedId, onSelect, onDivine }:
   const [xlDay, setXlDay] = useState("18");
   const [xlHour, setXlHour] = useState("7");
   const [yaoTosses, setYaoTosses] = useState(() => randomTosses());
+  const [tossSeq, setTossSeq] = useState(0);
+  const [shaking, setShaking] = useState(false);
   const [mh1, setMh1] = useState("3");
   const [mh2, setMh2] = useState("7");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   const isDaliuren = selectedId === "daliuren";
+
+  const toss = () => {
+    setYaoTosses(randomTosses());
+    setTossSeq((n) => n + 1);
+    setShaking(true);
+    window.setTimeout(() => setShaking(false), 460);
+  };
 
   const useNow = () => {
     const now = new Date();
@@ -156,9 +167,10 @@ export default function DivineForm({ adapters, selectedId, onSelect, onDivine }:
           </div>
           <button
             onClick={useNow}
-            className="rounded-lg border border-ash/40 px-3 py-2 text-sm text-ash hover:text-paper hover:border-gold transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-ash/40 px-3 py-2 text-sm text-ash transition-colors hover:border-gold hover:text-paper"
           >
-            ⌚ 当前时间
+            <IconClock size={14} />
+            当前时间
           </button>
         </div>
       ) : selectedId === "xiaoliuren" ? (
@@ -198,12 +210,16 @@ export default function DivineForm({ adapters, selectedId, onSelect, onDivine }:
             />
             <button
               type="button"
-              onClick={() => setYaoTosses(randomTosses())}
-              className="rounded-lg border border-ash/40 px-3 py-2 text-sm text-ash hover:text-paper transition-colors"
+              onClick={toss}
+              className={`inline-flex items-center gap-1.5 rounded-lg border border-gold/50 bg-gold/10 px-3 py-2 text-sm text-gold transition-colors hover:bg-gold/20 ${
+                shaking ? "shake" : ""
+              }`}
             >
-              🎲 随机摇卦
+              <IconDice size={14} />
+              随机摇卦
             </button>
           </div>
+          <YaoLines value={yaoTosses} animateKey={tossSeq} />
         </div>
       ) : selectedId === "meihua" ? (
         <div className="flex flex-wrap items-end gap-3">

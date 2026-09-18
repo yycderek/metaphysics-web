@@ -1,5 +1,7 @@
 "use client";
-// 站点头部（简化）：仅标题 + 副标题；主题切换为固定右上角（见 page 内浮动按钮）。
+// 站点头部：朱砂落款 + 品牌题名 + 一句说明，作为「静室起课」的题头。
+import Seal from "@/components/Seal";
+
 interface Props {
   title: string;
   subtitle?: string;
@@ -7,9 +9,12 @@ interface Props {
 
 export default function SiteHeader({ title, subtitle }: Props) {
   return (
-    <header>
-      <h1 className="text-3xl font-bold text-gold">{title}</h1>
-      {subtitle && <p className="text-sm text-ash mt-1">{subtitle}</p>}
+    <header className="flex items-start gap-4 border-b border-ash/20 pb-4">
+      <Seal char="玄" size={48} className="mt-0.5 shrink-0" />
+      <div className="min-w-0">
+        <h1 className="text-2xl font-bold tracking-[0.22em] text-gold">{title}</h1>
+        {subtitle && <p className="mt-1 text-sm text-ash">{subtitle}</p>}
+      </div>
     </header>
   );
 }

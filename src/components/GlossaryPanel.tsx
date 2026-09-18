@@ -1,6 +1,7 @@
 "use client";
 // 术语速查面板：列出全部玄学术语及其释义。
 import { useState } from "react";
+import { IconBook } from "@/components/icons";
 import { glossaryTerms, GLOSSARY } from "@/lib/glossary";
 
 export default function GlossaryPanel() {
@@ -12,9 +13,10 @@ export default function GlossaryPanel() {
         type="button"
         onClick={() => setShow((s) => !s)}
         aria-expanded={show}
-        className="text-gold font-bold text-sm"
+        className="flex items-center gap-2 text-sm font-bold text-gold"
       >
-        📖 术语速查{show ? "（收起）" : ""}
+        <IconBook size={15} />
+        术语速查{show ? "（收起）" : ""}
       </button>
       {show && (
         <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">

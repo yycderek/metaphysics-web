@@ -1,6 +1,7 @@
 "use client";
 // 分享卡：把卦象 + 断语渲染成一张玄学风竖版图（SVG），可下载 PNG 或复制到剪贴板。
 import { useRef, useState } from "react";
+import { IconCopy, IconDownload } from "@/components/icons";
 import type { AgentDivination } from "@/lib/agent/types";
 
 interface Props {
@@ -181,15 +182,17 @@ export default function ShareCard({ interpretation }: Props) {
       <div className="flex flex-wrap gap-2">
         <button
           onClick={download}
-          className="rounded-lg border border-ash/40 px-3 py-1.5 text-xs text-ash hover:text-gold hover:border-gold transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-ash/40 px-3 py-1.5 text-xs text-ash transition-colors hover:border-gold hover:text-gold"
         >
-          ⬇ 下载 PNG
+          <IconDownload size={13} />
+          下载 PNG
         </button>
         <button
           onClick={copy}
-          className="rounded-lg border border-ash/40 px-3 py-1.5 text-xs text-ash hover:text-gold hover:border-gold transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-ash/40 px-3 py-1.5 text-xs text-ash transition-colors hover:border-gold hover:text-gold"
         >
-          📋 复制图片
+          <IconCopy size={13} />
+          复制图片
         </button>
         {note && <span className="text-xs text-jade self-center">{note}</span>}
       </div>
