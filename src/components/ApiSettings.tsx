@@ -1,32 +1,40 @@
 "use client";
 // AI API 设置：自定义 OpenAI 兼容服务（baseUrl / apiKey / model / temperature）。
 // 存 localStorage，Agent 与 AI 解读共享读取；留空则用服务端默认。
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { IconCheck, IconSliders } from "@/components/icons";
+import LiveNote from "@/components/LiveNote";
+import {
+  AI_CONFIG_LEGACY_STORAGE_KEY,
+  AI_CONFIG_STORAGE_KEY,
+  loadAIConfig,
+} from "@/lib/ai-config";
 import type { UserAIConfig } from "@/lib/aiTypes";
 
-const STORAGE_KEY = "metaphysics-ai-config";
-const LEGACY_KEY = "liuren-ai-config";
+const inputCls =
+  "w-full bg-ink-2 border border-ash/30 rounded-md px-2 py-1.5 text-sm text-paper placeholder:text-ash/80 focus:border-gold focus-visible:ring-2 focus-visible:ring-gold";
+const labelCls = "block text-xs text-ash mb-1";
 
-function load(): UserAIConfig {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_KEY);
-    return raw ? (JSON.parse(raw) as UserAIConfig) : {};
-  } catch {
-    return {};
-  }
+interface ApiSettingsFormProps {
+  initial: UserAIConfig;
+  onSaved: (cfg: UserAIConfig) => void;
+  onReset: () => void;
+  resetLabel?: string;
 }
 
-export default function ApiSettings() {
-  const [cfg, setCfg] = useState<UserAIConfig>(load);
-  const [show, setShow] = useState(false);
-  const [fBase, setFBase] = useState(cfg.baseUrl ?? "");
-  const [fKey, setFKey] = useState(cfg.apiKey ?? "");
-  const [fModel, setFModel] = useState(cfg.model ?? "");
-  const [fTemp, setFTemp] = useState(cfg.temperature != null ? String(cfg.temperature) : "");
-  const [note, setNote] = useState("");
-
-  const configured = !!(cfg.baseUrl || cfg.apiKey || cfg.model);
+export function ApiSettingsForm({
+  initial,
+  onSaved,
+  onReset,
+  resetLabel = "恢复默认",
+}: ApiSettingsFormProps) {
+  const uid = useId();
+  const [fBase, setFBase] = useState(initial.baseUrl ?? "");
+  const [fKey, setFKey] = useState(initial.apiKey ?? "");
+  const [fModel, setFModel] = useState(initial.model ?? "");
+  const [fTemp, setFTemp] = useState(
+    initial.temperature != null ? String(initial.temperature) : "",
+  );
 
   const save = () => {
     const next: UserAIConfig = {};
@@ -35,35 +43,134 @@ export default function ApiSettings() {
     if (fModel.trim()) next.model = fModel.trim();
     const t = parseFloat(fTemp);
     if (!Number.isNaN(t) && t > 0 && t <= 2) next.temperature = t;
-    setCfg(next);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      localStorage.removeItem(LEGACY_KEY);
+      localStorage.setItem(AI_CONFIG_STORAGE_KEY, JSON.stringify(next));
+      localStorage.removeItem(AI_CONFIG_LEGACY_STORAGE_KEY);
     } catch {
       /* ignore */
     }
-    setShow(false);
-    setNote("已保存");
+    onSaved(next);
   };
 
   const reset = () => {
-    setCfg({});
     setFBase("");
     setFKey("");
     setFModel("");
     setFTemp("");
     try {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(LEGACY_KEY);
+      localStorage.removeItem(AI_CONFIG_STORAGE_KEY);
+      localStorage.removeItem(AI_CONFIG_LEGACY_STORAGE_KEY);
     } catch {
       /* ignore */
     }
-    setShow(false);
-    setNote("已恢复默认");
+    onReset();
   };
 
-  const inputCls =
-    "bg-ink border border-ash/40 rounded-lg px-2 py-1.5 text-sm text-paper placeholder:text-ash/80 focus:border-gold outline-none";
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div>
+          <label htmlFor={`${uid}-base`} className={labelCls}>
+            Base URL
+          </label>
+          <input
+            id={`${uid}-base`}
+            className={inputCls}
+            type="url"
+            inputMode="url"
+            autoComplete="off"
+            spellCheck={false}
+            placeholder="https://api.deepseek.com"
+            value={fBase}
+            onChange={(e) => setFBase(e.target.value)}
+          />
+        </div>
+        <div>
+          <label htmlFor={`${uid}-model`} className={labelCls}>
+            Model
+          </label>
+          <input
+            id={`${uid}-model`}
+            className={inputCls}
+            autoComplete="off"
+            spellCheck={false}
+            placeholder="deepseek-v4-flash"
+            value={fModel}
+            onChange={(e) => setFModel(e.target.value)}
+          />
+        </div>
+        <div>
+          <label htmlFor={`${uid}-key`} className={labelCls}>
+            API Key
+          </label>
+          <input
+            id={`${uid}-key`}
+            className={inputCls}
+            type="password"
+            autoComplete="off"
+            spellCheck={false}
+            placeholder="sk-…"
+            value={fKey}
+            onChange={(e) => setFKey(e.target.value)}
+          />
+        </div>
+        <div>
+          <label htmlFor={`${uid}-temp`} className={labelCls}>
+            Temperature（0-2）
+          </label>
+          <input
+            id={`${uid}-temp`}
+            className={inputCls}
+            type="number"
+            step="0.1"
+            min="0"
+            max="2"
+            autoComplete="off"
+            spellCheck={false}
+            placeholder="0.7"
+            value={fTemp}
+            onChange={(e) => setFTemp(e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={save}
+          className="rounded-md border border-gold/40 px-3 py-1 text-xs text-gold transition-colors hover:bg-gold/10"
+        >
+          保存
+        </button>
+        <button
+          onClick={reset}
+          className="rounded-md border border-ash/30 px-3 py-1 text-xs text-ash transition-colors hover:text-paper"
+        >
+          {resetLabel}
+        </button>
+      </div>
+    </>
+  );
+}
+
+export default function ApiSettings() {
+  const [cfg, setCfg] = useState<UserAIConfig>(loadAIConfig);
+  const [show, setShow] = useState(false);
+  const [note, setNote] = useState("");
+  const noteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const configured = !!(cfg.baseUrl || cfg.apiKey || cfg.model);
+
+  useEffect(
+    () => () => {
+      if (noteTimer.current) clearTimeout(noteTimer.current);
+    },
+    [],
+  );
+
+  const flash = (msg: string) => {
+    setNote(msg);
+    if (noteTimer.current) clearTimeout(noteTimer.current);
+    noteTimer.current = setTimeout(() => setNote(""), 3000);
+  };
 
   return (
     <div className="text-xs">
@@ -78,59 +185,27 @@ export default function ApiSettings() {
       </button>
 
       {show && (
-        <div className="mt-2 rounded-lg border border-ash/30 bg-ink p-3 space-y-2">
-          <p className="text-ash/85 leading-relaxed">
+        <div className="mt-2 space-y-2 rounded-md border border-ash/25 bg-ink p-4">
+          <p className="leading-relaxed text-ash/85">
             使用 OpenAI 兼容服务（DeepSeek/通义/豆包/Kimi/智谱/Ollama/vLLM
             均可）。留空则用服务端默认模型。
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <input
-              className={inputCls}
-              placeholder="Base URL"
-              value={fBase}
-              onChange={(e) => setFBase(e.target.value)}
-            />
-            <input
-              className={inputCls}
-              placeholder="Model（如 deepseek-chat / qwen-plus）"
-              value={fModel}
-              onChange={(e) => setFModel(e.target.value)}
-            />
-            <input
-              className={inputCls}
-              type="password"
-              placeholder="API Key"
-              value={fKey}
-              onChange={(e) => setFKey(e.target.value)}
-            />
-            <input
-              className={inputCls}
-              type="number"
-              step="0.1"
-              min="0"
-              max="2"
-              placeholder="Temperature 0.7"
-              value={fTemp}
-              onChange={(e) => setFTemp(e.target.value)}
-            />
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={save}
-              className="rounded bg-gold/20 border border-gold/50 px-3 py-1 text-gold hover:bg-gold/30"
-            >
-              保存
-            </button>
-            <button
-              onClick={reset}
-              className="rounded border border-ash/40 px-3 py-1 text-ash hover:text-paper"
-            >
-              恢复默认
-            </button>
-            {note && <span className="text-jade self-center">{note}</span>}
-          </div>
+          <ApiSettingsForm
+            initial={cfg}
+            onSaved={(next) => {
+              setCfg(next);
+              setShow(false);
+              flash("已保存");
+            }}
+            onReset={() => {
+              setCfg({});
+              setShow(false);
+              flash("已恢复默认");
+            }}
+          />
         </div>
       )}
+      <LiveNote className={note ? "mt-1 text-jade" : "sr-only"}>{note}</LiveNote>
     </div>
   );
 }

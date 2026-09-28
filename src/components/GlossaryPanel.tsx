@@ -1,29 +1,32 @@
 "use client";
 // 术语速查面板：列出全部玄学术语及其释义。
-import { useState } from "react";
+import { useId, useState } from "react";
 import { IconBook } from "@/components/icons";
 import { glossaryTerms, GLOSSARY } from "@/lib/glossary";
 
+const TERMS = glossaryTerms();
+
 export default function GlossaryPanel() {
   const [show, setShow] = useState(false);
-  const terms = glossaryTerms();
+  const listId = useId();
   return (
-    <section className="rounded-xl border border-ash/30 bg-ink-2 p-4">
+    <section className="rounded-md border border-ash/25 bg-ink-2 p-5">
       <button
         type="button"
         onClick={() => setShow((s) => !s)}
         aria-expanded={show}
-        className="flex items-center gap-2 text-sm font-bold text-gold"
+        aria-controls={listId}
+        className="flex items-center gap-2 font-display text-sm font-bold tracking-[0.2em] text-gold transition-colors hover:text-gold/80"
       >
         <IconBook size={15} />
         术语速查{show ? "（收起）" : ""}
       </button>
       {show && (
-        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {terms.map((t) => (
-            <div key={t} className="rounded border border-ash/20 bg-ink p-2 text-xs">
-              <span className="text-gold font-bold mr-2">{t}</span>
-              <span className="text-paper/80">{GLOSSARY[t]}</span>
+        <div id={listId} className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {TERMS.map((t) => (
+            <div key={t} className="rounded-md border border-ash/25 bg-ink p-2.5 text-xs leading-relaxed">
+              <span className="mr-2 font-display font-bold tracking-wider text-gold">{t}</span>
+              <span className="text-paper/80">{GLOSSARY[t] ?? "暂无释义"}</span>
             </div>
           ))}
         </div>

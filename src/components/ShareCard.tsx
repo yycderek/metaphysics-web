@@ -1,6 +1,7 @@
 "use client";
 // 分享卡：把卦象 + 断语渲染成一张玄学风竖版图（SVG），可下载 PNG 或复制到剪贴板。
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import LiveNote from "./LiveNote";
 import { IconCopy, IconDownload } from "@/components/icons";
 import type { AgentDivination } from "@/lib/agent/types";
 
@@ -8,12 +9,14 @@ interface Props {
   interpretation: AgentDivination;
 }
 
+// 主题变量 + 亮色回退：页面上随 .dark 翻转；导出为独立 SVG 时变量缺失，回退到亮色纸面色
 const WIDTH = 620;
 const HEIGHT = 820;
-const GOLD = "#7ea6c6"; // 月白蓝
-const PAPER = "#e6ecec"; // 青白
-const ASH = "#8796a0";
-const INK = "#0d1114"; // 玄青墨
+const GOLD = "var(--gold, #30587d)"; // 青花黛蓝
+const PAPER = "var(--paper, #2b251b)"; // 墨色
+const ASH = "var(--ash, #8a7d67)"; // 纸灰
+const INK = "var(--ink-2, #fcfaf3)"; // 册页底
+const VERMILION = "var(--vermilion, #b4362a)"; // 朱砂
 
 /** 按每行字数折行，超出上限截断 */
 function wrap(text: string, per: number, maxLines: number): string[] {
@@ -46,9 +49,11 @@ async function svgToPng(svg: SVGSVGElement): Promise<Blob> {
 export default function ShareCard({ interpretation }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [note, setNote] = useState("");
+  const [busy, setBusy] = useState<"download" | "copy" | null>(null);
 
   const download = async () => {
-    if (!svgRef.current) return;
+    if (!svgRef.current || busy) return;
+    setBusy("download");
     try {
       const blob = await svgToPng(svgRef.current);
       const a = document.createElement("a");
@@ -60,33 +65,44 @@ export default function ShareCard({ interpretation }: Props) {
       setNote("已下载");
     } catch (e) {
       setNote((e as Error).message);
+    } finally {
+      setBusy(null);
     }
   };
 
   const copy = async () => {
-    if (!svgRef.current) return;
+    if (!svgRef.current || busy) return;
+    setBusy("copy");
     try {
       const blob = await svgToPng(svgRef.current);
       await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
       setNote("已复制图片");
     } catch (e) {
       setNote((e as Error).message);
+    } finally {
+      setBusy(null);
     }
   };
 
-  const facts = [
-    interpretation.依据?.三传?.length ? `三传 ${interpretation.依据.三传.join("→")}` : "",
-    interpretation.依据?.天将?.length ? `天将 ${interpretation.依据.天将.join("/")}` : "",
-    interpretation.依据?.六亲?.length ? `六亲 ${interpretation.依据.六亲.join("/")}` : "",
-  ].filter(Boolean);
+  const facts = useMemo(
+    () =>
+      [
+        interpretation.依据?.三传?.length ? `三传 ${interpretation.依据.三传.join("→")}` : "",
+        interpretation.依据?.天将?.length ? `天将 ${interpretation.依据.天将.join("/")}` : "",
+        interpretation.依据?.六亲?.length ? `六亲 ${interpretation.依据.六亲.join("/")}` : "",
+      ].filter(Boolean),
+    [interpretation],
+  );
 
-  const zongduan = wrap(`总断：${interpretation.结论.总断}`, 24, 4);
-  const jianyi = wrap(`建议：${interpretation.结论.建议}`, 24, 5);
+  const zongduan = useMemo(() => wrap(`总断：${interpretation.结论.总断}`, 24, 4), [interpretation]);
+  const jianyi = useMemo(() => wrap(`建议：${interpretation.结论.建议}`, 24, 5), [interpretation]);
 
   return (
     <div className="space-y-2">
       <svg
         ref={svgRef}
+        role="img"
+        aria-label={`占卜结果分享图：${interpretation.卦象}`}
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         width={WIDTH}
@@ -100,13 +116,14 @@ export default function ShareCard({ interpretation }: Props) {
           y={16}
           width={WIDTH - 32}
           height={HEIGHT - 32}
-          rx={18}
+          rx={8}
           fill="none"
-          stroke={GOLD}
-          strokeWidth={2}
+          stroke={ASH}
+          strokeOpacity={0.5}
+          strokeWidth={1}
         />
 
-        <text x={WIDTH / 2} y={64} textAnchor="middle" fontSize={20} fill={GOLD} letterSpacing="6">
+        <text x={WIDTH / 2} y={64} textAnchor="middle" fontSize={20} fill={VERMILION} letterSpacing="6">
           玄 学 · 占 卜
         </text>
 
@@ -131,7 +148,7 @@ export default function ShareCard({ interpretation }: Props) {
           y1={196}
           x2={WIDTH - 40}
           y2={196}
-          stroke={GOLD}
+          stroke={ASH}
           strokeOpacity={0.5}
           strokeWidth={1}
         />
@@ -140,7 +157,7 @@ export default function ShareCard({ interpretation }: Props) {
           总断
         </text>
         {zongduan.map((l, i) => (
-          <text key={`z${i}`} x={40} y={266 + i * 26} fontSize={16} fill={PAPER}>
+          <text key={l} x={40} y={266 + i * 26} fontSize={16} fill={PAPER}>
             {l}
           </text>
         ))}
@@ -150,7 +167,7 @@ export default function ShareCard({ interpretation }: Props) {
         </text>
         {jianyi.map((l, i) => (
           <text
-            key={`j${i}`}
+            key={l}
             x={40}
             y={zongduan.length * 26 + 322 + i * 26}
             fontSize={16}
@@ -181,20 +198,24 @@ export default function ShareCard({ interpretation }: Props) {
 
       <div className="flex flex-wrap gap-2">
         <button
+          type="button"
           onClick={download}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-ash/40 px-3 py-1.5 text-xs text-ash transition-colors hover:border-gold hover:text-gold"
+          disabled={busy !== null}
+          className="inline-flex items-center gap-1.5 rounded-md border border-ash/30 px-3 py-1.5 text-xs text-ash transition-colors hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-60"
         >
           <IconDownload size={13} />
-          下载 PNG
+          {busy === "download" ? "下载中…" : "下载 PNG"}
         </button>
         <button
+          type="button"
           onClick={copy}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-ash/40 px-3 py-1.5 text-xs text-ash transition-colors hover:border-gold hover:text-gold"
+          disabled={busy !== null}
+          className="inline-flex items-center gap-1.5 rounded-md border border-ash/30 px-3 py-1.5 text-xs text-ash transition-colors hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-60"
         >
           <IconCopy size={13} />
-          复制图片
+          {busy === "copy" ? "复制中…" : "复制图片"}
         </button>
-        {note && <span className="text-xs text-jade self-center">{note}</span>}
+        <LiveNote className="self-center text-xs text-jade">{note}</LiveNote>
       </div>
     </div>
   );

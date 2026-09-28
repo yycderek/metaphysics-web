@@ -1,4 +1,3 @@
-"use client";
 // 梅花易数排盘视图：本卦/互卦/变卦卦象 + 上卦/下卦/动爻。
 import HexagramDiagram from "./HexagramDiagram";
 import { hexagramBinary } from "@/lib/algorithms/yijing";
@@ -45,11 +44,11 @@ export default function MeihuaPan({ raw }: { raw: unknown }) {
   return (
     <div className="space-y-4">
       <div className="grid sm:grid-cols-3 gap-4">
-        <HexagramDiagram title={`本卦 · ${r.本卦 ?? ""}`} lines={ben} />
-        <HexagramDiagram title={`互卦 · ${r.互卦 ?? ""}`} lines={hu} />
-        <HexagramDiagram title={`变卦 · ${r.变卦 ?? ""}`} lines={bian} />
+        <HexagramDiagram title={r.本卦 ? `本卦 · ${r.本卦}` : "本卦"} lines={ben} />
+        <HexagramDiagram title={r.互卦 ? `互卦 · ${r.互卦}` : "互卦"} lines={hu} />
+        <HexagramDiagram title={r.变卦 ? `变卦 · ${r.变卦}` : "变卦"} lines={bian} />
       </div>
-      <div className="rounded-lg border border-ash/30 bg-ink-2 p-3 text-xs space-y-1 text-ash">
+      <div className="rounded-md border border-ash/25 bg-ink-2 p-4 text-xs space-y-1 text-ash">
         <div className="flex flex-wrap gap-x-4">
           <span>报数：{(r.报数 ?? []).join("、")}</span>
           <span>上卦：{r.上卦}</span>

@@ -1,6 +1,6 @@
 "use client";
 // 六爻卦象（自上而下：上爻→初爻）：摇卦后逐爻落定，动爻以朱砂标记。
-import { motion, useReducedMotion } from "framer-motion";
+import { LazyMotion, domAnimation, m, useReducedMotion } from "framer-motion";
 
 const YAO_NAMES = ["初", "二", "三", "四", "五", "上"];
 
@@ -35,31 +35,33 @@ export default function YaoLines({ value, animateKey = 0 }: Props) {
   const rows = [...tosses].reverse();
 
   return (
-    <div className="flex flex-col items-center gap-1.5 py-1">
-      {rows.map((t, i) => {
-        const yang = t === 7 || t === 9;
-        const moving = t === 6 || t === 9;
-        const label = YAO_NAMES[5 - i];
-        return (
-          <motion.div
-            key={`${animateKey}-${i}`}
-            initial={reduce ? false : { opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: reduce ? 0 : i * 0.08, duration: 0.32 }}
-            className="flex items-center gap-3"
-          >
-            <span className="w-4 text-right text-[10px] text-ash">{label}</span>
-            <YaoBar yang={yang} moving={moving} />
-            <span
-              className="w-6 text-[10px]"
-              style={{ color: moving ? "var(--vermilion)" : "var(--ash)" }}
+    <LazyMotion features={domAnimation}>
+      <div className="flex flex-col items-center gap-1.5 py-1">
+        {rows.map((t, i) => {
+          const yang = t === 7 || t === 9;
+          const moving = t === 6 || t === 9;
+          const label = YAO_NAMES[5 - i];
+          return (
+            <m.div
+              key={`${animateKey}-${i}`}
+              initial={reduce ? false : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: reduce ? 0 : i * 0.08, duration: 0.32 }}
+              className="flex items-center gap-3"
             >
-              {t}
-            </span>
-            <span className="w-8 text-[10px] text-ash">{moving ? "动" : ""}</span>
-          </motion.div>
-        );
-      })}
-    </div>
+              <span className="w-4 text-right text-[10px] text-ash">{label}</span>
+              <YaoBar yang={yang} moving={moving} />
+              <span
+                className="w-6 text-[10px]"
+                style={{ color: moving ? "var(--vermilion)" : "var(--ash)" }}
+              >
+                {t}
+              </span>
+              <span className="w-8 text-[10px] text-ash">{moving ? "动" : ""}</span>
+            </m.div>
+          );
+        })}
+      </div>
+    </LazyMotion>
   );
 }

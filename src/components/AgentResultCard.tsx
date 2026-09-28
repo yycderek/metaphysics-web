@@ -2,7 +2,7 @@
 // Agent 结果卡：展示一次自主起课的卦象与解读。
 // 层次：卦象题头 → 引擎已核对依据 → 总断（视觉峰值 + 朱砂印）→ 课盘（弱化）→ 应验追踪。
 // 单卦 = 简略(结论+课盘) / 详细(推导过程+逐步占断)；多卦 = 综断 + 对比表 + 逐卦解读。
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { AgentDivination } from "@/lib/agent/types";
 import type { DivinationResult } from "@/lib/algorithms/types";
 import { rawKeShi } from "@/lib/algorithms/daliuren";
@@ -40,14 +40,14 @@ export default function AgentResultCard({
   topic,
 }: Props) {
   const isDaliuren = divination?.algorithmId === "daliuren";
-  const ks = isDaliuren ? rawKeShi(divination!) : null;
+  const ks = useMemo(() => (isDaliuren ? rawKeShi(divination!) : null), [isDaliuren, divination]);
   const [mode, setMode] = useState<"brief" | "detail">("brief");
   const [share, setShare] = useState(false);
   const isMulti = !!(interpretation.卦组?.length || (divinations && divinations.length > 1));
 
   const tabCls = (active: boolean) =>
-    `inline-flex items-center gap-1 rounded-lg border px-3 py-1 text-xs transition-colors ${
-      active ? "border-gold/60 bg-gold/10 text-gold" : "border-ash/40 text-ash hover:text-paper"
+    `inline-flex items-center gap-1 rounded-md border px-3 py-1 text-xs transition-colors ${
+      active ? "border-gold/70 text-gold" : "border-ash/30 text-ash hover:border-ash/60 hover:text-paper"
     }`;
 
   const facts = interpretation.依据
@@ -62,29 +62,38 @@ export default function AgentResultCard({
     : "";
 
   return (
-    <div className="rise-in space-y-5 rounded-2xl border border-ash/30 bg-ink p-5">
+    <div className="rise-in space-y-5 rounded-md border border-ash/25 bg-ink-2 p-5 md:p-6">
       {/* 题头 */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-baseline gap-2">
-            <span className="text-lg font-bold text-gold">{interpretation.卦象}</span>
+            <span className="font-display text-xl font-bold tracking-[0.15em] text-gold">{interpretation.卦象}</span>
             {interpretation.吉凶 && (
-              <span className="rounded-full border border-ash/40 px-2 py-0.5 text-xs text-ash">
+              <span className="rounded-md border border-ash/30 px-2 py-0.5 text-xs text-ash">
                 吉凶 · {interpretation.吉凶}
               </span>
             )}
           </div>
           <div className="mt-0.5 text-xs text-ash">
-            {interpretation.算法} · 置信度 {interpretation.置信度}（AI 自评）
+            {interpretation.算法} · 置信度{" "}
+            <span className="tabular-nums">{interpretation.置信度}</span>（AI 自评）
           </div>
         </div>
         <div className="flex gap-2">
           {!isMulti && (
             <>
-              <button className={tabCls(mode === "brief")} onClick={() => setMode("brief")}>
+              <button
+                className={tabCls(mode === "brief")}
+                aria-pressed={mode === "brief"}
+                onClick={() => setMode("brief")}
+              >
                 简略
               </button>
-              <button className={tabCls(mode === "detail")} onClick={() => setMode("detail")}>
+              <button
+                className={tabCls(mode === "detail")}
+                aria-pressed={mode === "detail"}
+                onClick={() => setMode("detail")}
+              >
                 详细
               </button>
             </>
@@ -104,8 +113,8 @@ export default function AgentResultCard({
 
       {/* 信任层：引擎已核对的硬依据，抬升为可读信息 */}
       {(facts || interpretation.出处) && (
-        <div className="rounded-lg border border-jade/25 bg-jade/5 px-3 py-2">
-          <div className="flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-jade">
+        <div className="rounded-md border border-jade/25 bg-jade/5 px-4 py-3">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.15em] text-jade">
             <IconCheck size={12} />
             引擎已核对 · 依据
           </div>
@@ -129,13 +138,13 @@ export default function AgentResultCard({
             <Seal char="断" size={54} stamp className="shrink-0" />
             <div className="min-w-0 flex-1">
               <div className="text-[11px] tracking-[0.2em] text-ash">总断</div>
-              <p className="mt-1 text-lg leading-relaxed text-paper md:text-xl">
+              <p className="mt-1 font-display text-lg font-bold leading-relaxed text-pretty text-paper md:text-xl">
                 <TermText text={interpretation.结论.总断} />
               </p>
             </div>
           </div>
 
-          <dl className="space-y-2 text-sm leading-relaxed">
+          <dl className="space-y-2.5 text-sm leading-loose">
             <div className="flex gap-3">
               <dt className="w-10 shrink-0 pt-0.5 text-xs text-ash">现状</dt>
               <dd className="text-paper/90">
@@ -158,7 +167,7 @@ export default function AgentResultCard({
 
           {/* 课盘：弱化处理，让总断成为焦点 */}
           <div className="space-y-4 border-t border-ash/15 pt-4">
-            <div className="flex items-center gap-1.5 text-[11px] tracking-wide text-ash">
+            <div className="flex items-center gap-1.5 text-[11px] tracking-[0.15em] text-ash">
               <IconCompass size={13} />
               课盘
             </div>
@@ -203,8 +212,8 @@ export default function AgentResultCard({
               {divination.steps.map((s, i) => {
                 const interp = interpretation.逐步[i];
                 return (
-                  <div key={s.key} className="border-l-2 border-ash/25 pl-3">
-                    <div className="text-sm font-bold text-gold">{s.title}</div>
+                  <div key={s.key} className="border-l border-ash/30 pl-3">
+                    <div className="font-display text-sm font-bold tracking-[0.15em] text-gold">{s.title}</div>
                     <div className="mt-0.5 text-xs text-ash">{s.desc}</div>
                     <div className="mt-2 text-sm text-paper/90">
                       <span className="mr-2 font-bold text-jade">占断</span>
@@ -262,7 +271,7 @@ function MultiPan({
     <div className="space-y-5">
       <div className="flex items-start gap-4">
         <Seal char="综" size={54} stamp className="shrink-0" />
-        <div className="min-w-0 flex-1 space-y-2 text-sm leading-relaxed">
+        <div className="min-w-0 flex-1 space-y-2.5 text-sm leading-loose">
           <div>
             <span className="mr-2 text-xs text-ash">综断</span>
             {interpretation.结论.总断}
@@ -285,10 +294,10 @@ function MultiPan({
       </div>
 
       {rows.length > 1 && (
-        <div className="overflow-x-auto rounded-lg border border-ash/20">
+        <div className="overflow-x-auto rounded-md border border-ash/25">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-ash/20 text-ash">
+              <tr className="border-b border-ash/25 tracking-[0.15em] text-ash">
                 <th className="w-28 px-2 py-1.5 text-left">卦象</th>
                 <th className="w-16 px-2 py-1.5 text-left">吉凶</th>
                 <th className="px-2 py-1.5 text-left">要点</th>
@@ -297,7 +306,7 @@ function MultiPan({
             </thead>
             <tbody>
               {rows.map((r, i) => (
-                <tr key={i} className="border-b border-ash/10 align-top">
+                <tr key={`${r.卦象}-${i}`} className="border-b border-ash/15 align-top">
                   <td className="px-2 py-1.5 text-gold">{r.卦象}</td>
                   <td className="px-2 py-1.5">{r.吉凶 ?? "-"}</td>
                   <td className="px-2 py-1.5 text-paper/90">{r.要点}</td>
@@ -312,8 +321,8 @@ function MultiPan({
       {groups.length > 0 && (
         <div className="space-y-3">
           {groups.map((g, i) => (
-            <div key={i} className="border-l-2 border-ash/25 pl-3 text-sm">
-              <span className="mr-2 font-bold text-gold">{g.卦象}</span>
+            <div key={`${g.卦象}-${i}`} className="border-l border-ash/30 pl-3 text-sm">
+              <span className="mr-2 font-display font-bold tracking-[0.1em] text-gold">{g.卦象}</span>
               {g.吉凶 && <span className="text-xs text-ash">{g.吉凶}</span>}
               <div className="text-paper/90">{g.结论}</div>
               {g.建议 && <div className="text-xs text-jade">建议：{g.建议}</div>}

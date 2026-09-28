@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-27T22:55:00+08:00",
+  "title": "Design System: 玄学 · 占卜",
+  "extensions": {
+    "colorMeta": {
+      "vermilion-seal": {
+        "role": "primary",
+        "displayName": "朱砂 Vermilion Seal",
+        "canonical": "#b4362a",
+        "tonalRamp": ["#2a0d09", "#471811", "#652218", "#832d1f", "#b4362a", "#cd5a48", "#e08a76", "#f0c0b2"]
+      },
+      "qinghua-blue": {
+        "role": "secondary",
+        "displayName": "青花黛蓝 Qinghua Blue",
+        "canonical": "#30587d",
+        "tonalRamp": ["#0c151f", "#142334", "#1b3149", "#234061", "#30587d", "#4a739c", "#6f97bd", "#a8c4dd"]
+      },
+      "paper-ground": {
+        "role": "neutral",
+        "displayName": "宣纸 Paper Ground",
+        "canonical": "#f6f2e8",
+        "tonalRamp": ["#4a443a", "#6e6350", "#8f8368", "#b0a483", "#d0c6a9", "#e5dec9", "#f6f2e8", "#fcfaf3"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display 碑额", "purpose": "站点题名、课名、干支大字（Noto Serif SC 900）。" },
+      "body": { "displayName": "Body 行文", "purpose": "正文与界面（LXGW WenKai）。" },
+      "label": { "displayName": "Label 小签", "purpose": "面板题头与竖排侧签。" }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "seal-stamp", "value": "cubic-bezier(0.2, 0.8, 0.3, 1) 0.45s", "purpose": "盖印回弹，印章与结果落章时刻。" },
+      { "name": "theme-fade", "value": "background-color 0.25s ease", "purpose": "亮暗主题切换的纸色过渡。" }
+    ],
+    "breakpoints": [
+      { "name": "lg", "value": "1024px", "purpose": "双栏工作台与移动 tab 布局的分界。" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button 朱砂主按钮",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "主动作专用（起课/起卦/断课），一屏不超过两处。",
+      "html": "<button class=\"ds-btn-primary\">起 课</button>",
+      "css": ".ds-btn-primary { background: var(--vermilion, #b4362a); color: var(--seal-ink, #faf5ea); border: none; border-radius: 6px; padding: 8px 16px; font-family: 'LXGW WenKai', 'Kaiti SC', serif; letter-spacing: 0.1em; transition: background-color 0.2s; } .ds-btn-primary:hover { background: color-mix(in srgb, var(--vermilion, #b4362a) 90%, transparent); } .ds-btn-primary:focus-visible { outline: 2px solid var(--gold, #30587d); outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button 描边次按钮",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "次级操作与模式切换，发丝描边，hover 转青花。",
+      "html": "<button class=\"ds-btn-ghost\">推导过程</button>",
+      "css": ".ds-btn-ghost { background: transparent; color: var(--ash, #6e6350); border: 1px solid color-mix(in srgb, var(--ash, #6e6350) 40%, transparent); border-radius: 6px; padding: 8px 16px; font-family: 'LXGW WenKai', 'Kaiti SC', serif; letter-spacing: 0.05em; transition: border-color 0.2s, color 0.2s; } .ds-btn-ghost:hover { border-color: var(--gold, #30587d); color: var(--paper, #2b251b); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--gold, #30587d); outline-offset: 2px; }"
+    },
+    {
+      "name": "Album Card 册页卡",
+      "kind": "card",
+      "refersTo": "card-album",
+      "description": "平面容器：发丝边 + 6px 圆角 + 册页底，零投影。",
+      "html": "<div class=\"ds-card-album\"><h3 class=\"ds-card-title\">四课</h3><p>卡片内容以发丝线与纸色微差分层。</p></div>",
+      "css": ".ds-card-album { background: var(--ink-2, #fcfaf3); color: var(--paper, #2b251b); border: 1px solid color-mix(in srgb, var(--ash, #6e6350) 25%, transparent); border-radius: 6px; padding: 20px; } .ds-card-title { font-family: 'Noto Serif SC', serif; font-weight: 700; letter-spacing: 0.2em; color: var(--gold, #30587d); margin: 0 0 12px; }"
+    },
+    {
+      "name": "Input 输入框",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "册页底 + 发丝边，focus 出青花环，光标朱砂。",
+      "html": "<input class=\"ds-input\" placeholder=\"把想问的事告诉我…\" />",
+      "css": ".ds-input { background: var(--ink-2, #fcfaf3); color: var(--paper, #2b251b); border: 1px solid color-mix(in srgb, var(--ash, #6e6350) 30%, transparent); border-radius: 6px; padding: 8px 12px; font-family: 'LXGW WenKai', 'Kaiti SC', serif; caret-color: var(--vermilion, #b4362a); } .ds-input:focus-visible { outline: none; border-color: var(--gold, #30587d); box-shadow: 0 0 0 2px color-mix(in srgb, var(--gold, #30587d) 60%, transparent); }"
+    },
+    {
+      "name": "Seal 朱砂方印",
+      "kind": "custom",
+      "description": "签名组件：双线方印，盖印动效。",
+      "html": "<svg class=\"ds-seal\" viewBox=\"0 0 100 100\" width=\"44\" height=\"44\" role=\"img\" aria-label=\"朱砂印\"><rect x=\"5\" y=\"5\" width=\"90\" height=\"90\" rx=\"6\" fill=\"none\" stroke=\"var(--vermilion, #b4362a)\" stroke-width=\"6\"/><rect x=\"17\" y=\"17\" width=\"66\" height=\"66\" rx=\"6\" fill=\"none\" stroke=\"var(--vermilion, #b4362a)\" stroke-width=\"2\" stroke-opacity=\"0.55\"/><text x=\"50\" y=\"62\" text-anchor=\"middle\" font-size=\"40\" fill=\"var(--vermilion, #b4362a)\" font-family=\"'Noto Serif SC', serif\" font-weight=\"600\">玄</text></svg>",
+      "css": ".ds-seal { display: block; }"
+    },
+    {
+      "name": "Vertical Label 竖排侧签",
+      "kind": "custom",
+      "description": "册页左缘的竖排青花小签，结果面板的签名标记。",
+      "html": "<div class=\"ds-vlabel-wrap\"><span class=\"ds-vlabel\">天地盘</span><div class=\"ds-vlabel-body\">册页内容</div></div>",
+      "css": ".ds-vlabel-wrap { display: flex; gap: 16px; } .ds-vlabel { writing-mode: vertical-rl; letter-spacing: 0.35em; font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 14px; color: var(--gold, #30587d); user-select: none; } .ds-vlabel-body { flex: 1; min-width: 0; }"
+    },
+    {
+      "name": "Double Rule 界栏",
+      "kind": "custom",
+      "description": "题头与页脚的册页双线收边。",
+      "html": "<div class=\"ds-double-rule\"></div>",
+      "css": ".ds-double-rule { border-bottom: 3px double color-mix(in srgb, var(--ash, #6e6350) 55%, transparent); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "一案宣纸",
+    "overview": "整个界面是一张铺开的案头册页：暖白宣纸为底，墨色行文，朱砂只落在印记与主动作上，青花黛蓝承担标题与指引。容器是平面的「册页」——发丝边框、小圆角、零投影，层次靠底色微差与界栏双线，不靠阴影。暗色是同一世界的夜晚形态「夜墨」。",
+    "keyCharacteristics": [
+      "亮/暗双主题同等完成度，默认亮色",
+      "平面册页容器（1px 发丝边 + 6px 圆角），全站无投影",
+      "签名元素：朱砂方印、界栏双线、竖排侧签",
+      "自托管中文字体：霞鹜文楷正文 + 思源宋体标题"
+    ],
+    "rules": [
+      { "name": "The One-Seal Rule", "body": "朱砂实底只给主动作与印章；一屏强朱砂不超过两处。", "section": "colors" },
+      { "name": "The No-Clone Rule", "body": "中文标题必带正字距；字重对比 400 vs 900，不用中间档糊过渡。", "section": "typography" },
+      { "name": "The Flat-Album Rule", "body": "任何容器不得加阴影；需要层次时换底色或加发丝线。", "section": "elevation" }
+    ],
+    "dos": [
+      "Do 用三层纸色做层次，留白要大方（p-5 / space-y-5 起步）。",
+      "Do 让朱砂保持稀有；一屏强朱砂 ≤2 处。",
+      "Do 亮/暗双主题成对调整 token，暗色同步提亮而非反色。",
+      "Do 保持 a11y 基线：label 关联、focus-visible、aria-live、reduced-motion 降级。"
+    ],
+    "donts": [
+      "Don't 加投影、渐变、玻璃模糊——平面册页不靠这些。",
+      "Don't 用彩色粗侧边条（border-l-2+）标记卡片。",
+      "Don't 用 rounded-xl 以上大圆角容器。",
+      "Don't 把纸灰（--ash）再调淡，次级文字对比度不得回退到 4.5:1 以下。"
+    ]
+  }
+}

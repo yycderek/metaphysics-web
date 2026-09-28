@@ -1,6 +1,6 @@
 "use client";
 // 朱砂印章：结果盖印 / 品牌落款。stamp=true 时以「落印」动效盖下（尊重减少动效偏好）。
-import { motion, useReducedMotion } from "framer-motion";
+import { LazyMotion, domAnimation, m, useReducedMotion } from "framer-motion";
 
 interface Props {
   char?: string;
@@ -26,7 +26,7 @@ export default function Seal({ char = "玄", size = 52, className = "", stamp = 
         y="5"
         width="90"
         height="90"
-        rx="16"
+        rx="6"
         fill="none"
         style={{ stroke: "var(--vermilion)" }}
         strokeWidth="6"
@@ -48,7 +48,7 @@ export default function Seal({ char = "玄", size = 52, className = "", stamp = 
         textAnchor="middle"
         dominantBaseline="central"
         fontSize="46"
-        style={{ fill: "var(--vermilion)", fontFamily: "var(--font-serif-cn)" }}
+        style={{ fill: "var(--vermilion)", fontFamily: "var(--font-display)", fontWeight: 600 }}
       >
         {char}
       </text>
@@ -58,13 +58,15 @@ export default function Seal({ char = "玄", size = 52, className = "", stamp = 
   if (!stamp || reduce) return svg;
 
   return (
-    <motion.span
-      className="inline-block"
-      initial={{ scale: 2.4, opacity: 0, rotate: -14 }}
-      animate={{ scale: 1, opacity: 1, rotate: 0 }}
-      transition={{ type: "spring", stiffness: 240, damping: 15 }}
-    >
-      {svg}
-    </motion.span>
+    <LazyMotion features={domAnimation}>
+      <m.span
+        className="inline-block"
+        initial={{ scale: 2.4, opacity: 0, rotate: -14 }}
+        animate={{ scale: 1, opacity: 1, rotate: 0 }}
+        transition={{ type: "spring", stiffness: 240, damping: 15 }}
+      >
+        {svg}
+      </m.span>
+    </LazyMotion>
   );
 }

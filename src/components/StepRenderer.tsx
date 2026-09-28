@@ -3,8 +3,8 @@
 // - 大六壬步骤 → 专属视图（天盘圆盘/四课卡/三传链，复用现有组件）
 // - 其他算法 / 未知步骤 → 通用 JSON 树视图兜底
 // - 动画风格与原 StepDemo 一致（framer-motion），支持手动/自动播放
-import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, LazyMotion, domAnimation, m, useReducedMotion } from "framer-motion";
 import type { DivinationResult, StepResult } from "@/lib/algorithms/types";
 import { resolveStepView } from "@/lib/algorithms/stepViews";
 import { rawKeShi } from "@/lib/algorithms/daliuren";
@@ -50,8 +50,8 @@ function DaliurenStepView({ step, ks }: { step: StepResult; ks: KeShi }) {
     case "jiuzongmen": {
       const data = step.data as { method?: string; kename?: string };
       return (
-        <div className="rounded-lg border border-gold/40 bg-ink-2 p-5 text-center">
-          <div className="text-2xl font-bold text-gold">{data.kename ?? ks.kename}</div>
+        <div className="rounded-md border border-ash/25 bg-ink-2 p-5 text-center">
+          <div className="font-display text-2xl font-black tracking-[0.15em] text-paper">{data.kename ?? ks.kename}</div>
           <div className="mt-1 text-sm text-ash">判定方法：{data.method ?? ks.method}</div>
           <p className="mt-3 text-sm text-paper leading-relaxed">
             四课 {sike.map((e) => `${e.bottom}→${e.top}`).join("  ")}
@@ -79,13 +79,13 @@ function DaliurenStepView({ step, ks }: { step: StepResult; ks: KeShi }) {
       return (
         <div className="space-y-4">
           <SanchuanChain ks={ks} />
-          <div className="rounded-lg border border-ash/30 bg-ink-2 p-4">
+          <div className="rounded-md border border-ash/25 bg-ink-2 p-4">
             <div className="text-sm text-ash mb-2">三传细断</div>
             <div className="space-y-1.5">
               {chuan.map((c) => (
                 <div key={c.name} className="flex items-center gap-3 text-sm flex-wrap">
                   <span className="w-12 text-gold">{c.name}</span>
-                  <span className="w-8 text-xl text-paper">{c.zhi}</span>
+                  <span className="w-8 font-display text-xl font-bold text-paper">{c.zhi}</span>
                   <span className="w-16">
                     {c.tianjiang.short}·{c.tianjiang.full}
                   </span>
@@ -114,6 +114,8 @@ export default function StepRenderer({ result, autoPlay = false }: Props) {
   const [step, setStep] = useState(0);
   const [playing, setPlaying] = useState(autoPlay);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const reduce = useReducedMotion();
+  const ks = useMemo(() => (result.algorithmId === "daliuren" ? rawKeShi(result) : null), [result]);
 
   // 换课式时回到第一步并停止播放（仅 result 引用变化时重置；StrictMode 双挂载安全）
   const prevResult = useRef<DivinationResult>(result);
@@ -143,14 +145,13 @@ export default function StepRenderer({ result, autoPlay = false }: Props) {
 
   if (steps.length === 0) {
     return (
-      <div className="rounded-xl border border-ash/30 bg-ink-2 p-6 text-center text-sm text-ash">
+      <div className="rounded-md border border-ash/25 bg-ink-2 p-6 text-center text-sm text-ash">
         该算法（{result.algorithmName}）未提供推导过程，仅支持结果模式。
       </div>
     );
   }
 
   const cur = steps[step];
-  const ks = result.algorithmId === "daliuren" ? rawKeShi(result) : null;
   const viewKind = resolveStepView(result.algorithmId, cur.key);
 
   return (
@@ -165,10 +166,10 @@ export default function StepRenderer({ result, autoPlay = false }: Props) {
                 setStep(i);
                 setPlaying(false);
               }}
-              className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
+              className={`px-3 py-1.5 rounded-md text-xs border transition-colors focus-visible:ring-2 focus-visible:ring-gold ${
                 i === step
-                  ? "border-gold bg-gold/15 text-gold"
-                  : "border-ash/30 text-ash hover:text-paper"
+                  ? "border-vermilion text-vermilion"
+                  : "border-ash/25 text-ash hover:text-paper"
               }`}
             >
               {s.title.split("、")[0]}
@@ -178,7 +179,7 @@ export default function StepRenderer({ result, autoPlay = false }: Props) {
         <div className="flex gap-2">
           <button
             onClick={() => setPlaying((p) => !p)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-ash/40 px-4 py-2 text-sm text-ash transition-colors hover:border-gold hover:text-paper"
+            className="inline-flex items-center gap-1.5 rounded-md border border-ash/25 px-4 py-2 text-sm text-ash transition-colors hover:border-gold hover:text-paper focus-visible:ring-2 focus-visible:ring-gold"
           >
             {playing ? <IconPause size={14} /> : <IconPlay size={14} />}
             {playing ? "暂停" : "自动演示"}
@@ -186,7 +187,7 @@ export default function StepRenderer({ result, autoPlay = false }: Props) {
           <button
             onClick={() => setStep((s) => Math.max(0, s - 1))}
             disabled={step === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-ash/40 px-4 py-2 text-sm disabled:opacity-30 hover:border-gold"
+            className="inline-flex items-center gap-1.5 rounded-md border border-ash/25 px-4 py-2 text-sm disabled:opacity-30 hover:border-gold focus-visible:ring-2 focus-visible:ring-gold"
           >
             <IconChevronLeft size={14} />
             上一步
@@ -194,7 +195,7 @@ export default function StepRenderer({ result, autoPlay = false }: Props) {
           <button
             onClick={() => setStep((s) => Math.min(steps.length - 1, s + 1))}
             disabled={step === steps.length - 1}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-vermilion px-4 py-2 text-sm disabled:opacity-30"
+            className="inline-flex items-center gap-1.5 rounded-md bg-vermilion px-4 py-2 text-sm text-seal-ink transition-colors hover:bg-vermilion/90 disabled:opacity-30 focus-visible:ring-2 focus-visible:ring-gold"
           >
             下一步
             <IconChevronRight size={14} />
@@ -204,31 +205,34 @@ export default function StepRenderer({ result, autoPlay = false }: Props) {
 
       {/* 步骤标题 */}
       <div>
-        <h3 className="text-2xl font-bold text-gold">{cur.title}</h3>
+        <h3 className="font-display text-2xl font-bold tracking-[0.1em] text-gold">{cur.title}</h3>
         <p className="mt-1 text-sm leading-relaxed text-ash">{cur.desc}</p>
       </div>
 
       {/* 步骤内容 */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={cur.key}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -12 }}
-          transition={{ duration: 0.25 }}
-          className="space-y-4"
-        >
-          {viewKind === "daliuren" && ks ? (
-            <DaliurenStepView step={cur} ks={ks} />
-          ) : viewKind === "liuyao" ? (
-            <LiuyaoDemo step={cur} raw={result.raw} />
-          ) : viewKind === "meihua" ? (
-            <MeihuaDemo step={cur} raw={result.raw} />
-          ) : (
-            <DataView data={cur.data} />
-          )}
-        </motion.div>
-      </AnimatePresence>
+      <LazyMotion features={domAnimation}>
+        <AnimatePresence mode="wait">
+          <m.div
+            key={cur.key}
+            initial={reduce ? false : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduce ? undefined : { opacity: 0, y: -12 }}
+            transition={{ duration: 0.25 }}
+            className="space-y-4"
+            aria-live="polite"
+          >
+            {viewKind === "daliuren" && ks ? (
+              <DaliurenStepView step={cur} ks={ks} />
+            ) : viewKind === "liuyao" ? (
+              <LiuyaoDemo step={cur} raw={result.raw} />
+            ) : viewKind === "meihua" ? (
+              <MeihuaDemo step={cur} raw={result.raw} />
+            ) : (
+              <DataView data={cur.data} />
+            )}
+          </m.div>
+        </AnimatePresence>
+      </LazyMotion>
 
       {/* 进度 */}
       <div className="text-center text-xs text-ash">

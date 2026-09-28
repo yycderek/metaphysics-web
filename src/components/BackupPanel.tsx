@@ -2,6 +2,7 @@
 // 本地数据备份：导出 / 导入「历史 + 应验」为 JSON 文件（换设备 / 防丢失，无需账号）。
 // 导入前先解析并预览数量，用户选择「合并」或「覆盖」，避免误操作不可逆。
 import { useState } from "react";
+import LiveNote from "./LiveNote";
 import { IconDownload, IconWarning } from "@/components/icons";
 import { loadHistory, saveHistory, type HistoryEntry } from "@/lib/history";
 import { loadChangyan, saveChangyan, type ChangyanEntry } from "@/lib/changyan";
@@ -50,7 +51,7 @@ export default function BackupPanel() {
       const text = await file.text();
       const data = JSON.parse(text) as { history?: HistoryEntry[]; changyan?: ChangyanEntry[] };
       if (!Array.isArray(data.history) || !Array.isArray(data.changyan)) {
-        setNote("文件格式不对（缺少 history / changyan）");
+        setNote("文件格式不对（缺少 history / changyan），请使用本页导出的 JSON 文件");
         return;
       }
       setNote("");
@@ -94,12 +95,14 @@ export default function BackupPanel() {
           <IconDownload size={12} />
           导出
         </button>
-        <label className={`${actionCls} inline-flex cursor-pointer items-center gap-1`}>
+        <label
+          className={`${actionCls} inline-flex cursor-pointer items-center gap-1 rounded-md focus-within:ring-2 focus-within:ring-gold`}
+        >
           导入
           <input
             type="file"
             accept="application/json,.json"
-            className="hidden"
+            className="sr-only"
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) void pick(f);
@@ -107,11 +110,11 @@ export default function BackupPanel() {
             }}
           />
         </label>
-        {note && <span className="text-jade">{note}</span>}
+        <LiveNote className="self-center text-jade">{note}</LiveNote>
       </div>
 
       {pending && (
-        <div className="mt-2 space-y-2 rounded-lg border border-vermilion/40 bg-vermilion/5 p-2">
+        <div className="mt-3 space-y-2.5 rounded-md border border-vermilion/35 bg-vermilion/5 p-3">
           <div className="flex items-start gap-1.5 text-vermilion">
             <IconWarning size={13} className="mt-0.5 shrink-0" />
             <span className="leading-relaxed">
@@ -123,21 +126,21 @@ export default function BackupPanel() {
             <button
               type="button"
               onClick={() => apply("merge")}
-              className="rounded border border-gold/50 bg-gold/15 px-2.5 py-1 text-gold hover:bg-gold/25"
+              className="rounded-md border border-gold/50 bg-gold/15 px-2.5 py-1 text-gold hover:bg-gold/25"
             >
               合并导入
             </button>
             <button
               type="button"
               onClick={() => apply("replace")}
-              className="rounded border border-vermilion/50 px-2.5 py-1 text-vermilion hover:bg-vermilion/10"
+              className="rounded-md border border-vermilion/50 px-2.5 py-1 text-vermilion hover:bg-vermilion/10"
             >
               覆盖导入
             </button>
             <button
               type="button"
               onClick={() => setPending(null)}
-              className="rounded border border-ash/40 px-2.5 py-1 text-ash hover:text-paper"
+              className="rounded-md border border-ash/40 px-2.5 py-1 text-ash hover:text-paper"
             >
               取消
             </button>

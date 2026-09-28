@@ -1,27 +1,28 @@
 @import "tailwindcss";
 
-/* 主题色板——「青花 · 玄」：素白瓷 / 玄青墨底、黛青(青花蓝)标题、朱砂红点缀、青玉为辅。
-   完全告别之前的暖米白 + 琥珀金。 */
+/* 主题色板——「宣纸 · 朱砂」新中式：宣纸暖白底、墨色正文、朱砂印记、青花黛蓝标题。
+   暗色为「夜墨」：暖黑案头、米白墨色。双主题由 .dark 类驱动。 */
 :root {
-  /* 亮色 · 青花瓷 · 素白 · 黛蓝 · 朱砂 */
-  --ink: #eef2f3; /* 页面底 · 青白瓷 */
-  --ink-2: #fafcfc; /* 卡片底 · 素白 */
-  --paper: #22303a; /* 主文字 · 黛墨 */
-  --vermilion: #b23a2b; /* 朱砂红（主点缀） */
-  --gold: #33587a; /* 青花蓝（标题/强调） */
-  --jade: #1f7a63; /* 青玉 */
-  --ash: #64767d; /* 青灰 */
+  --ink: #f6f2e8; /* 页面底 · 宣纸 */
+  --ink-2: #fcfaf3; /* 册页底 · 比纸更白一分 */
+  --paper: #2b251b; /* 主文字 · 墨色 */
+  --vermilion: #b4362a; /* 朱砂（印记/主按钮/点缀） */
+  --gold: #30587d; /* 青花黛蓝（标题/强调） */
+  --jade: #247a5f; /* 青玉（成功/确认） */
+  --ash: #6e6350; /* 纸灰（次级文字/发丝线） */
+  --seal-ink: #faf5ea; /* 印上白文 · 恒定暖白，不随主题翻转 */
 }
 
 .dark {
-  /* 暗色 · 玄青墨 · 月白蓝 · 朱砂 */
-  --ink: #0d1114; /* 玄青墨底 */
-  --ink-2: #181e23; /* 次级底 */
-  --paper: #e6ecec; /* 青白 */
-  --vermilion: #c7492f; /* 朱砂 */
-  --gold: #7ea6c6; /* 月白蓝（标题/强调） */
-  --jade: #3aa886; /* 青玉 */
-  --ash: #8796a0; /* 青灰 */
+  color-scheme: dark;
+  --ink: #15181b; /* 夜墨底 */
+  --ink-2: #1d2126; /* 案面 */
+  --paper: #e7e1d2; /* 米白墨 */
+  --vermilion: #cf5040; /* 朱砂（暗下提亮） */
+  --gold: #a3bdd0; /* 月白青 */
+  --jade: #4dae8d;
+  --ash: #a39a86;
+  --seal-ink: #faf5ea;
 }
 
 @theme {
@@ -32,8 +33,17 @@
   --color-gold: var(--gold);
   --color-jade: var(--jade);
   --color-ash: var(--ash);
+  --color-seal-ink: var(--seal-ink);
+  /* 正文/界面：霞鹜文楷（自托管），回落系统楷体 */
   --font-serif-cn:
-    "Kaiti SC", "STKaiti", "KaiTi", "LXGW WenKai", "Noto Serif SC", "Songti SC", "SimSun", serif;
+    "LXGW WenKai", "Kaiti SC", "STKaiti", "KaiTi", "Songti SC", "Noto Serif SC", serif;
+  /* 大标题/课名：思源宋体（自托管），衬线碑刻感 */
+  --font-display: "Noto Serif SC", "LXGW WenKai", "Songti SC", "SimSun", serif;
+}
+
+html {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html,
@@ -41,6 +51,7 @@ body {
   background: var(--color-ink);
   color: var(--color-paper);
   font-family: var(--font-serif-cn);
+  line-height: 1.8;
   transition:
     background-color 0.25s ease,
     color 0.25s ease;
@@ -56,14 +67,34 @@ body {
   border-radius: 4px;
 }
 
-/* 页面氛围：顶部一抹极淡的青花光晕，给「静室起课」一点空间感 */
-body {
-  background-image: radial-gradient(
-    1100px 520px at 50% -12%,
-    color-mix(in srgb, var(--gold) 9%, transparent),
-    transparent 68%
-  );
-  background-attachment: fixed;
+/* 浏览器表面也入设计：选中色、光标、占位符、滚动条 */
+::selection {
+  background: color-mix(in srgb, var(--vermilion) 22%, transparent);
+}
+input,
+textarea {
+  caret-color: var(--vermilion);
+}
+::placeholder {
+  color: color-mix(in srgb, var(--ash) 90%, transparent);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--ash) 45%, transparent) transparent;
+}
+
+/* 界栏：册页式双线，用于题头/章节分隔 */
+.double-rule {
+  border-bottom: 3px double color-mix(in srgb, var(--ash) 55%, transparent);
+}
+.double-rule-top {
+  border-top: 3px double color-mix(in srgb, var(--ash) 55%, transparent);
+}
+
+/* 竖排小签：章节标记 */
+.vertical-rl {
+  writing-mode: vertical-rl;
+  letter-spacing: 0.35em;
 }
 
 /* 仪式动效 */

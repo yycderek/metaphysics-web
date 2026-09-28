@@ -1,4 +1,3 @@
-"use client";
 // 六爻卦象图：自下而上画六爻，阳爻实线、阴爻断线；可标动爻、世应、六亲/六神。
 interface Line {
   yang: boolean;
@@ -16,8 +15,8 @@ interface Props {
 
 export default function HexagramDiagram({ title, lines, shiPos, yingPos }: Props) {
   return (
-    <div className="rounded-lg border border-ash/30 bg-ink-2 p-3">
-      <div className="text-center text-sm text-gold font-bold mb-2">{title}</div>
+    <div className="rounded-md border border-ash/25 bg-ink-2 p-4">
+      <div className="text-center font-display text-sm font-bold tracking-[0.15em] text-gold mb-3">{title}</div>
       <div className="flex flex-col-reverse gap-1">
         {lines.map((l, i) => {
           const pos = i + 1;
@@ -27,7 +26,7 @@ export default function HexagramDiagram({ title, lines, shiPos, yingPos }: Props
             <div key={i} className="flex items-center gap-2">
               <span className="w-3 text-[10px] text-ash">{pos}</span>
               <span className={`w-8 text-[10px] ${l.moving ? "text-vermilion" : "text-ash"}`}>
-                {l.moving ? "动" : l.tag ? "" : ""}
+                {l.moving ? "动" : ""}
               </span>
               <div className="flex-1 flex items-center gap-1">
                 {l.yang ? (

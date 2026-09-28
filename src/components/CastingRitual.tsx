@@ -1,6 +1,6 @@
 "use client";
 // 起课仪式：占卜进行中展示缓慢旋转的八卦罗盘 + 里程碑，把等待变成仪式而非进度条。
-import { motion, useReducedMotion } from "framer-motion";
+import { LazyMotion, domAnimation, m, useReducedMotion } from "framer-motion";
 
 interface Props {
   /** SSE 里程碑文本，最后一条为进行中 */
@@ -35,7 +35,7 @@ function BaguaRing() {
           <path
             d="M50 8v7"
             style={{ stroke: "var(--gold)" }}
-            strokeWidth="3"
+            strokeWidth="2"
             strokeLinecap="round"
             strokeOpacity={i % 2 === 0 ? 0.85 : 0.4}
           />
@@ -58,43 +58,52 @@ function BaguaRing() {
 export default function CastingRitual({ progress, algorithm }: Props) {
   const reduce = useReducedMotion();
   return (
-    <div className="relative overflow-hidden rounded-xl border border-gold/30 bg-ink px-4 py-4">
-      <div className="flex items-center gap-4">
-        <div className="relative shrink-0">
-          <div className={reduce ? "" : "animate-spin-slow"}>
-            <BaguaRing />
+    <LazyMotion features={domAnimation}>
+      <div className="relative overflow-hidden rounded-md border border-ash/25 bg-ink-2 px-5 py-5">
+        <div className="flex items-center gap-4">
+          <div className="relative shrink-0">
+            <div className={reduce ? "" : "animate-spin-slow"}>
+              <BaguaRing />
+            </div>
+            <span
+              className="pointer-events-none absolute inset-0 flex items-center justify-center font-display text-xl"
+              style={{ color: "var(--gold)" }}
+            >
+              占
+            </span>
           </div>
-          <span
-            className="pointer-events-none absolute inset-0 flex items-center justify-center text-xl"
-            style={{ color: "var(--gold)" }}
-          >
-            占
-          </span>
-        </div>
-        <div className="min-w-0 flex-1 space-y-1">
-          <div className="text-sm font-bold" style={{ color: "var(--gold)" }}>
-            正在起课{algorithm ? ` · ${algorithm}` : ""}…
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="font-display text-sm font-bold tracking-[0.1em]" style={{ color: "var(--gold)" }}>
+              正在起课{algorithm ? ` · ${algorithm}` : ""}…
+            </div>
+            <ul className="space-y-0.5" aria-live="polite">
+              {progress.map((p, i) => {
+                const current = i === progress.length - 1;
+                return (
+                  <m.li
+                    key={`${i}-${p}`}
+                    initial={reduce ? false : { opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.28 }}
+                    className="flex items-center gap-2 text-xs"
+                    style={{ color: current ? "var(--paper)" : "var(--ash)" }}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="h-1.5 w-1.5 shrink-0 rounded-[1px]"
+                      style={{
+                        background: current ? "var(--vermilion)" : "transparent",
+                        border: current ? "none" : "1px solid var(--ash)",
+                      }}
+                    />
+                    <span className="truncate">{p}</span>
+                  </m.li>
+                );
+              })}
+            </ul>
           </div>
-          <ul className="space-y-0.5">
-            {progress.map((p, i) => {
-              const current = i === progress.length - 1;
-              return (
-                <motion.li
-                  key={`${i}-${p}`}
-                  initial={reduce ? false : { opacity: 0, x: -6 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.28 }}
-                  className="flex items-center gap-2 text-xs"
-                  style={{ color: current ? "var(--paper)" : "var(--ash)" }}
-                >
-                  <span style={{ color: "var(--gold)" }}>{current ? "◉" : "✓"}</span>
-                  <span className="truncate">{p}</span>
-                </motion.li>
-              );
-            })}
-          </ul>
         </div>
       </div>
-    </div>
+    </LazyMotion>
   );
 }

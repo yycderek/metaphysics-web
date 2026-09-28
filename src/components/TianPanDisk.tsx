@@ -1,4 +1,3 @@
-"use client";
 // 天盘圆盘：内圈地盘（固定），外圈天盘（月将加时旋转），贵人标星
 import { DIZHI } from "@/lib/data";
 import type { KeShi } from "@/lib/types";
@@ -16,14 +15,19 @@ function pos(i: number, r: number): [number, number] {
 
 export default function TianPanDisk({ ks }: { ks: KeShi }) {
   return (
-    <svg viewBox="0 0 420 420" className="w-full max-w-[440px] mx-auto">
+    <svg
+      viewBox="0 0 420 420"
+      className="w-full max-w-[440px] mx-auto"
+      role="img"
+      aria-label={`天盘：${ks.yuejiang}将加${ks.shizhi}时`}
+    >
       {/* 外环 */}
       <circle
         cx={CX}
         cy={CY}
         r={R_OUTER}
         style={{ fill: "var(--ink-2)", stroke: "var(--gold)" }}
-        strokeWidth="2"
+        strokeWidth="1"
       />
       <circle
         cx={CX}
@@ -47,12 +51,12 @@ export default function TianPanDisk({ ks }: { ks: KeShi }) {
         cy={CY}
         r={34}
         style={{ fill: "var(--ink-2)", stroke: "var(--gold)" }}
-        strokeWidth="1.5"
+        strokeWidth="1"
       />
-      <text x={CX} y={CY - 6} textAnchor="middle" fontSize="15" style={{ fill: "var(--paper)" }}>
+      <text x={CX} y={CY - 6} textAnchor="middle" fontSize="15" style={{ fill: "var(--paper)", fontFamily: "var(--font-display)" }}>
         {ks.yuejiang}将
       </text>
-      <text x={CX} y={CY + 16} textAnchor="middle" fontSize="15" style={{ fill: "var(--paper)" }}>
+      <text x={CX} y={CY + 16} textAnchor="middle" fontSize="15" style={{ fill: "var(--paper)", fontFamily: "var(--font-display)" }}>
         {ks.shizhi}时
       </text>
 

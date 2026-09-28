@@ -1,6 +1,6 @@
 "use client";
 // 应验追踪：为这一卦标记应验/未应验，并展示历史准确率。
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   changyanStats,
   loadChangyan,
@@ -23,7 +23,7 @@ const OPTIONS: ChangyanOutcome[] = ["应验", "未应验", "待验证"];
 export default function ChangyanTrack({ id, algorithmId, topic, 卦象, 总结 }: Props) {
   const [entries, setEntries] = useState<ChangyanEntry[]>([]);
   const current = entries.find((e) => e.id === id)?.outcome;
-  const stats = changyanStats(entries);
+  const stats = useMemo(() => changyanStats(entries), [entries]);
 
   // 挂载后从 localStorage 载入，避免与 SSR 首帧不一致（hydration 错误）
   useEffect(() => {
@@ -47,26 +47,24 @@ export default function ChangyanTrack({ id, algorithmId, topic, 卦象, 总结 }
 
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs">
-      <span className="text-ash">应验追踪：</span>
+      <span className="tracking-[0.15em] text-ash">应验追踪：</span>
       {OPTIONS.map((o) => (
         <button
           key={o}
+          type="button"
+          aria-pressed={current === o}
           onClick={() => pick(o)}
-          className={`px-2 py-1 rounded border transition-colors ${
+          className={`inline-flex items-center rounded-md border px-2.5 py-1 transition-colors ${
             current === o
-              ? o === "应验"
-                ? "border-jade text-jade"
-                : o === "未应验"
-                  ? "border-vermilion text-vermilion"
-                  : "border-gold text-gold"
-              : "border-ash/40 text-ash hover:text-paper"
+              ? "border-vermilion/70 text-vermilion before:mr-1.5 before:inline-block before:size-1.5 before:rounded-full before:bg-vermilion before:content-['']"
+              : "border-ash/30 text-ash hover:border-ash/60 hover:text-paper"
           }`}
         >
           {o}
         </button>
       ))}
       {stats.acc !== null && (
-        <span className="text-ash/85">
+        <span className="tabular-nums text-ash/85">
           已验证 {stats.verified} · 准确率 {stats.acc}%
         </span>
       )}

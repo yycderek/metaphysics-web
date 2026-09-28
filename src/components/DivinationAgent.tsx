@@ -9,15 +9,13 @@ import ChangyanReview from "@/components/ChangyanReview";
 import ApiSettings from "@/components/ApiSettings";
 import CastingRitual from "@/components/CastingRitual";
 import { IconChat, IconSpark, IconTrigram, IconUser, IconWarning } from "@/components/icons";
+import { loadAIConfig } from "@/lib/ai-config";
 import { toPriorDivination } from "@/lib/agent/divinate";
 import { loadHistory, pushHistoryEntry, saveHistory } from "@/lib/history";
 import { changyanStats, loadChangyan } from "@/lib/changyan";
 import { detectSkill } from "@/lib/agent/skills";
 import type { AgentDivination, AgentMeta } from "@/lib/agent/types";
 import type { DivinationResult } from "@/lib/algorithms/types";
-
-const STORAGE_KEY = "metaphysics-ai-config";
-const LEGACY_STORAGE_KEY = "liuren-ai-config";
 
 const EXAMPLES = ["看看我最近的事业运势", "测测我明天出行的吉凶", "帮我看看这周换工作合不合适"];
 const FOLLOW_UPS = [
@@ -48,15 +46,6 @@ interface AgentTurn {
   entryId?: string;
   topic?: string;
   error?: string;
-}
-
-function loadAIConfig(): Record<string, unknown> | undefined {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : undefined;
-  } catch {
-    return undefined;
-  }
 }
 
 export default function DivinationAgent() {
@@ -218,17 +207,17 @@ export default function DivinationAgent() {
   const submitChip = (q: string) => run(q, mode === "new");
 
   const inputCls =
-    "flex-1 bg-ink border border-ash/40 rounded-lg px-3 py-2 text-sm text-paper placeholder:text-ash/85 focus:border-gold outline-none";
+    "flex-1 bg-ink-2 border border-ash/30 rounded-md px-3 py-2 text-sm text-paper placeholder:text-ash/85 focus:border-gold focus-visible:ring-2 focus-visible:ring-gold";
 
   const segCls = (active: boolean) =>
-    `inline-flex items-center gap-1 rounded-md px-2.5 py-1 transition-colors ${
-      active ? "bg-gold/15 text-gold" : "text-ash hover:text-paper"
+    `inline-flex items-center gap-1 rounded-sm px-2.5 py-1 transition-colors ${
+      active ? "bg-gold/10 text-gold" : "text-ash hover:text-paper"
     }`;
 
   return (
-    <section className="rounded-xl border border-gold/40 bg-ink-2 p-4">
+    <section className="rounded-md border border-ash/25 bg-ink-2 p-5">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 font-bold text-gold">
+        <h3 className="flex items-center gap-2 font-display font-bold tracking-[0.2em] text-gold">
           <IconCompassMark />
           智能占卜
         </h3>
@@ -238,18 +227,18 @@ export default function DivinationAgent() {
         </div>
       </div>
 
-      <div className="mb-3 space-y-2">
+      <div className="mb-3 space-y-3">
         {/* 澄清态：独立模式，输入框直接作答 */}
         {pendingClarify && (
-          <div className="flex items-start gap-2 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-sm text-gold">
-            <IconChat size={15} className="mt-0.5 shrink-0" />
+          <div className="flex items-start gap-2 rounded-md border border-ash/25 bg-ink px-3 py-2 text-sm text-gold">
+            <IconChat size={15} className="mt-0.5 shrink-0 text-vermilion" />
             <span>请先回答：{pendingClarify}</span>
           </div>
         )}
 
         {/* 模式切换：仅在已有卦象且非澄清态时出现 */}
         {hasTurns && !pendingClarify && (
-          <div className="inline-flex rounded-lg border border-ash/30 p-0.5 text-xs">
+          <div className="inline-flex rounded-md border border-ash/25 p-0.5 text-xs">
             <button
               type="button"
               onClick={() => setComposerMode("new")}
@@ -289,6 +278,7 @@ export default function DivinationAgent() {
             }
           }}
           rows={2}
+          aria-label={pendingClarify ? "回答 Agent 的澄清问题" : mode === "new" ? "想问的事" : "追问当前卦象"}
           placeholder={
             pendingClarify
               ? "在这里回答上面的问题…"
@@ -305,7 +295,7 @@ export default function DivinationAgent() {
               value={algo}
               onChange={(e) => setAlgo(e.target.value)}
               aria-label="选择算法"
-              className="bg-ink border border-ash/40 rounded-lg px-2 py-2 text-sm text-paper focus:border-gold outline-none"
+              className="bg-ink-2 border border-ash/30 rounded-md px-2 py-2 text-sm text-paper focus:border-gold focus-visible:ring-2 focus-visible:ring-gold"
             >
               {ALGO_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -319,17 +309,28 @@ export default function DivinationAgent() {
           <button
             onClick={submit}
             disabled={busy}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gold px-6 py-2 text-sm font-bold text-ink transition-colors hover:bg-gold/90 disabled:opacity-40"
+            className="flex flex-1 items-center justify-center gap-2 rounded-md bg-vermilion px-6 py-2 text-sm font-bold text-seal-ink transition-colors hover:bg-vermilion/90 disabled:opacity-40"
           >
             {!busy && (mode === "new" ? <IconSpark size={15} /> : <IconChat size={15} />)}
             {busy ? "起课中…" : pendingClarify ? "作答并继续" : mode === "new" ? "起卦" : "追问"}
           </button>
+          {busy && (
+            <button
+              type="button"
+              onClick={() => abortRef.current?.abort()}
+              className="rounded-md border border-ash/30 px-4 py-2 text-sm text-ash transition-colors hover:text-paper"
+            >
+              停止
+            </button>
+          )}
         </div>
 
         {showProfile && (
           <input
             value={profile}
             onChange={(e) => setProfile(e.target.value)}
+            aria-label="出生信息（可选）"
+            autoComplete="off"
             placeholder="出生信息（可选）：如 1992-07-15 午时 男"
             className={`${inputCls} block`}
           />
@@ -344,7 +345,7 @@ export default function DivinationAgent() {
               key={q}
               onClick={() => submitChip(q)}
               disabled={busy}
-              className="rounded-full border border-ash/40 px-3 py-1 text-xs text-ash transition-colors hover:border-gold hover:text-gold disabled:opacity-40"
+              className="rounded-full border border-ash/30 px-3 py-1 text-xs text-ash transition-colors hover:border-gold hover:text-gold disabled:opacity-40"
             >
               {q}
             </button>
@@ -374,13 +375,13 @@ export default function DivinationAgent() {
         </div>
       )}
 
-      <div className="space-y-4">
-        {turns.map((t, idx) => (
-          <div key={idx} className="space-y-2">
+      <div className={hasTurns ? "space-y-4 border-t border-ash/20 pt-4" : "space-y-4"}>
+        {turns.map((t) => (
+          <div key={t.entryId ?? `q-${t.question}`} className="space-y-2">
             <div className="text-sm text-gold">问：{t.question}</div>
             {t.clarify ? (
-              <div className="flex items-start gap-2 rounded-lg border border-gold/40 bg-ink px-3 py-2 text-sm text-gold">
-                <IconChat size={15} className="mt-0.5 shrink-0" />
+              <div className="flex items-start gap-2 rounded-md border border-ash/25 bg-ink px-3 py-2 text-sm text-gold">
+                <IconChat size={15} className="mt-0.5 shrink-0 text-vermilion" />
                 <span>Agent 追问：{t.clarify}</span>
               </div>
             ) : t.error ? (
@@ -400,7 +401,7 @@ export default function DivinationAgent() {
 
       <ChangyanReview />
 
-      <p className="pt-1 text-xs text-ash/85">仅供文化娱乐参考，不构成医疗/法律/财务等专业建议。</p>
+      <p className="mt-4 border-t border-ash/20 pt-3 text-xs text-ash/85">仅供文化娱乐参考，不构成医疗/法律/财务等专业建议。</p>
     </section>
   );
 }

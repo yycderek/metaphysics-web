@@ -1,4 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import "lxgw-wenkai-webfont/lxgwwenkai-regular.css";
+import "@fontsource/noto-serif-sc/chinese-simplified-600.css";
+import "@fontsource/noto-serif-sc/chinese-simplified-900.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,15 +22,15 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#eef2f3" },
-    { media: "(prefers-color-scheme: dark)", color: "#0d1114" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f2e8" },
+    { media: "(prefers-color-scheme: dark)", color: "#15181b" },
   ],
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
-      <body suppressHydrationWarning>
+      <body>
         {/* 首帧前设置主题（body 首子节点的内联脚本，合法且先于绘制）；默认亮色，仅用户存过 dark 才加暗色 */}
         <script
           suppressHydrationWarning

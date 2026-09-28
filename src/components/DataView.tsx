@@ -1,10 +1,17 @@
-"use client";
 // 友好的数据视图：把结构化数据（推导步骤中间值 / raw）渲染成可读的名值对、列表、小卡片，
 // 彻底替代 raw JSON 树（不出现 JSON.stringify）。标签用肤色区分，数组/嵌套用缩进或小卡展示。
 import type { ReactNode } from "react";
 
 function isPrimitive(v: unknown): boolean {
   return typeof v === "string" || typeof v === "number" || typeof v === "boolean";
+}
+
+function itemKey(v: unknown, i: number): string {
+  try {
+    return JSON.stringify(v) ?? String(i);
+  } catch {
+    return String(i);
+  }
 }
 
 function Inline({ v }: { v: string | number | boolean }) {
@@ -24,7 +31,10 @@ function render(v: unknown, depth: number): ReactNode {
     return (
       <div className="space-y-1.5">
         {v.map((item, i) => (
-          <div key={i} className="rounded-md border border-ash/20 bg-ink px-2.5 py-1.5 space-y-0.5">
+          <div
+            key={itemKey(item, i)}
+            className="rounded-md border border-ash/20 bg-ink px-2.5 py-1.5 space-y-0.5"
+          >
             {render(item, depth + 1)}
           </div>
         ))}
@@ -38,7 +48,7 @@ function render(v: unknown, depth: number): ReactNode {
       <div className="space-y-1">
         {entries.map(([k, val]) => (
           <div key={k} className="flex gap-2 text-sm">
-            <span className="w-20 shrink-0 text-gold">{k}</span>
+            <span className="w-20 shrink-0 break-words text-gold">{k}</span>
             <div className="flex-1 min-w-0">{render(val, depth + 1)}</div>
           </div>
         ))}

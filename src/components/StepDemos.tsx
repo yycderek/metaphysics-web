@@ -1,4 +1,3 @@
-"use client";
 // 六爻 / 梅花 的图形化逐步演示（用于 StepRenderer 推导过程）。
 import HexagramDiagram from "./HexagramDiagram";
 import DataView from "./DataView";
@@ -65,12 +64,12 @@ export function LiuyaoDemo({ step, raw }: { step: StepResult; raw: unknown }) {
   if (step.key === "najia") {
     const ys = r.爻 ?? [];
     return (
-      <div className="rounded-lg border border-ash/30 bg-ink-2 overflow-x-auto">
+      <div className="rounded-md border border-ash/25 bg-ink-2 overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
             <tr className="text-ash border-b border-ash/20">
               {["爻位", "纳甲", "五行", "六亲", "六神", "动静"].map((h) => (
-                <th key={h} className="px-2 py-1 text-left">
+                <th key={h} scope="col" className="px-2 py-1 text-left">
                   {h}
                 </th>
               ))}
@@ -111,7 +110,7 @@ export function LiuyaoDemo({ step, raw }: { step: StepResult; raw: unknown }) {
   }
   if (step.key === "liushen") {
     return (
-      <div className="rounded-lg border border-ash/30 bg-ink-2 p-3 text-xs space-y-1">
+      <div className="rounded-md border border-ash/25 bg-ink-2 p-4 text-xs space-y-1">
         <div className="text-ash">
           旬空：{(r.旬空 ?? []).join("")} · 占日：{r.日柱} · 宫：{r.宫}
         </div>
@@ -163,7 +162,7 @@ export function MeihuaDemo({ step, raw }: { step: StepResult; raw: unknown }) {
           title={`用卦（事）· ${r.用卦 ?? ""}`}
           lines={byName((r.用卦 ?? "").split("（")[0])}
         />
-        <div className="sm:col-span-2 rounded-lg border border-gold/30 bg-ink-2 p-3 text-sm">
+        <div className="sm:col-span-2 rounded-md border border-gold/30 bg-ink-2 p-4 text-sm">
           体用关系：<span className="text-gold font-bold">{r.体用关系 ?? ""}</span>
         </div>
       </div>

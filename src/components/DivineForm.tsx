@@ -1,6 +1,6 @@
 "use client";
 // 算法输入表单：算法选择（内置）+ 各算法友好输入；大六壬→干支，小六壬→月日时，六爻→摇卦，梅花→报数。
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { DIZHI, TIANGAN, YUEJIANG_NAME, shizhiFromHour } from "@/lib/data";
 import { rizhuFromDate } from "@/lib/calendar";
 import { IconClock, IconDice } from "@/components/icons";
@@ -22,12 +22,13 @@ function randomTosses(): string {
 }
 
 const numCls =
-  "bg-ink-2 border border-ash/40 rounded-lg px-3 py-2 text-paper text-sm focus:border-gold outline-none";
+  "bg-ink-2 border border-ash/30 rounded-md px-3 py-2 text-paper text-sm focus:border-gold focus-visible:ring-2 focus-visible:ring-gold";
 
 const inputCls =
-  "bg-ink-2 border border-ash/40 rounded-lg px-3 py-2 text-paper text-sm focus:border-gold outline-none";
+  "bg-ink-2 border border-ash/30 rounded-md px-3 py-2 text-paper text-sm focus:border-gold focus-visible:ring-2 focus-visible:ring-gold";
 
 export default function DivineForm({ adapters, selectedId, onSelect, onDivine }: Props) {
+  const uid = useId();
   const [gan, setGan] = useState(DEFAULT.rizhu[0]);
   const [zhi, setZhi] = useState(DEFAULT.rizhu[1]);
   const [shizhi, setShizhi] = useState(DEFAULT.shizhi);
@@ -44,14 +45,22 @@ export default function DivineForm({ adapters, selectedId, onSelect, onDivine }:
   const [mh2, setMh2] = useState("7");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const shakeTimer = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    return () => window.clearTimeout(shakeTimer.current);
+  }, []);
 
   const isDaliuren = selectedId === "daliuren";
+
+  const xlIds = [`${uid}-xl-month`, `${uid}-xl-day`, `${uid}-xl-hour`];
 
   const toss = () => {
     setYaoTosses(randomTosses());
     setTossSeq((n) => n + 1);
     setShaking(true);
-    window.setTimeout(() => setShaking(false), 460);
+    window.clearTimeout(shakeTimer.current);
+    shakeTimer.current = window.setTimeout(() => setShaking(false), 460);
   };
 
   const useNow = () => {
@@ -94,12 +103,15 @@ export default function DivineForm({ adapters, selectedId, onSelect, onDivine }:
   const selectCls = inputCls;
 
   return (
-    <div className="rounded-xl border border-ash/30 bg-ink-2 p-4 space-y-4">
+    <div className="rounded-md border border-ash/25 bg-ink-2 p-5 space-y-5">
       {/* 算法选择 */}
       <div className="flex flex-wrap items-end gap-3">
         <div>
-          <div className="text-xs text-ash mb-1">算法</div>
+          <label htmlFor={`${uid}-algo`} className="block text-xs text-ash mb-1">
+            算法
+          </label>
           <select
+            id={`${uid}-algo`}
             className={selectCls}
             value={selectedId}
             onChange={(e) => onSelect(e.target.value)}
@@ -118,8 +130,15 @@ export default function DivineForm({ adapters, selectedId, onSelect, onDivine }:
       {isDaliuren ? (
         <div className="flex flex-wrap items-end gap-3">
           <div>
-            <div className="text-xs text-ash mb-1">日干</div>
-            <select className={selectCls} value={gan} onChange={(e) => setGan(e.target.value)}>
+            <label htmlFor={`${uid}-gan`} className="block text-xs text-ash mb-1">
+              日干
+            </label>
+            <select
+              id={`${uid}-gan`}
+              className={selectCls}
+              value={gan}
+              onChange={(e) => setGan(e.target.value)}
+            >
               {TIANGAN.map((g) => (
                 <option key={g} value={g}>
                   {g}
@@ -128,8 +147,15 @@ export default function DivineForm({ adapters, selectedId, onSelect, onDivine }:
             </select>
           </div>
           <div>
-            <div className="text-xs text-ash mb-1">日支</div>
-            <select className={selectCls} value={zhi} onChange={(e) => setZhi(e.target.value)}>
+            <label htmlFor={`${uid}-zhi`} className="block text-xs text-ash mb-1">
+              日支
+            </label>
+            <select
+              id={`${uid}-zhi`}
+              className={selectCls}
+              value={zhi}
+              onChange={(e) => setZhi(e.target.value)}
+            >
               {DIZHI.map((d) => (
                 <option key={d} value={d}>
                   {d}
@@ -138,8 +164,11 @@ export default function DivineForm({ adapters, selectedId, onSelect, onDivine }:
             </select>
           </div>
           <div>
-            <div className="text-xs text-ash mb-1">时支</div>
+            <label htmlFor={`${uid}-shizhi`} className="block text-xs text-ash mb-1">
+              时支
+            </label>
             <select
+              id={`${uid}-shizhi`}
               className={selectCls}
               value={shizhi}
               onChange={(e) => setShizhi(e.target.value)}
@@ -152,8 +181,11 @@ export default function DivineForm({ adapters, selectedId, onSelect, onDivine }:
             </select>
           </div>
           <div>
-            <div className="text-xs text-ash mb-1">月将</div>
+            <label htmlFor={`${uid}-yuejiang`} className="block text-xs text-ash mb-1">
+              月将
+            </label>
             <select
+              id={`${uid}-yuejiang`}
               className={selectCls}
               value={yuejiang}
               onChange={(e) => setYuejiang(e.target.value)}
@@ -167,7 +199,7 @@ export default function DivineForm({ adapters, selectedId, onSelect, onDivine }:
           </div>
           <button
             onClick={useNow}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-ash/40 px-3 py-2 text-sm text-ash transition-colors hover:border-gold hover:text-paper"
+            className="inline-flex items-center gap-1.5 rounded-md border border-ash/30 px-3 py-2 text-sm text-ash transition-colors hover:border-gold hover:text-paper"
           >
             <IconClock size={14} />
             当前时间
@@ -177,8 +209,11 @@ export default function DivineForm({ adapters, selectedId, onSelect, onDivine }:
         <div className="flex flex-wrap items-end gap-3">
           {(["月", "日", "时"] as const).map((label, i) => (
             <div key={label}>
-              <div className="text-xs text-ash mb-1">{label}</div>
+              <label htmlFor={xlIds[i]} className="block text-xs text-ash mb-1">
+                {label}
+              </label>
               <input
+                id={xlIds[i]}
                 type="number"
                 min={1}
                 max={30}
@@ -198,20 +233,22 @@ export default function DivineForm({ adapters, selectedId, onSelect, onDivine }:
         </div>
       ) : selectedId === "liuyao" ? (
         <div>
-          <div className="text-xs text-ash mb-1">
+          <label htmlFor={`${uid}-yao`} className="block text-xs text-ash mb-1">
             六爻 · 铜钱摇卦（6 个值，6=老阴 7=少阳 8=少阴 9=老阳）
-          </div>
+          </label>
           <div className="flex gap-2">
             <input
+              id={`${uid}-yao`}
               className={`${inputCls} font-mono flex-1`}
               value={yaoTosses}
               onChange={(e) => setYaoTosses(e.target.value)}
               placeholder="如 7,7,7,7,7,7"
+              autoComplete="off"
             />
             <button
               type="button"
               onClick={toss}
-              className={`inline-flex items-center gap-1.5 rounded-lg border border-gold/50 bg-gold/10 px-3 py-2 text-sm text-gold transition-colors hover:bg-gold/20 ${
+              className={`inline-flex items-center gap-1.5 rounded-md border border-gold/40 px-3 py-2 text-sm text-gold transition-colors hover:bg-gold/10 ${
                 shaking ? "shake" : ""
               }`}
             >
@@ -224,8 +261,11 @@ export default function DivineForm({ adapters, selectedId, onSelect, onDivine }:
       ) : selectedId === "meihua" ? (
         <div className="flex flex-wrap items-end gap-3">
           <div>
-            <div className="text-xs text-ash mb-1">报数一</div>
+            <label htmlFor={`${uid}-mh1`} className="block text-xs text-ash mb-1">
+              报数一
+            </label>
             <input
+              id={`${uid}-mh1`}
               type="number"
               min={1}
               className={`${numCls} w-20`}
@@ -234,8 +274,11 @@ export default function DivineForm({ adapters, selectedId, onSelect, onDivine }:
             />
           </div>
           <div>
-            <div className="text-xs text-ash mb-1">报数二</div>
+            <label htmlFor={`${uid}-mh2`} className="block text-xs text-ash mb-1">
+              报数二
+            </label>
             <input
+              id={`${uid}-mh2`}
               type="number"
               min={1}
               className={`${numCls} w-20`}
@@ -247,26 +290,34 @@ export default function DivineForm({ adapters, selectedId, onSelect, onDivine }:
         </div>
       ) : (
         <div>
-          <div className="text-xs text-ash mb-1">输入参数（JSON）</div>
+          <label htmlFor={`${uid}-json`} className="block text-xs text-ash mb-1">
+            输入参数（JSON）
+          </label>
           <textarea
+            id={`${uid}-json`}
             className={`${inputCls} w-full font-mono h-28 resize-y`}
             placeholder={'{\n  "key": "value"\n}'}
             value={jsonInput}
             onChange={(e) => setJsonInput(e.target.value)}
+            autoComplete="off"
           />
           <p className="text-xs text-ash/85 mt-1">远程/自定义算法需按协议传入 JSON。</p>
         </div>
       )}
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 border-t border-ash/20 pt-4">
         <button
           onClick={divine}
           disabled={busy}
-          className="rounded-lg bg-gold px-6 py-2 text-sm font-bold text-ink hover:bg-gold/90 transition-colors disabled:opacity-40"
+          className="rounded-md bg-vermilion px-6 py-2 text-sm font-bold text-seal-ink transition-colors hover:bg-vermilion/90 disabled:opacity-40"
         >
           {busy ? "起课中…" : "起课"}
         </button>
-        {error && <div className="text-sm text-vermilion flex-1">{error}</div>}
+        {error && (
+          <div role="alert" className="text-sm text-vermilion flex-1">
+            {error}
+          </div>
+        )}
       </div>
     </div>
   );

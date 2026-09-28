@@ -1,4 +1,3 @@
-"use client";
 // 六爻排盘视图：本卦/变卦卦象 + 六爻纳甲/六亲/六神表。
 import HexagramDiagram from "./HexagramDiagram";
 import { hexagramBinary } from "@/lib/algorithms/yijing";
@@ -54,7 +53,7 @@ export default function LiuyaoPan({ raw }: { raw: unknown }) {
         <HexagramDiagram title={`变卦 · ${r.变卦 ?? ""}`} lines={bianLines} />
       </div>
 
-      <div className="rounded-lg border border-ash/30 bg-ink-2 p-3 text-xs space-y-1">
+      <div className="rounded-md border border-ash/25 bg-ink-2 p-4 text-xs space-y-1">
         <div className="flex flex-wrap gap-x-4 text-ash">
           <span>宫：{r.宫}</span>
           <span>世爻：{r.世爻}</span>
@@ -65,16 +64,16 @@ export default function LiuyaoPan({ raw }: { raw: unknown }) {
       </div>
 
       {ben.length > 0 && (
-        <div className="rounded-lg border border-ash/30 bg-ink-2 overflow-x-auto">
+        <div className="rounded-md border border-ash/25 bg-ink-2 overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr className="text-ash border-b border-ash/20">
-                <th className="px-2 py-1 text-left">爻位</th>
-                <th className="px-2 py-1 text-left">纳甲</th>
-                <th className="px-2 py-1 text-left">五行</th>
-                <th className="px-2 py-1 text-left">六亲</th>
-                <th className="px-2 py-1 text-left">六神</th>
-                <th className="px-2 py-1 text-left">动/静</th>
+                <th scope="col" className="px-2 py-1 text-left">爻位</th>
+                <th scope="col" className="px-2 py-1 text-left">纳甲</th>
+                <th scope="col" className="px-2 py-1 text-left">五行</th>
+                <th scope="col" className="px-2 py-1 text-left">六亲</th>
+                <th scope="col" className="px-2 py-1 text-left">六神</th>
+                <th scope="col" className="px-2 py-1 text-left">动/静</th>
               </tr>
             </thead>
             <tbody>

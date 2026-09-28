@@ -1,4 +1,3 @@
-"use client";
 // 统一图标集（内联 SVG，无第三方依赖）：中式玄学语境下的领域字形 + 通用操作图标。
 // 约定：24×24 视框、currentColor 描边、aria-hidden（语义由相邻文本承担）。
 import type { SVGProps } from "react";

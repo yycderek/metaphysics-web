@@ -1,6 +1,7 @@
 "use client";
 // 断课质量评估面板：对一个 provider 切多个 model 跑黄金题库，SSE 展示进度 + 评分矩阵。
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import LiveNote from "@/components/LiveNote";
 import { changyanStats, loadChangyan } from "@/lib/changyan";
 
 interface Row {
@@ -29,6 +30,7 @@ export default function EvalPanel() {
     Record<string, { 平均分: number | null; 通过率: number | null }>
   >({});
   const [error, setError] = useState("");
+  const abortRef = useRef<AbortController | null>(null);
 
   const run = async () => {
     const list = models
@@ -41,11 +43,14 @@ export default function EvalPanel() {
     setRows([]);
     setSummary({});
     setError("");
+    const controller = new AbortController();
+    abortRef.current = controller;
     const milestones: string[] = [];
     try {
       const resp = await fetch("/api/eval", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({ models: list, 应验: changyanStats(loadChangyan()).acc }),
       });
       if (!resp.ok) {
@@ -79,47 +84,62 @@ export default function EvalPanel() {
         }
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      if ((e as Error).name !== "AbortError")
+        setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
+      abortRef.current = null;
     }
   };
 
   return (
-    <section className="rounded-xl border border-ash/30 bg-ink-2 p-4">
-      <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
-        <h3 className="text-gold font-bold">🧪 断课质量评估</h3>
+    <section className="rounded-md border border-ash/25 bg-ink-2 p-5">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h3 className="font-display font-bold tracking-[0.2em] text-gold">断课质量评估</h3>
         <span className="text-xs text-ash">同一 provider 切多个模型，跑黄金题库对比断语质量</span>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-3">
+      <div className="mb-3 flex flex-wrap gap-2">
         <input
           value={models}
           onChange={(e) => setModels(e.target.value)}
+          aria-label="评估模型（逗号分隔）"
           placeholder="模型名，逗号分隔：deepseek-v4-flash, deepseek-chat"
-          className="flex-1 min-w-[240px] bg-ink border border-ash/40 rounded-lg px-3 py-2 text-sm text-paper placeholder:text-ash/85 focus:border-gold outline-none"
+          className="min-w-[240px] flex-1 rounded-md border border-ash/30 bg-ink-2 px-3 py-2 text-sm text-paper placeholder:text-ash/85 focus:border-gold focus-visible:ring-2 focus-visible:ring-gold"
         />
         <button
           onClick={run}
           disabled={busy}
-          className="rounded-lg bg-gold px-6 py-2 text-sm font-bold text-ink hover:bg-gold/90 transition-colors disabled:opacity-40"
+          className="rounded-md bg-vermilion px-6 py-2 text-sm font-bold text-seal-ink transition-colors hover:bg-vermilion/90 disabled:opacity-40"
         >
           {busy ? "评估中…" : "开始评估"}
         </button>
+        {busy && (
+          <button
+            type="button"
+            onClick={() => abortRef.current?.abort()}
+            className="rounded-md border border-ash/30 px-4 py-2 text-sm text-ash transition-colors hover:text-paper"
+          >
+            取消
+          </button>
+        )}
       </div>
 
-      {busy && progress.length > 0 && (
-        <div className="mb-3 rounded-lg border border-ash/30 bg-ink px-3 py-2 space-y-1">
-          {progress.map((p, i) => (
-            <div key={i} className="flex items-center gap-2 text-xs text-ash">
-              <span className="text-gold">{i === progress.length - 1 ? "●" : "✓"}</span>
-              <span className={i === progress.length - 1 ? "text-paper/90" : ""}>{p}</span>
-            </div>
-          ))}
+      <LiveNote
+        className={
+          busy && progress.length
+            ? "mb-3 rounded-md border border-ash/25 bg-ink px-3 py-2 text-xs text-paper/90"
+            : "sr-only"
+        }
+      >
+        {busy && progress.length ? progress[progress.length - 1] : ""}
+      </LiveNote>
+
+      {error && (
+        <div role="alert" className="mb-3 text-sm text-vermilion">
+          {error}
         </div>
       )}
-
-      {error && <div className="mb-3 text-sm text-vermilion">{error}</div>}
 
       {rows.length > 0 && <EvalMatrix rows={rows} summary={summary} />}
     </section>
@@ -133,19 +153,21 @@ function EvalMatrix({
   rows: Row[];
   summary: Record<string, { 平均分: number | null; 通过率: number | null }>;
 }) {
-  const models = Array.from(new Set(rows.map((r) => r.model)));
-  const caseIds = Array.from(new Set(rows.map((r) => r.caseId)));
-  const cell = (model: string, caseId: string) =>
-    rows.find((r) => r.model === model && r.caseId === caseId);
+  const { models, caseIds, cells } = useMemo(() => {
+    const models = Array.from(new Set(rows.map((r) => r.model)));
+    const caseIds = Array.from(new Set(rows.map((r) => r.caseId)));
+    const cells = new Map(rows.map((r) => [`${r.model}${r.caseId}`, r]));
+    return { models, caseIds, cells };
+  }, [rows]);
 
   return (
-    <div className="rounded-lg border border-ash/30 bg-ink overflow-x-auto">
+    <div className="overflow-x-auto rounded-md border border-ash/25 bg-ink">
       <table className="w-full text-xs">
         <thead>
-          <tr className="text-ash border-b border-ash/20">
-            <th className="px-2 py-1 text-left">用例</th>
+          <tr className="border-b border-ash/20 text-ash">
+            <th className="px-3 py-2 text-left">用例</th>
             {models.map((m) => (
-              <th key={m} className="px-2 py-1 text-center whitespace-nowrap">
+              <th key={m} className="px-3 py-2 text-center whitespace-nowrap">
                 {m}
               </th>
             ))}
@@ -156,15 +178,15 @@ function EvalMatrix({
             const title = rows.find((r) => r.caseId === id)?.title ?? id;
             return (
               <tr key={id} className="border-b border-ash/10">
-                <td className="px-2 py-1 text-paper">{title}</td>
+                <td className="px-3 py-2 text-paper">{title}</td>
                 {models.map((m) => {
-                  const r = cell(m, id);
+                  const r = cells.get(`${m}${id}`);
                   const detail = r
                     ? (r.error ??
                       `卦象：${r.卦象}\n硬指标：${r.grounding?.score ?? "-"} 分（卦象一致${r.grounding?.卦象一致 ? "✓" : "✗"} / 校验${r.grounding?.自校验通过 ? "✓" : "✗"}）\n质量评分：${r.quality?.score ?? "-"}\n${r.quality?.reason ?? ""}`)
                     : "";
                   return (
-                    <td key={m} className="px-2 py-1 text-center" title={detail}>
+                    <td key={m} className="px-3 py-2 text-center" title={detail}>
                       {r ? (
                         r.error ? (
                           <span className="text-vermilion">ERR</span>
@@ -172,10 +194,10 @@ function EvalMatrix({
                           <span
                             className={
                               r.total >= 75
-                                ? "text-jade"
+                                ? "tabular-nums text-jade"
                                 : r.total >= 60
-                                  ? "text-gold"
-                                  : "text-vermilion"
+                                  ? "tabular-nums text-gold"
+                                  : "tabular-nums text-vermilion"
                             }
                           >
                             {r.total}
@@ -192,18 +214,18 @@ function EvalMatrix({
           })}
         </tbody>
         <tfoot>
-          <tr className="text-ash border-t border-ash/20">
-            <td className="px-2 py-1">平均分</td>
+          <tr className="border-t border-ash/20 text-ash">
+            <td className="px-3 py-2">平均分</td>
             {models.map((m) => (
-              <td key={m} className="px-2 py-1 text-center text-gold">
+              <td key={m} className="px-3 py-2 text-center tabular-nums text-gold">
                 {summary[m]?.平均分 ?? "-"}
               </td>
             ))}
           </tr>
           <tr className="text-ash">
-            <td className="px-2 py-1">卦象一致率</td>
+            <td className="px-3 py-2">卦象一致率</td>
             {models.map((m) => (
-              <td key={m} className="px-2 py-1 text-center">
+              <td key={m} className="px-3 py-2 text-center tabular-nums">
                 {summary[m]?.通过率 != null ? `${summary[m].通过率}%` : "-"}
               </td>
             ))}
