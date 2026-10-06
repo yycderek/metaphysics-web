@@ -12,7 +12,9 @@ export default function KeShiHeader({ ks }: { ks: KeShi }) {
   return (
     <div className="rounded-md border border-ash/25 bg-ink-2 p-5">
       <div className="flex items-baseline justify-between flex-wrap gap-2">
-        <h2 className="font-display text-2xl md:text-3xl font-black tracking-[0.15em] text-paper text-balance">{ks.kename}</h2>
+        <h2 className="font-display text-2xl md:text-3xl font-black tracking-[0.15em] text-paper text-balance">
+          {ks.kename}
+        </h2>
         <span className="text-sm text-ash">九宗门·{ks.method}</span>
       </div>
       <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">

@@ -4,11 +4,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { IconCheck, IconSliders } from "@/components/icons";
 import LiveNote from "@/components/LiveNote";
-import {
-  AI_CONFIG_LEGACY_STORAGE_KEY,
-  AI_CONFIG_STORAGE_KEY,
-  loadAIConfig,
-} from "@/lib/ai-config";
+import { AI_CONFIG_LEGACY_STORAGE_KEY, AI_CONFIG_STORAGE_KEY, loadAIConfig } from "@/lib/ai-config";
 import type { UserAIConfig } from "@/lib/aiTypes";
 
 const inputCls =

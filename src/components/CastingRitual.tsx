@@ -73,7 +73,10 @@ export default function CastingRitual({ progress, algorithm }: Props) {
             </span>
           </div>
           <div className="min-w-0 flex-1 space-y-1">
-            <div className="font-display text-sm font-bold tracking-[0.1em]" style={{ color: "var(--gold)" }}>
+            <div
+              className="font-display text-sm font-bold tracking-[0.1em]"
+              style={{ color: "var(--gold)" }}
+            >
               正在起课{algorithm ? ` · ${algorithm}` : ""}…
             </div>
             <ul className="space-y-0.5" aria-live="polite">

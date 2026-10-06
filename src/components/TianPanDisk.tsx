@@ -53,10 +53,22 @@ export default function TianPanDisk({ ks }: { ks: KeShi }) {
         style={{ fill: "var(--ink-2)", stroke: "var(--gold)" }}
         strokeWidth="1"
       />
-      <text x={CX} y={CY - 6} textAnchor="middle" fontSize="15" style={{ fill: "var(--paper)", fontFamily: "var(--font-display)" }}>
+      <text
+        x={CX}
+        y={CY - 6}
+        textAnchor="middle"
+        fontSize="15"
+        style={{ fill: "var(--paper)", fontFamily: "var(--font-display)" }}
+      >
         {ks.yuejiang}将
       </text>
-      <text x={CX} y={CY + 16} textAnchor="middle" fontSize="15" style={{ fill: "var(--paper)", fontFamily: "var(--font-display)" }}>
+      <text
+        x={CX}
+        y={CY + 16}
+        textAnchor="middle"
+        fontSize="15"
+        style={{ fill: "var(--paper)", fontFamily: "var(--font-display)" }}
+      >
         {ks.shizhi}时
       </text>
 

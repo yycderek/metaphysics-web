@@ -94,7 +94,10 @@ export default function ShareCard({ interpretation }: Props) {
     [interpretation],
   );
 
-  const zongduan = useMemo(() => wrap(`总断：${interpretation.结论.总断}`, 24, 4), [interpretation]);
+  const zongduan = useMemo(
+    () => wrap(`总断：${interpretation.结论.总断}`, 24, 4),
+    [interpretation],
+  );
   const jianyi = useMemo(() => wrap(`建议：${interpretation.结论.建议}`, 24, 5), [interpretation]);
 
   return (
@@ -123,7 +126,14 @@ export default function ShareCard({ interpretation }: Props) {
           strokeWidth={1}
         />
 
-        <text x={WIDTH / 2} y={64} textAnchor="middle" fontSize={20} fill={VERMILION} letterSpacing="6">
+        <text
+          x={WIDTH / 2}
+          y={64}
+          textAnchor="middle"
+          fontSize={20}
+          fill={VERMILION}
+          letterSpacing="6"
+        >
           玄 学 · 占 卜
         </text>
 
@@ -166,13 +176,7 @@ export default function ShareCard({ interpretation }: Props) {
           建议
         </text>
         {jianyi.map((l, i) => (
-          <text
-            key={l}
-            x={40}
-            y={zongduan.length * 26 + 322 + i * 26}
-            fontSize={16}
-            fill={PAPER}
-          >
+          <text key={l} x={40} y={zongduan.length * 26 + 322 + i * 26} fontSize={16} fill={PAPER}>
             {l}
           </text>
         ))}

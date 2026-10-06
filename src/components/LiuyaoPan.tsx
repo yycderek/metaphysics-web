@@ -68,12 +68,24 @@ export default function LiuyaoPan({ raw }: { raw: unknown }) {
           <table className="w-full text-xs">
             <thead>
               <tr className="text-ash border-b border-ash/20">
-                <th scope="col" className="px-2 py-1 text-left">爻位</th>
-                <th scope="col" className="px-2 py-1 text-left">纳甲</th>
-                <th scope="col" className="px-2 py-1 text-left">五行</th>
-                <th scope="col" className="px-2 py-1 text-left">六亲</th>
-                <th scope="col" className="px-2 py-1 text-left">六神</th>
-                <th scope="col" className="px-2 py-1 text-left">动/静</th>
+                <th scope="col" className="px-2 py-1 text-left">
+                  爻位
+                </th>
+                <th scope="col" className="px-2 py-1 text-left">
+                  纳甲
+                </th>
+                <th scope="col" className="px-2 py-1 text-left">
+                  五行
+                </th>
+                <th scope="col" className="px-2 py-1 text-left">
+                  六亲
+                </th>
+                <th scope="col" className="px-2 py-1 text-left">
+                  六神
+                </th>
+                <th scope="col" className="px-2 py-1 text-left">
+                  动/静
+                </th>
               </tr>
             </thead>
             <tbody>

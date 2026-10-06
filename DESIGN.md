@@ -63,6 +63,7 @@ components:
 整个界面是一张铺开的案头册页：暖白宣纸为底，墨色行文，朱砂只落在印记与主动作上，青花黛蓝承担标题与指引。容器是平面的「册页」——发丝边框、小圆角、零投影，层次靠底色微差（页面纸 vs 册页纸）与界栏双线，不靠阴影。暗色是同一世界的夜晚形态「夜墨」：暖黑案面、米白墨字，朱砂在暗处提亮。
 
 **Key Characteristics:**
+
 - 亮/暗双主题同等完成度，默认亮色，`.dark` 类驱动
 - 平面册页容器（1px 发丝边 + 6px 圆角），全站无投影
 - 签名元素：朱砂方印（Seal）、界栏双线（`.double-rule`）、竖排侧签（`.vertical-rl`）
@@ -73,15 +74,19 @@ components:
 宣纸暖色系为主场，朱砂是唯一强点缀。
 
 ### Primary
+
 - **朱砂 Vermilion Seal**（`--vermilion`）：主按钮实底、印章、关键标记（克课、动爻、当前步骤描边）。一屏之内强朱砂不超过两处。
 
 ### Secondary
+
 - **青花黛蓝 Qinghua Blue**（`--gold`，历史变量名保留）：标题、链接态、选中态、术语下划线。
 
 ### Tertiary
+
 - **青玉 Jade**（`--jade`）：成功/确认反馈（LiveNote 提示、应验标记）。
 
 ### Neutral
+
 - **宣纸 Paper Ground**（`--ink`）：页面底。
 - **册页 Album Surface**（`--ink-2`）：容器底，比页面更白一分，借微差浮起。
 - **墨色 Ink Text**（`--paper`）：正文与标题主色。
@@ -91,6 +96,7 @@ components:
 暗色映射：夜墨底 / 案面 / 米白墨 / 提亮朱砂 / 月白青，见 frontmatter `night-*`。
 
 ### Named Rules
+
 **The One-Seal Rule.** 朱砂实底只给主动作（起课/起卦/断课）与印章；其余强调一律青花描边或文字色，不做色块填充。
 
 ## Typography
@@ -101,6 +107,7 @@ components:
 **Character:** 宋体的碑刻感撑住题名与干支大字，文楷的手写体温负责正文与界面——一个立骨，一个行文。
 
 ### Hierarchy
+
 - **Display**（900, text-2xl~4xl, tracking 0.15–0.3em）：站点题名、课名（如「重审课」）。
 - **Title**（700, text-sm~base, tracking 0.2em）：面板标题、区块题头，青花色。
 - **Vertical Label**（700, text-sm, `.vertical-rl` 竖排 + 0.35em 字距）：册页侧缘签名，如 天地盘/四课/三传。
@@ -108,6 +115,7 @@ components:
 - **Label**（text-xs, text-ash）：数据标签、免责声明。
 
 ### Named Rules
+
 **The No-Clone Rule.** 中文标题必带正字距（0.1em 以上）；西文/数字混排不单独换字体。字重对比要大（400 vs 900），不用 500/600 糊中间层。
 
 ## Layout
@@ -119,6 +127,7 @@ components:
 全站无投影。深度靠三层纸色（页面纸 → 册页 → 内嵌纸）与发丝边框表达；主题切换时底色 0.25s 过渡。选中文字染朱砂 22%、输入光标朱砂、滚动条纸灰——浏览器表面同样入设计。
 
 ### Named Rules
+
 **The Flat-Album Rule.** 任何容器不得加 `shadow-*`；需要层次时换底色或加发丝线，不许加阴影。
 
 ## Shapes
@@ -128,36 +137,44 @@ components:
 ## Components
 
 ### Buttons
+
 - **Shape:** 6px 圆角。
 - **Primary:** 朱砂实底 + 印白文字（`bg-vermilion text-seal-ink`），hover 降 90% 不透明度；busy 态带「…」文案。
 - **Secondary/Ghost:** 纸灰发丝描边（`border-ash/30~40`），hover 描边转青花、文字转墨色。
 - **Focus:** 全部保留 `focus-visible:ring-2 ring-gold` 或全局 :focus-visible 描边。
 
 ### Cards / Containers
+
 - 册页卡：`rounded-md border border-ash/25 bg-ink-2 p-5`；内嵌区块用 `bg-ink` 形成纸色微差。
 - 列表行用 `divide-y divide-ash/15` 发丝分隔，不用卡片套卡片。
 
 ### Inputs / Fields
+
 - `rounded-md border-ash/30 bg-ink-2`，focus 出青花 ring；标签必须 `<label htmlFor>` 关联，占位符仅作示例。
 
 ### Navigation
+
 - 顶部题头：朱砂印 + 宋体题名 + 界栏双线；无导航栏。模式切换（课式结果/推导过程）为描边小签，选中态青花描边 + 淡青花底。
 
 ### Signature: Seal 印章
+
 朱砂双线方印（外框 rx 6 / 内框 rx 6），盖印动效 `seal-stamp`（0.45s 回弹），`role="img"` + aria-label。
 
 ### Signature: Vertical Label 竖排侧签
+
 `.vertical-rl`（writing-mode: vertical-rl + 0.35em 字距），置于册页左缘，青花宋体小字。
 
 ## Do's and Don'ts
 
 ### Do:
+
 - **Do** 用三层纸色做层次，留白要大方（p-5 / space-y-5 起步）。
 - **Do** 让朱砂保持稀有；一屏强朱砂 ≤2 处。
 - **Do** 亮/暗双主题成对调整 token，暗色同步提亮而非反色。
 - **Do** 保持 a11y 基线：label 关联、focus-visible、aria-live、reduced-motion 降级。
 
 ### Don't:
+
 - **Don't** 加投影、渐变、玻璃模糊——平面册页不靠这些。
 - **Don't** 用彩色粗侧边条（border-l-2+）标记卡片。
 - **Don't** 用 rounded-xl 以上大圆角容器。

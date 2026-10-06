@@ -47,7 +47,9 @@ export default function AgentResultCard({
 
   const tabCls = (active: boolean) =>
     `inline-flex items-center gap-1 rounded-md border px-3 py-1 text-xs transition-colors ${
-      active ? "border-gold/70 text-gold" : "border-ash/30 text-ash hover:border-ash/60 hover:text-paper"
+      active
+        ? "border-gold/70 text-gold"
+        : "border-ash/30 text-ash hover:border-ash/60 hover:text-paper"
     }`;
 
   const facts = interpretation.依据
@@ -67,7 +69,9 @@ export default function AgentResultCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-baseline gap-2">
-            <span className="font-display text-xl font-bold tracking-[0.15em] text-gold">{interpretation.卦象}</span>
+            <span className="font-display text-xl font-bold tracking-[0.15em] text-gold">
+              {interpretation.卦象}
+            </span>
             {interpretation.吉凶 && (
               <span className="rounded-md border border-ash/30 px-2 py-0.5 text-xs text-ash">
                 吉凶 · {interpretation.吉凶}
@@ -213,7 +217,9 @@ export default function AgentResultCard({
                 const interp = interpretation.逐步[i];
                 return (
                   <div key={s.key} className="border-l border-ash/30 pl-3">
-                    <div className="font-display text-sm font-bold tracking-[0.15em] text-gold">{s.title}</div>
+                    <div className="font-display text-sm font-bold tracking-[0.15em] text-gold">
+                      {s.title}
+                    </div>
                     <div className="mt-0.5 text-xs text-ash">{s.desc}</div>
                     <div className="mt-2 text-sm text-paper/90">
                       <span className="mr-2 font-bold text-jade">占断</span>
@@ -322,7 +328,9 @@ function MultiPan({
         <div className="space-y-3">
           {groups.map((g, i) => (
             <div key={`${g.卦象}-${i}`} className="border-l border-ash/30 pl-3 text-sm">
-              <span className="mr-2 font-display font-bold tracking-[0.1em] text-gold">{g.卦象}</span>
+              <span className="mr-2 font-display font-bold tracking-[0.1em] text-gold">
+                {g.卦象}
+              </span>
               {g.吉凶 && <span className="text-xs text-ash">{g.吉凶}</span>}
               <div className="text-paper/90">{g.结论}</div>
               {g.建议 && <div className="text-xs text-jade">建议：{g.建议}</div>}

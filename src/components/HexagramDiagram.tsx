@@ -16,7 +16,9 @@ interface Props {
 export default function HexagramDiagram({ title, lines, shiPos, yingPos }: Props) {
   return (
     <div className="rounded-md border border-ash/25 bg-ink-2 p-4">
-      <div className="text-center font-display text-sm font-bold tracking-[0.15em] text-gold mb-3">{title}</div>
+      <div className="text-center font-display text-sm font-bold tracking-[0.15em] text-gold mb-3">
+        {title}
+      </div>
       <div className="flex flex-col-reverse gap-1">
         {lines.map((l, i) => {
           const pos = i + 1;

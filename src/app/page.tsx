@@ -191,24 +191,26 @@ export default function HomePage() {
                                   <div className="min-w-0 flex-1">
                                     <SanchuanChain ks={ks} />
                                     <div className="mt-4 border-t border-ash/20 pt-3 space-y-1.5 text-sm">
-                                    {chuan.map((c) => (
-                                      <div key={c.name} className="flex items-center gap-3">
-                                        <span className="w-12 text-gold">{c.name}</span>
-                                        <span className="w-8 font-display text-xl font-bold text-paper">
-                                          {c.zhi}
-                                        </span>
-                                        <span className="w-20">
-                                          {c.tianjiang.short}·{c.tianjiang.full}
-                                        </span>
-                                        <span className="text-xs text-ash flex-1">
-                                          {c.tianjiang.zhushi}
-                                        </span>
-                                        <span className="text-xs text-paper">六亲 {c.liuqin}</span>
-                                      </div>
-                                    ))}
+                                      {chuan.map((c) => (
+                                        <div key={c.name} className="flex items-center gap-3">
+                                          <span className="w-12 text-gold">{c.name}</span>
+                                          <span className="w-8 font-display text-xl font-bold text-paper">
+                                            {c.zhi}
+                                          </span>
+                                          <span className="w-20">
+                                            {c.tianjiang.short}·{c.tianjiang.full}
+                                          </span>
+                                          <span className="text-xs text-ash flex-1">
+                                            {c.tianjiang.zhushi}
+                                          </span>
+                                          <span className="text-xs text-paper">
+                                            六亲 {c.liuqin}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
                               </div>
                             </section>
                           </>
@@ -222,9 +224,7 @@ export default function HomePage() {
                           </section>
                         ) : (
                           <section className="rounded-md border border-ash/25 bg-ink p-5">
-                            <h2 className={`${panelH2} mb-3`}>
-                              课式结果 · {result.algorithmName}
-                            </h2>
+                            <h2 className={`${panelH2} mb-3`}>课式结果 · {result.algorithmName}</h2>
                             <SimpleResult algorithmId={result.algorithmId} raw={result.raw} />
                           </section>
                         )

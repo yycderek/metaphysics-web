@@ -24,7 +24,10 @@ export default function GlossaryPanel() {
       {show && (
         <div id={listId} className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {TERMS.map((t) => (
-            <div key={t} className="rounded-md border border-ash/25 bg-ink p-2.5 text-xs leading-relaxed">
+            <div
+              key={t}
+              className="rounded-md border border-ash/25 bg-ink p-2.5 text-xs leading-relaxed"
+            >
               <span className="mr-2 font-display font-bold tracking-wider text-gold">{t}</span>
               <span className="text-paper/80">{GLOSSARY[t] ?? "暂无释义"}</span>
             </div>

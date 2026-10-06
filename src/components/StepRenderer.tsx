@@ -51,7 +51,9 @@ function DaliurenStepView({ step, ks }: { step: StepResult; ks: KeShi }) {
       const data = step.data as { method?: string; kename?: string };
       return (
         <div className="rounded-md border border-ash/25 bg-ink-2 p-5 text-center">
-          <div className="font-display text-2xl font-black tracking-[0.15em] text-paper">{data.kename ?? ks.kename}</div>
+          <div className="font-display text-2xl font-black tracking-[0.15em] text-paper">
+            {data.kename ?? ks.kename}
+          </div>
           <div className="mt-1 text-sm text-ash">判定方法：{data.method ?? ks.method}</div>
           <p className="mt-3 text-sm text-paper leading-relaxed">
             四课 {sike.map((e) => `${e.bottom}→${e.top}`).join("  ")}

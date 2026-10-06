@@ -16,7 +16,12 @@ export default function SikeCards({ ks }: { ks: KeShi }) {
             }`}
           >
             <div className="text-xs text-ash mb-1">
-              第{e.index}课 {isKe && <span className="text-vermilion" aria-hidden="true">★</span>}
+              第{e.index}课{" "}
+              {isKe && (
+                <span className="text-vermilion" aria-hidden="true">
+                  ★
+                </span>
+              )}
             </div>
             <div className="font-display text-xl font-bold text-paper my-1.5">
               {e.bottom} <span className="font-serif-cn font-normal text-ash">→</span> {e.top}

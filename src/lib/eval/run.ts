@@ -57,15 +57,20 @@ export async function runEvalCase(
     interpretation = tryParseStructured(turn.content);
     // 结构解析失败 → 给一次纠正机会（与 agent 一致，保证公平）
     if (!interpretation && turn.content) {
-      const retry = await chatCompletion(config, [
-        ...messages,
-        { role: "assistant", content: turn.content },
-        {
-          role: "user",
-          content:
-            "请只输出符合格式的 JSON 对象（必须含 卦象/算法/结论{总断,现状,建议}/逐步[{步骤,解读}]/置信度），不要任何解释或代码块。",
-        },
-      ], undefined, signal);
+      const retry = await chatCompletion(
+        config,
+        [
+          ...messages,
+          { role: "assistant", content: turn.content },
+          {
+            role: "user",
+            content:
+              "请只输出符合格式的 JSON 对象（必须含 卦象/算法/结论{总断,现状,建议}/逐步[{步骤,解读}]/置信度），不要任何解释或代码块。",
+          },
+        ],
+        undefined,
+        signal,
+      );
       interpretation = tryParseStructured(retry.content);
     }
   } catch (e) {

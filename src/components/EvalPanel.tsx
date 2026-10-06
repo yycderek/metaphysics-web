@@ -83,8 +83,7 @@ export default function EvalPanel() {
         }
       }
     } catch (e) {
-      if ((e as Error).name !== "AbortError")
-        setError(e instanceof Error ? e.message : String(e));
+      if ((e as Error).name !== "AbortError") setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
       abortRef.current = null;

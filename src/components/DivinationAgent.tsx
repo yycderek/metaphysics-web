@@ -278,7 +278,9 @@ export default function DivinationAgent() {
             }
           }}
           rows={2}
-          aria-label={pendingClarify ? "回答 Agent 的澄清问题" : mode === "new" ? "想问的事" : "追问当前卦象"}
+          aria-label={
+            pendingClarify ? "回答 Agent 的澄清问题" : mode === "new" ? "想问的事" : "追问当前卦象"
+          }
           placeholder={
             pendingClarify
               ? "在这里回答上面的问题…"
@@ -401,7 +403,9 @@ export default function DivinationAgent() {
 
       <ChangyanReview />
 
-      <p className="mt-4 border-t border-ash/20 pt-3 text-xs text-ash/85">仅供文化娱乐参考，不构成医疗/法律/财务等专业建议。</p>
+      <p className="mt-4 border-t border-ash/20 pt-3 text-xs text-ash/85">
+        仅供文化娱乐参考，不构成医疗/法律/财务等专业建议。
+      </p>
     </section>
   );
 }
