@@ -4,7 +4,13 @@ import { useEffect, useId, useRef, useState } from "react";
 import AgentResultCard from "./AgentResultCard";
 import LiveNote from "./LiveNote";
 import { IconHistory } from "@/components/icons";
-import { loadHistory, removeHistoryEntry, saveHistory, type HistoryEntry } from "@/lib/history";
+import {
+  loadHistory,
+  removeHistoryEntry,
+  saveHistory,
+  RECORDS_CHANGED_EVENT,
+  type HistoryEntry,
+} from "@/lib/history";
 
 export default function HistoryPanel() {
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
@@ -15,10 +21,14 @@ export default function HistoryPanel() {
   const listId = useId();
   const timerRef = useRef<number | null>(null);
 
-  // 挂载后从 localStorage 载入，避免与 SSR 首帧不一致（hydration 错误）
+  // 挂载后从 localStorage 载入，避免与 SSR 首帧不一致（hydration 错误）；
+  // 监听记录变更事件（导入备份 / 别处写入）后重读
   useEffect(() => {
-    setEntries(loadHistory());
+    const refresh = () => setEntries(loadHistory());
+    refresh();
+    window.addEventListener(RECORDS_CHANGED_EVENT, refresh);
     return () => {
+      window.removeEventListener(RECORDS_CHANGED_EVENT, refresh);
       if (timerRef.current !== null) window.clearTimeout(timerRef.current);
     };
   }, []);
@@ -40,7 +50,7 @@ export default function HistoryPanel() {
         onClick={() => setShow((s) => !s)}
         aria-expanded={show}
         aria-controls={listId}
-        className="flex items-center gap-2 font-display text-sm font-bold tracking-[0.2em] text-gold transition-colors hover:text-gold/80"
+        className="flex items-center gap-2 font-display text-sm font-bold tracking-[0.2em] text-qinghua transition-colors hover:text-qinghua/80"
       >
         <IconHistory size={15} />
         历史回看{entries.length ? `（${entries.length}）` : ""}
@@ -57,7 +67,7 @@ export default function HistoryPanel() {
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="truncate text-sm">
-                    <span className="text-gold">问：{h.question}</span>
+                    <span className="text-qinghua">问：{h.question}</span>
                     <span className="ml-2 text-xs text-ash">{h.卦象}</span>
                   </div>
                   <div className="mt-1 line-clamp-2 text-xs leading-relaxed text-paper/80">

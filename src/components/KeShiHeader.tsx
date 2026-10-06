@@ -46,7 +46,7 @@ export default function KeShiHeader({ ks }: { ks: KeShi }) {
           <div className="text-ash text-xs">旬空 / 贵人</div>
           <div className="text-sm text-paper">
             {ks.xunkong.join(" ")}
-            <span className="text-xs text-gold ml-2">
+            <span className="text-xs text-qinghua ml-2">
               {ks.guiren}·{ks.guirenMode}
             </span>
           </div>

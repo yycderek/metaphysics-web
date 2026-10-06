@@ -81,7 +81,7 @@ export function LiuyaoDemo({ step, raw }: { step: StepResult; raw: unknown }) {
                 <td className="px-2 py-1 text-paper">{y.爻位}</td>
                 <td className="px-2 py-1 text-paper">{y.纳}</td>
                 <td className="px-2 py-1">{y.五行}</td>
-                <td className="px-2 py-1 text-gold">{y.六亲}</td>
+                <td className="px-2 py-1 text-qinghua">{y.六亲}</td>
                 <td className="px-2 py-1">{y.六神}</td>
                 <td className={`px-2 py-1 ${y.变 === "动" ? "text-vermilion" : "text-ash"}`}>
                   {y.变}
@@ -162,8 +162,8 @@ export function MeihuaDemo({ step, raw }: { step: StepResult; raw: unknown }) {
           title={`用卦（事）· ${r.用卦 ?? ""}`}
           lines={byName((r.用卦 ?? "").split("（")[0])}
         />
-        <div className="sm:col-span-2 rounded-md border border-gold/30 bg-ink-2 p-4 text-sm">
-          体用关系：<span className="text-gold font-bold">{r.体用关系 ?? ""}</span>
+        <div className="sm:col-span-2 rounded-md border border-qinghua/30 bg-ink-2 p-4 text-sm">
+          体用关系：<span className="text-qinghua font-bold">{r.体用关系 ?? ""}</span>
         </div>
       </div>
     );

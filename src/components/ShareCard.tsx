@@ -9,14 +9,32 @@ interface Props {
   interpretation: AgentDivination;
 }
 
-// 主题变量 + 亮色回退：页面上随 .dark 翻转；导出为独立 SVG 时变量缺失，回退到亮色纸面色
+// 主题变量 + 亮色回退：页面上随 .dark 翻转；导出为独立 SVG 时变量缺失，序列化前替换为当前主题实际值
 const WIDTH = 620;
 const HEIGHT = 820;
-const GOLD = "var(--gold, #30587d)"; // 青花黛蓝
+const THEME_VARS = [
+  ["--qinghua", "#30587d"],
+  ["--paper", "#2b251b"],
+  ["--ash", "#6e6350"],
+  ["--ink-2", "#fcfaf3"],
+  ["--vermilion", "#b4362a"],
+] as const;
+const GOLD = "var(--qinghua, #30587d)"; // 青花黛蓝
 const PAPER = "var(--paper, #2b251b)"; // 墨色
-const ASH = "var(--ash, #8a7d67)"; // 纸灰
+const ASH = "var(--ash, #6e6350)"; // 纸灰
 const INK = "var(--ink-2, #fcfaf3)"; // 册页底
 const VERMILION = "var(--vermilion, #b4362a)"; // 朱砂
+
+/** 序列化 SVG 前把 var(--x, fallback) 替换为当前主题计算值，保证导出图与屏上一致 */
+function resolveThemeColors(xml: string): string {
+  const cs = getComputedStyle(document.documentElement);
+  let out = xml;
+  for (const [name, fallback] of THEME_VARS) {
+    const value = cs.getPropertyValue(name).trim() || fallback;
+    out = out.split(`var(${name}, ${fallback})`).join(value);
+  }
+  return out;
+}
 
 /** 按每行字数折行，超出上限截断 */
 function wrap(text: string, per: number, maxLines: number): string[] {
@@ -28,7 +46,7 @@ function wrap(text: string, per: number, maxLines: number): string[] {
 }
 
 async function svgToPng(svg: SVGSVGElement): Promise<Blob> {
-  const xml = new XMLSerializer().serializeToString(svg);
+  const xml = resolveThemeColors(new XMLSerializer().serializeToString(svg));
   const blob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const img = new Image();
@@ -58,7 +76,7 @@ export default function ShareCard({ interpretation }: Props) {
       const blob = await svgToPng(svgRef.current);
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = `占卜-${interpretation.卦象}.png`;
+      a.download = `占卜-${interpretation.卦象.replace(/[\\/:*?"<>|]/g, "")}.png`;
       a.click();
       // 延后释放，避免浏览器读取前 URL 已被回收导致下载失败
       setTimeout(() => URL.revokeObjectURL(a.href), 2000);
@@ -205,7 +223,7 @@ export default function ShareCard({ interpretation }: Props) {
           type="button"
           onClick={download}
           disabled={busy !== null}
-          className="inline-flex items-center gap-1.5 rounded-md border border-ash/30 px-3 py-1.5 text-xs text-ash transition-colors hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 rounded-md border border-ash/30 px-3 py-1.5 text-xs text-ash transition-colors hover:border-qinghua hover:text-qinghua disabled:cursor-not-allowed disabled:opacity-60"
         >
           <IconDownload size={13} />
           {busy === "download" ? "下载中…" : "下载 PNG"}
@@ -214,7 +232,7 @@ export default function ShareCard({ interpretation }: Props) {
           type="button"
           onClick={copy}
           disabled={busy !== null}
-          className="inline-flex items-center gap-1.5 rounded-md border border-ash/30 px-3 py-1.5 text-xs text-ash transition-colors hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 rounded-md border border-ash/30 px-3 py-1.5 text-xs text-ash transition-colors hover:border-qinghua hover:text-qinghua disabled:cursor-not-allowed disabled:opacity-60"
         >
           <IconCopy size={13} />
           {busy === "copy" ? "复制中…" : "复制图片"}

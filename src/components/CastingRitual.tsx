@@ -17,7 +17,7 @@ function BaguaRing() {
         cy="50"
         r="44"
         fill="none"
-        style={{ stroke: "var(--gold)" }}
+        style={{ stroke: "var(--qinghua)" }}
         strokeOpacity="0.35"
         strokeWidth="1.5"
       />
@@ -26,7 +26,7 @@ function BaguaRing() {
         cy="50"
         r="30"
         fill="none"
-        style={{ stroke: "var(--gold)" }}
+        style={{ stroke: "var(--qinghua)" }}
         strokeOpacity="0.22"
         strokeWidth="1"
       />
@@ -34,7 +34,7 @@ function BaguaRing() {
         <g key={i} transform={`rotate(${i * 45} 50 50)`}>
           <path
             d="M50 8v7"
-            style={{ stroke: "var(--gold)" }}
+            style={{ stroke: "var(--qinghua)" }}
             strokeWidth="2"
             strokeLinecap="round"
             strokeOpacity={i % 2 === 0 ? 0.85 : 0.4}
@@ -67,7 +67,7 @@ export default function CastingRitual({ progress, algorithm }: Props) {
             </div>
             <span
               className="pointer-events-none absolute inset-0 flex items-center justify-center font-display text-xl"
-              style={{ color: "var(--gold)" }}
+              style={{ color: "var(--qinghua)" }}
             >
               占
             </span>
@@ -75,7 +75,7 @@ export default function CastingRitual({ progress, algorithm }: Props) {
           <div className="min-w-0 flex-1 space-y-1">
             <div
               className="font-display text-sm font-bold tracking-[0.1em]"
-              style={{ color: "var(--gold)" }}
+              style={{ color: "var(--qinghua)" }}
             >
               正在起课{algorithm ? ` · ${algorithm}` : ""}…
             </div>

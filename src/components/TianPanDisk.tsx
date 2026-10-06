@@ -26,7 +26,7 @@ export default function TianPanDisk({ ks }: { ks: KeShi }) {
         cx={CX}
         cy={CY}
         r={R_OUTER}
-        style={{ fill: "var(--ink-2)", stroke: "var(--gold)" }}
+        style={{ fill: "var(--ink-2)", stroke: "var(--qinghua)" }}
         strokeWidth="1"
       />
       <circle
@@ -50,7 +50,7 @@ export default function TianPanDisk({ ks }: { ks: KeShi }) {
         cx={CX}
         cy={CY}
         r={34}
-        style={{ fill: "var(--ink-2)", stroke: "var(--gold)" }}
+        style={{ fill: "var(--ink-2)", stroke: "var(--qinghua)" }}
         strokeWidth="1"
       />
       <text
@@ -104,7 +104,7 @@ export default function TianPanDisk({ ks }: { ks: KeShi }) {
               dominantBaseline="central"
               fontSize="19"
               fontWeight={isGui ? 700 : 400}
-              style={{ fill: isGui ? "var(--gold)" : "var(--paper)" }}
+              style={{ fill: isGui ? "var(--qinghua)" : "var(--paper)" }}
             >
               {tian}
             </text>
@@ -114,7 +114,7 @@ export default function TianPanDisk({ ks }: { ks: KeShi }) {
                 y={y - 22}
                 textAnchor="middle"
                 fontSize="13"
-                style={{ fill: "var(--gold)" }}
+                style={{ fill: "var(--qinghua)" }}
               >
                 ★贵
               </text>

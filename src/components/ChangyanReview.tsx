@@ -2,7 +2,13 @@
 // 应验复盘：按算法 × 事类聚合应验率，标注可靠区间。反馈给 agent 校准断语置信度。
 import { useEffect, useId, useMemo, useState } from "react";
 import { IconChart } from "@/components/icons";
-import { changyanStats, loadChangyan, reliability, type ChangyanEntry } from "@/lib/changyan";
+import {
+  changyanStats,
+  loadChangyan,
+  reliability,
+  RECORDS_CHANGED_EVENT,
+  type ChangyanEntry,
+} from "@/lib/changyan";
 
 export default function ChangyanReview() {
   const [entries, setEntries] = useState<ChangyanEntry[]>([]);
@@ -10,16 +16,20 @@ export default function ChangyanReview() {
   const listId = useId();
   const stats = useMemo(() => changyanStats(entries), [entries]);
 
-  // 挂载后从 localStorage 载入，避免与 SSR 首帧不一致（hydration 错误）
+  // 挂载后从 localStorage 载入，避免与 SSR 首帧不一致（hydration 错误）；
+  // 监听记录变更事件（打标 / 导入备份）后重读
   useEffect(() => {
-    setEntries(loadChangyan());
+    const refresh = () => setEntries(loadChangyan());
+    refresh();
+    window.addEventListener(RECORDS_CHANGED_EVENT, refresh);
+    return () => window.removeEventListener(RECORDS_CHANGED_EVENT, refresh);
   }, []);
 
   const byAlgo = Object.entries(stats.byAlgo);
   const byTopic = Object.entries(stats.byTopic);
 
   const toneCls = (t: "ok" | "mid" | "low") =>
-    t === "ok" ? "text-jade" : t === "mid" ? "text-gold" : "text-vermilion";
+    t === "ok" ? "text-jade" : t === "mid" ? "text-qinghua" : "text-vermilion";
 
   return (
     <section className="rounded-md border border-ash/25 bg-ink-2 p-5">
@@ -28,7 +38,7 @@ export default function ChangyanReview() {
         onClick={() => setShow((s) => !s)}
         aria-expanded={show}
         aria-controls={listId}
-        className="flex items-center gap-2 font-display text-sm font-bold tracking-[0.2em] text-gold tabular-nums transition-colors hover:text-gold/80"
+        className="flex items-center gap-2 font-display text-sm font-bold tracking-[0.2em] text-qinghua tabular-nums transition-colors hover:text-qinghua/80"
       >
         <IconChart size={15} />
         应验复盘{stats.verified ? ` · 应验率 ${stats.acc}%` : ""}

@@ -7,7 +7,7 @@
   --ink-2: #fcfaf3; /* 册页底 · 比纸更白一分 */
   --paper: #2b251b; /* 主文字 · 墨色 */
   --vermilion: #b4362a; /* 朱砂（印记/主按钮/点缀） */
-  --gold: #30587d; /* 青花黛蓝（标题/强调） */
+  --qinghua: #30587d; /* 青花黛蓝（标题/强调） */
   --jade: #247a5f; /* 青玉（成功/确认） */
   --ash: #6e6350; /* 纸灰（次级文字/发丝线） */
   --seal-ink: #faf5ea; /* 印上白文 · 恒定暖白，不随主题翻转 */
@@ -19,7 +19,7 @@
   --ink-2: #1d2126; /* 案面 */
   --paper: #e7e1d2; /* 米白墨 */
   --vermilion: #cf5040; /* 朱砂（暗下提亮） */
-  --gold: #a3bdd0; /* 月白青 */
+  --qinghua: #a3bdd0; /* 月白青 */
   --jade: #4dae8d;
   --ash: #a39a86;
   --seal-ink: #faf5ea;
@@ -30,7 +30,7 @@
   --color-ink-2: var(--ink-2);
   --color-paper: var(--paper);
   --color-vermilion: var(--vermilion);
-  --color-gold: var(--gold);
+  --color-qinghua: var(--qinghua);
   --color-jade: var(--jade);
   --color-ash: var(--ash);
   --color-seal-ink: var(--seal-ink);
@@ -62,7 +62,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-gold);
+  outline: 2px solid var(--color-qinghua);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -175,6 +175,36 @@ textarea {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* 打印：强制亮色纸面，隐藏侧边栏/主题切换/按钮/输入区，主区全宽（课盘 SVG 保持可见） */
+@media print {
+  :root,
+  .dark {
+    --ink: #f6f2e8;
+    --ink-2: #fcfaf3;
+    --paper: #2b251b;
+    --vermilion: #b4362a;
+    --qinghua: #30587d;
+    --jade: #247a5f;
+    --ash: #6e6350;
+    --seal-ink: #faf5ea;
+  }
+  aside,
+  button,
+  input,
+  textarea,
+  select,
+  label:has(> input[type="file"]) {
+    display: none !important;
+  }
+  main {
+    max-width: none !important;
+  }
   * {
     transition: none !important;
     animation: none !important;

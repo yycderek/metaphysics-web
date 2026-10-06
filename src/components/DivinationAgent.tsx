@@ -207,17 +207,17 @@ export default function DivinationAgent() {
   const submitChip = (q: string) => run(q, mode === "new");
 
   const inputCls =
-    "flex-1 bg-ink-2 border border-ash/30 rounded-md px-3 py-2 text-sm text-paper placeholder:text-ash/85 focus:border-gold focus-visible:ring-2 focus-visible:ring-gold";
+    "flex-1 bg-ink-2 border border-ash/30 rounded-md px-3 py-2 text-sm text-paper placeholder:text-ash/85 focus:border-qinghua focus-visible:ring-2 focus-visible:ring-qinghua";
 
   const segCls = (active: boolean) =>
     `inline-flex items-center gap-1 rounded-sm px-2.5 py-1 transition-colors ${
-      active ? "bg-gold/10 text-gold" : "text-ash hover:text-paper"
+      active ? "bg-qinghua/10 text-qinghua" : "text-ash hover:text-paper"
     }`;
 
   return (
     <section className="rounded-md border border-ash/25 bg-ink-2 p-5">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 font-display font-bold tracking-[0.2em] text-gold">
+        <h3 className="flex items-center gap-2 font-display font-bold tracking-[0.2em] text-qinghua">
           <IconCompassMark />
           智能占卜
         </h3>
@@ -230,7 +230,7 @@ export default function DivinationAgent() {
       <div className="mb-3 space-y-3">
         {/* 澄清态：独立模式，输入框直接作答 */}
         {pendingClarify && (
-          <div className="flex items-start gap-2 rounded-md border border-ash/25 bg-ink px-3 py-2 text-sm text-gold">
+          <div className="flex items-start gap-2 rounded-md border border-ash/25 bg-ink px-3 py-2 text-sm text-qinghua">
             <IconChat size={15} className="mt-0.5 shrink-0 text-vermilion" />
             <span>请先回答：{pendingClarify}</span>
           </div>
@@ -272,7 +272,12 @@ export default function DivinationAgent() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+            // Enter 或 Ctrl/Cmd+Enter 提交（Shift+Enter 换行；输入法组词中忽略）
+            if (
+              e.key === "Enter" &&
+              !e.nativeEvent.isComposing &&
+              (e.ctrlKey || e.metaKey || !e.shiftKey)
+            ) {
               e.preventDefault();
               submit();
             }
@@ -297,7 +302,7 @@ export default function DivinationAgent() {
               value={algo}
               onChange={(e) => setAlgo(e.target.value)}
               aria-label="选择算法"
-              className="bg-ink-2 border border-ash/30 rounded-md px-2 py-2 text-sm text-paper focus:border-gold focus-visible:ring-2 focus-visible:ring-gold"
+              className="bg-ink-2 border border-ash/30 rounded-md px-2 py-2 text-sm text-paper focus:border-qinghua focus-visible:ring-2 focus-visible:ring-qinghua"
             >
               {ALGO_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -347,7 +352,7 @@ export default function DivinationAgent() {
               key={q}
               onClick={() => submitChip(q)}
               disabled={busy}
-              className="rounded-full border border-ash/30 px-3 py-1 text-xs text-ash transition-colors hover:border-gold hover:text-gold disabled:opacity-40"
+              className="rounded-full border border-ash/30 px-3 py-1 text-xs text-ash transition-colors hover:border-qinghua hover:text-qinghua disabled:opacity-40"
             >
               {q}
             </button>
@@ -356,7 +361,7 @@ export default function DivinationAgent() {
             type="button"
             onClick={() => setShowProfile((s) => !s)}
             aria-expanded={showProfile}
-            className="inline-flex items-center gap-1 self-center text-xs text-ash/85 transition-colors hover:text-gold"
+            className="inline-flex items-center gap-1 self-center text-xs text-ash/85 transition-colors hover:text-qinghua"
           >
             <IconUser size={12} />
             {showProfile ? "收起出生信息" : "出生信息（可选）"}
@@ -380,9 +385,9 @@ export default function DivinationAgent() {
       <div className={hasTurns ? "space-y-4 border-t border-ash/20 pt-4" : "space-y-4"}>
         {turns.map((t) => (
           <div key={t.entryId ?? `q-${t.question}`} className="space-y-2">
-            <div className="text-sm text-gold">问：{t.question}</div>
+            <div className="text-sm text-qinghua">问：{t.question}</div>
             {t.clarify ? (
-              <div className="flex items-start gap-2 rounded-md border border-ash/25 bg-ink px-3 py-2 text-sm text-gold">
+              <div className="flex items-start gap-2 rounded-md border border-ash/25 bg-ink px-3 py-2 text-sm text-qinghua">
                 <IconChat size={15} className="mt-0.5 shrink-0 text-vermilion" />
                 <span>Agent 追问：{t.clarify}</span>
               </div>
@@ -413,7 +418,7 @@ export default function DivinationAgent() {
 /** 面板标题的卦象标记 */
 function IconCompassMark() {
   return (
-    <span className="text-gold">
+    <span className="text-qinghua">
       <IconTrigram size={16} />
     </span>
   );

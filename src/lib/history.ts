@@ -16,6 +16,14 @@ export interface HistoryEntry {
 const STORAGE_KEY = "metaphysics-history";
 const MAX = 20;
 
+/** 本地记录（历史/应验）变更事件：各面板监听后重读 localStorage */
+export const RECORDS_CHANGED_EVENT = "meta:records-changed";
+
+export function emitRecordsChanged(): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(RECORDS_CHANGED_EVENT));
+}
+
 export function loadHistory(): HistoryEntry[] {
   if (typeof window === "undefined") return [];
   try {
@@ -34,6 +42,7 @@ export function saveHistory(list: HistoryEntry[]): void {
   } catch {
     /* ignore */
   }
+  emitRecordsChanged();
 }
 
 /** 追加一条（去重 by id），最多保留 MAX 条 */

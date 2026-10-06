@@ -8,7 +8,7 @@ import { AI_CONFIG_LEGACY_STORAGE_KEY, AI_CONFIG_STORAGE_KEY, loadAIConfig } fro
 import type { UserAIConfig } from "@/lib/aiTypes";
 
 const inputCls =
-  "w-full bg-ink-2 border border-ash/30 rounded-md px-2 py-1.5 text-sm text-paper placeholder:text-ash/80 focus:border-gold focus-visible:ring-2 focus-visible:ring-gold";
+  "w-full bg-ink-2 border border-ash/30 rounded-md px-2 py-1.5 text-sm text-paper placeholder:text-ash/80 focus:border-qinghua focus-visible:ring-2 focus-visible:ring-qinghua";
 const labelCls = "block text-xs text-ash mb-1";
 
 interface ApiSettingsFormProps {
@@ -132,7 +132,7 @@ export function ApiSettingsForm({
       <div className="flex gap-2">
         <button
           onClick={save}
-          className="rounded-md border border-gold/40 px-3 py-1 text-xs text-gold transition-colors hover:bg-gold/10"
+          className="rounded-md border border-qinghua/40 px-3 py-1 text-xs text-qinghua transition-colors hover:bg-qinghua/10"
         >
           保存
         </button>
@@ -174,7 +174,7 @@ export default function ApiSettings() {
         type="button"
         onClick={() => setShow((s) => !s)}
         aria-expanded={show}
-        className="inline-flex items-center gap-1 text-ash transition-colors hover:text-gold"
+        className="inline-flex items-center gap-1 text-ash transition-colors hover:text-qinghua"
       >
         {configured ? <IconCheck size={12} /> : <IconSliders size={12} />}
         {configured ? "自定义 AI" : "自定义 AI API"}

@@ -48,7 +48,7 @@ function render(v: unknown, depth: number): ReactNode {
       <div className="space-y-1">
         {entries.map(([k, val]) => (
           <div key={k} className="flex gap-2 text-sm">
-            <span className="w-20 shrink-0 break-words text-gold">{k}</span>
+            <span className="w-20 shrink-0 break-words text-qinghua">{k}</span>
             <div className="flex-1 min-w-0">{render(val, depth + 1)}</div>
           </div>
         ))}

@@ -81,6 +81,38 @@ describe("resolveAIConfig 优先级", () => {
   });
 });
 
+describe("resolveAIConfig 类型收窄（客户端请求体字段不可信）", () => {
+  const asUser = (v: unknown) => v as Parameters<typeof resolveAIConfig>[0];
+
+  it("非字符串字段一律丢弃且不抛错，回退默认/env", () => {
+    process.env.AI_API_KEY = "env-ai-key";
+    const cfg = resolveAIConfig(
+      asUser({ baseUrl: 123, apiKey: { k: 1 }, model: null, temperature: "hot", maxTokens: NaN }),
+    );
+    expect(cfg.baseUrl).toBe("https://api.deepseek.com");
+    expect(cfg.apiKey).toBe("env-ai-key");
+    expect(cfg.model).toBe("deepseek-v4-flash");
+    expect(cfg.temperature).toBe(0.7);
+    expect(cfg.maxTokens).toBe(8192);
+  });
+
+  it("数组/对象伪装的 baseUrl 不视为自定义 baseUrl（env key 照常兜底）", () => {
+    process.env.AI_API_KEY = "env-ai-key";
+    const cfg = resolveAIConfig(asUser({ baseUrl: ["https://evil.example.com"] }));
+    expect(cfg.baseUrl).toBe("https://api.deepseek.com");
+    expect(cfg.apiKey).toBe("env-ai-key");
+  });
+
+  it("Infinity / -Infinity 数值字段丢弃，正常 number 保留", () => {
+    const bad = resolveAIConfig(asUser({ temperature: Infinity, maxTokens: -Infinity }));
+    expect(bad.temperature).toBe(0.7);
+    expect(bad.maxTokens).toBe(8192);
+    const good = resolveAIConfig(asUser({ temperature: 0, maxTokens: 128 }));
+    expect(good.temperature).toBe(0);
+    expect(good.maxTokens).toBe(128);
+  });
+});
+
 describe("resolveApiKey 环境变量优先级", () => {
   it("AI_API_KEY 优先于 DEEPSEEK_API_KEY", () => {
     process.env.AI_API_KEY = "env-ai-key";

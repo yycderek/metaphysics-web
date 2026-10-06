@@ -43,15 +43,20 @@ export function resolveApiKey(): string {
 export function resolveAIConfig(user?: UserAIConfig): AIProviderConfig {
   const envBaseUrl = process.env.AI_BASE_URL ?? process.env.DEEPSEEK_BASE_URL ?? DEFAULT_BASE_URL;
   const envModel = process.env.AI_MODEL ?? process.env.DEEPSEEK_MODEL ?? DEFAULT_MODEL;
-  const userBaseUrl = user?.baseUrl?.trim() ?? "";
+  // 类型收窄：aiConfig 来自客户端请求体，字段类型不可信；
+  // 非字符串字段一律丢弃（防 .trim() 抛 500），数值字段仅接受有限 number
+  const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
+  const num = (v: unknown, fallback: number): number =>
+    typeof v === "number" && Number.isFinite(v) ? v : fallback;
+  const userBaseUrl = str(user?.baseUrl);
   return {
     baseUrl: userBaseUrl || envBaseUrl,
     // 安全：用户自定义 baseUrl 时禁止用服务端 env key 兜底（防 SSRF 携带服务端凭证打任意 URL），
     // 必须由用户自带 apiKey；缺 key 时返回空串，由调用方报配置错误。
-    apiKey: user?.apiKey?.trim() || (userBaseUrl ? "" : resolveApiKey()),
-    model: user?.model?.trim() || envModel,
-    temperature: user?.temperature ?? DEFAULT_TEMPERATURE,
-    maxTokens: user?.maxTokens ?? DEFAULT_MAX_TOKENS,
+    apiKey: str(user?.apiKey) || (userBaseUrl ? "" : resolveApiKey()),
+    model: str(user?.model) || envModel,
+    temperature: num(user?.temperature, DEFAULT_TEMPERATURE),
+    maxTokens: num(user?.maxTokens, DEFAULT_MAX_TOKENS),
   };
 }
 

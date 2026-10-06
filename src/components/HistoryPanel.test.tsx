@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import HistoryPanel from "./HistoryPanel";
-import type { HistoryEntry } from "@/lib/history";
+import { saveHistory, type HistoryEntry } from "@/lib/history";
 
 const entry: HistoryEntry = {
   id: "1",
@@ -38,5 +38,20 @@ describe("HistoryPanel", () => {
     fireEvent.click(screen.getByText(/历史回看/));
     expect(screen.getByText(/看看事业/)).toBeInTheDocument();
     expect(screen.getByText("先难后易")).toBeInTheDocument();
+  });
+
+  it("监听 meta:records-changed：外部写入后自动刷新列表", () => {
+    render(<HistoryPanel />);
+    fireEvent.click(screen.getByText(/历史回看/));
+    const added: HistoryEntry = {
+      ...entry,
+      id: "2",
+      question: "导入的事业卦",
+      ts: 2,
+    };
+    act(() => {
+      saveHistory([added, entry]);
+    });
+    expect(screen.getByText(/导入的事业卦/)).toBeInTheDocument();
   });
 });

@@ -86,7 +86,7 @@ function DaliurenStepView({ step, ks }: { step: StepResult; ks: KeShi }) {
             <div className="space-y-1.5">
               {chuan.map((c) => (
                 <div key={c.name} className="flex items-center gap-3 text-sm flex-wrap">
-                  <span className="w-12 text-gold">{c.name}</span>
+                  <span className="w-12 text-qinghua">{c.name}</span>
                   <span className="w-8 font-display text-xl font-bold text-paper">{c.zhi}</span>
                   <span className="w-16">
                     {c.tianjiang.short}·{c.tianjiang.full}
@@ -168,7 +168,7 @@ export default function StepRenderer({ result, autoPlay = false }: Props) {
                 setStep(i);
                 setPlaying(false);
               }}
-              className={`px-3 py-1.5 rounded-md text-xs border transition-colors focus-visible:ring-2 focus-visible:ring-gold ${
+              className={`px-3 py-1.5 rounded-md text-xs border transition-colors focus-visible:ring-2 focus-visible:ring-qinghua ${
                 i === step
                   ? "border-vermilion text-vermilion"
                   : "border-ash/25 text-ash hover:text-paper"
@@ -181,7 +181,7 @@ export default function StepRenderer({ result, autoPlay = false }: Props) {
         <div className="flex gap-2">
           <button
             onClick={() => setPlaying((p) => !p)}
-            className="inline-flex items-center gap-1.5 rounded-md border border-ash/25 px-4 py-2 text-sm text-ash transition-colors hover:border-gold hover:text-paper focus-visible:ring-2 focus-visible:ring-gold"
+            className="inline-flex items-center gap-1.5 rounded-md border border-ash/25 px-4 py-2 text-sm text-ash transition-colors hover:border-qinghua hover:text-paper focus-visible:ring-2 focus-visible:ring-qinghua"
           >
             {playing ? <IconPause size={14} /> : <IconPlay size={14} />}
             {playing ? "暂停" : "自动演示"}
@@ -189,7 +189,7 @@ export default function StepRenderer({ result, autoPlay = false }: Props) {
           <button
             onClick={() => setStep((s) => Math.max(0, s - 1))}
             disabled={step === 0}
-            className="inline-flex items-center gap-1.5 rounded-md border border-ash/25 px-4 py-2 text-sm disabled:opacity-30 hover:border-gold focus-visible:ring-2 focus-visible:ring-gold"
+            className="inline-flex items-center gap-1.5 rounded-md border border-ash/25 px-4 py-2 text-sm disabled:opacity-30 hover:border-qinghua focus-visible:ring-2 focus-visible:ring-qinghua"
           >
             <IconChevronLeft size={14} />
             上一步
@@ -197,7 +197,7 @@ export default function StepRenderer({ result, autoPlay = false }: Props) {
           <button
             onClick={() => setStep((s) => Math.min(steps.length - 1, s + 1))}
             disabled={step === steps.length - 1}
-            className="inline-flex items-center gap-1.5 rounded-md bg-vermilion px-4 py-2 text-sm text-seal-ink transition-colors hover:bg-vermilion/90 disabled:opacity-30 focus-visible:ring-2 focus-visible:ring-gold"
+            className="inline-flex items-center gap-1.5 rounded-md bg-vermilion px-4 py-2 text-sm text-seal-ink transition-colors hover:bg-vermilion/90 disabled:opacity-30 focus-visible:ring-2 focus-visible:ring-qinghua"
           >
             下一步
             <IconChevronRight size={14} />
@@ -207,7 +207,9 @@ export default function StepRenderer({ result, autoPlay = false }: Props) {
 
       {/* 步骤标题 */}
       <div>
-        <h3 className="font-display text-2xl font-bold tracking-[0.1em] text-gold">{cur.title}</h3>
+        <h3 className="font-display text-2xl font-bold tracking-[0.1em] text-qinghua">
+          {cur.title}
+        </h3>
         <p className="mt-1 text-sm leading-relaxed text-ash">{cur.desc}</p>
       </div>
 

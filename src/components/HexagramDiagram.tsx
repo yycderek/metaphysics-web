@@ -16,7 +16,7 @@ interface Props {
 export default function HexagramDiagram({ title, lines, shiPos, yingPos }: Props) {
   return (
     <div className="rounded-md border border-ash/25 bg-ink-2 p-4">
-      <div className="text-center font-display text-sm font-bold tracking-[0.15em] text-gold mb-3">
+      <div className="text-center font-display text-sm font-bold tracking-[0.15em] text-qinghua mb-3">
         {title}
       </div>
       <div className="flex flex-col-reverse gap-1">
@@ -47,7 +47,7 @@ export default function HexagramDiagram({ title, lines, shiPos, yingPos }: Props
                   </>
                 )}
               </div>
-              <span className={`w-12 text-xs ${isGui ? "text-gold font-bold" : "text-ash"}`}>
+              <span className={`w-12 text-xs ${isGui ? "text-qinghua font-bold" : "text-ash"}`}>
                 {isGui ? "世" : isYing ? "应" : (l.extra ?? "")}
               </span>
               <span className="w-14 text-xs text-paper/80">{l.tag ?? ""}</span>

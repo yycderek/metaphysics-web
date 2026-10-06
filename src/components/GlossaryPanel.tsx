@@ -16,7 +16,7 @@ export default function GlossaryPanel() {
         onClick={() => setShow((s) => !s)}
         aria-expanded={show}
         aria-controls={listId}
-        className="flex items-center gap-2 font-display text-sm font-bold tracking-[0.2em] text-gold transition-colors hover:text-gold/80"
+        className="flex items-center gap-2 font-display text-sm font-bold tracking-[0.2em] text-qinghua transition-colors hover:text-qinghua/80"
       >
         <IconBook size={15} />
         术语速查{show ? "（收起）" : ""}
@@ -28,7 +28,7 @@ export default function GlossaryPanel() {
               key={t}
               className="rounded-md border border-ash/25 bg-ink p-2.5 text-xs leading-relaxed"
             >
-              <span className="mr-2 font-display font-bold tracking-wider text-gold">{t}</span>
+              <span className="mr-2 font-display font-bold tracking-wider text-qinghua">{t}</span>
               <span className="text-paper/80">{GLOSSARY[t] ?? "暂无释义"}</span>
             </div>
           ))}

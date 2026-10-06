@@ -82,7 +82,7 @@
       "refersTo": "button-primary",
       "description": "主动作专用（起课/起卦/断课），一屏不超过两处。",
       "html": "<button class=\"ds-btn-primary\">起 课</button>",
-      "css": ".ds-btn-primary { background: var(--vermilion, #b4362a); color: var(--seal-ink, #faf5ea); border: none; border-radius: 6px; padding: 8px 16px; font-family: 'LXGW WenKai', 'Kaiti SC', serif; letter-spacing: 0.1em; transition: background-color 0.2s; } .ds-btn-primary:hover { background: color-mix(in srgb, var(--vermilion, #b4362a) 90%, transparent); } .ds-btn-primary:focus-visible { outline: 2px solid var(--gold, #30587d); outline-offset: 2px; }"
+      "css": ".ds-btn-primary { background: var(--vermilion, #b4362a); color: var(--seal-ink, #faf5ea); border: none; border-radius: 6px; padding: 8px 16px; font-family: 'LXGW WenKai', 'Kaiti SC', serif; letter-spacing: 0.1em; transition: background-color 0.2s; } .ds-btn-primary:hover { background: color-mix(in srgb, var(--vermilion, #b4362a) 90%, transparent); } .ds-btn-primary:focus-visible { outline: 2px solid var(--qinghua, #30587d); outline-offset: 2px; }"
     },
     {
       "name": "Ghost Button 描边次按钮",
@@ -90,7 +90,7 @@
       "refersTo": "button-ghost",
       "description": "次级操作与模式切换，发丝描边，hover 转青花。",
       "html": "<button class=\"ds-btn-ghost\">推导过程</button>",
-      "css": ".ds-btn-ghost { background: transparent; color: var(--ash, #6e6350); border: 1px solid color-mix(in srgb, var(--ash, #6e6350) 40%, transparent); border-radius: 6px; padding: 8px 16px; font-family: 'LXGW WenKai', 'Kaiti SC', serif; letter-spacing: 0.05em; transition: border-color 0.2s, color 0.2s; } .ds-btn-ghost:hover { border-color: var(--gold, #30587d); color: var(--paper, #2b251b); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--gold, #30587d); outline-offset: 2px; }"
+      "css": ".ds-btn-ghost { background: transparent; color: var(--ash, #6e6350); border: 1px solid color-mix(in srgb, var(--ash, #6e6350) 40%, transparent); border-radius: 6px; padding: 8px 16px; font-family: 'LXGW WenKai', 'Kaiti SC', serif; letter-spacing: 0.05em; transition: border-color 0.2s, color 0.2s; } .ds-btn-ghost:hover { border-color: var(--qinghua, #30587d); color: var(--paper, #2b251b); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--qinghua, #30587d); outline-offset: 2px; }"
     },
     {
       "name": "Album Card 册页卡",
@@ -98,7 +98,7 @@
       "refersTo": "card-album",
       "description": "平面容器：发丝边 + 6px 圆角 + 册页底，零投影。",
       "html": "<div class=\"ds-card-album\"><h3 class=\"ds-card-title\">四课</h3><p>卡片内容以发丝线与纸色微差分层。</p></div>",
-      "css": ".ds-card-album { background: var(--ink-2, #fcfaf3); color: var(--paper, #2b251b); border: 1px solid color-mix(in srgb, var(--ash, #6e6350) 25%, transparent); border-radius: 6px; padding: 20px; } .ds-card-title { font-family: 'Noto Serif SC', serif; font-weight: 700; letter-spacing: 0.2em; color: var(--gold, #30587d); margin: 0 0 12px; }"
+      "css": ".ds-card-album { background: var(--ink-2, #fcfaf3); color: var(--paper, #2b251b); border: 1px solid color-mix(in srgb, var(--ash, #6e6350) 25%, transparent); border-radius: 6px; padding: 20px; } .ds-card-title { font-family: 'Noto Serif SC', serif; font-weight: 700; letter-spacing: 0.2em; color: var(--qinghua, #30587d); margin: 0 0 12px; }"
     },
     {
       "name": "Input 输入框",
@@ -106,7 +106,7 @@
       "refersTo": "input-field",
       "description": "册页底 + 发丝边，focus 出青花环，光标朱砂。",
       "html": "<input class=\"ds-input\" placeholder=\"把想问的事告诉我…\" />",
-      "css": ".ds-input { background: var(--ink-2, #fcfaf3); color: var(--paper, #2b251b); border: 1px solid color-mix(in srgb, var(--ash, #6e6350) 30%, transparent); border-radius: 6px; padding: 8px 12px; font-family: 'LXGW WenKai', 'Kaiti SC', serif; caret-color: var(--vermilion, #b4362a); } .ds-input:focus-visible { outline: none; border-color: var(--gold, #30587d); box-shadow: 0 0 0 2px color-mix(in srgb, var(--gold, #30587d) 60%, transparent); }"
+      "css": ".ds-input { background: var(--ink-2, #fcfaf3); color: var(--paper, #2b251b); border: 1px solid color-mix(in srgb, var(--ash, #6e6350) 30%, transparent); border-radius: 6px; padding: 8px 12px; font-family: 'LXGW WenKai', 'Kaiti SC', serif; caret-color: var(--vermilion, #b4362a); } .ds-input:focus-visible { outline: none; border-color: var(--qinghua, #30587d); box-shadow: 0 0 0 2px color-mix(in srgb, var(--qinghua, #30587d) 60%, transparent); }"
     },
     {
       "name": "Seal 朱砂方印",
@@ -120,7 +120,7 @@
       "kind": "custom",
       "description": "册页左缘的竖排青花小签，结果面板的签名标记。",
       "html": "<div class=\"ds-vlabel-wrap\"><span class=\"ds-vlabel\">天地盘</span><div class=\"ds-vlabel-body\">册页内容</div></div>",
-      "css": ".ds-vlabel-wrap { display: flex; gap: 16px; } .ds-vlabel { writing-mode: vertical-rl; letter-spacing: 0.35em; font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 14px; color: var(--gold, #30587d); user-select: none; } .ds-vlabel-body { flex: 1; min-width: 0; }"
+      "css": ".ds-vlabel-wrap { display: flex; gap: 16px; } .ds-vlabel { writing-mode: vertical-rl; letter-spacing: 0.35em; font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 14px; color: var(--qinghua, #30587d); user-select: none; } .ds-vlabel-body { flex: 1; min-width: 0; }"
     },
     {
       "name": "Double Rule 界栏",

@@ -93,7 +93,7 @@ export default function EvalPanel() {
   return (
     <section className="rounded-md border border-ash/25 bg-ink-2 p-5">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="font-display font-bold tracking-[0.2em] text-gold">断课质量评估</h3>
+        <h3 className="font-display font-bold tracking-[0.2em] text-qinghua">断课质量评估</h3>
         <span className="text-xs text-ash">同一 provider 切多个模型，跑黄金题库对比断语质量</span>
       </div>
 
@@ -103,7 +103,7 @@ export default function EvalPanel() {
           onChange={(e) => setModels(e.target.value)}
           aria-label="评估模型（逗号分隔）"
           placeholder="模型名，逗号分隔：deepseek-v4-flash, deepseek-chat"
-          className="min-w-[240px] flex-1 rounded-md border border-ash/30 bg-ink-2 px-3 py-2 text-sm text-paper placeholder:text-ash/85 focus:border-gold focus-visible:ring-2 focus-visible:ring-gold"
+          className="min-w-[240px] flex-1 rounded-md border border-ash/30 bg-ink-2 px-3 py-2 text-sm text-paper placeholder:text-ash/85 focus:border-qinghua focus-visible:ring-2 focus-visible:ring-qinghua"
         />
         <button
           onClick={run}
@@ -195,7 +195,7 @@ function EvalMatrix({
                               r.total >= 75
                                 ? "tabular-nums text-jade"
                                 : r.total >= 60
-                                  ? "tabular-nums text-gold"
+                                  ? "tabular-nums text-qinghua"
                                   : "tabular-nums text-vermilion"
                             }
                           >
@@ -216,7 +216,7 @@ function EvalMatrix({
           <tr className="border-t border-ash/20 text-ash">
             <td className="px-3 py-2">平均分</td>
             {models.map((m) => (
-              <td key={m} className="px-3 py-2 text-center tabular-nums text-gold">
+              <td key={m} className="px-3 py-2 text-center tabular-nums text-qinghua">
                 {summary[m]?.平均分 ?? "-"}
               </td>
             ))}

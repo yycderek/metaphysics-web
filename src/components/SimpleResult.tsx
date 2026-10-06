@@ -11,14 +11,14 @@ interface XiaoRaw {
 function jxColor(a?: string): string {
   if (a === "吉") return "text-jade";
   if (a === "凶") return "text-vermilion";
-  return "text-gold";
+  return "text-qinghua";
 }
 
 function XiaoLiuRenCard({ raw }: { raw: XiaoRaw }) {
   return (
     <div className="rounded-md border border-ash/25 bg-ink-2 p-5 text-center space-y-3">
       <div className="text-sm text-ash">六壬掌诀 · 落宫</div>
-      <div className="font-display text-5xl font-black text-gold">{raw.palm ?? "?"}</div>
+      <div className="font-display text-5xl font-black text-qinghua">{raw.palm ?? "?"}</div>
       <div className={`text-xl ${jxColor(raw.auspicious)} font-display font-bold tracking-[0.1em]`}>
         吉凶 · {raw.auspicious ?? "-"}
       </div>

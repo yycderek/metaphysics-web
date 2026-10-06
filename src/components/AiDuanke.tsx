@@ -204,7 +204,7 @@ export default function AiDuanke({ result }: Props) {
   return (
     <section className="rounded-md border border-ash/25 bg-ink-2 p-5">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 font-display font-bold tracking-[0.2em] text-gold">
+        <h3 className="flex items-center gap-2 font-display font-bold tracking-[0.2em] text-qinghua">
           <IconChat size={16} />
           AI 解读当前课盘
         </h3>
@@ -214,7 +214,7 @@ export default function AiDuanke({ result }: Props) {
             title="API 设置"
             aria-expanded={showSettings}
             aria-controls="ai-duanke-settings"
-            className="inline-flex items-center gap-1 rounded-md border border-ash/30 px-2 py-1 transition-colors hover:border-gold hover:text-gold"
+            className="inline-flex items-center gap-1 rounded-md border border-ash/30 px-2 py-1 transition-colors hover:border-qinghua hover:text-qinghua"
           >
             <IconSliders size={12} />
             {aiConfig.baseUrl || aiConfig.model || aiConfig.apiKey ? "自定义 API" : "API 设置"}
@@ -224,7 +224,7 @@ export default function AiDuanke({ result }: Props) {
               <span>季节</span>
               <select
                 aria-label="季节"
-                className="rounded-md border border-ash/30 bg-ink-2 px-2 py-1 text-sm text-paper focus:border-gold focus-visible:ring-2 focus-visible:ring-gold"
+                className="rounded-md border border-ash/30 bg-ink-2 px-2 py-1 text-sm text-paper focus:border-qinghua focus-visible:ring-2 focus-visible:ring-qinghua"
                 value={season}
                 onChange={(e) => setSeason(e.target.value as typeof season)}
               >
@@ -270,7 +270,7 @@ export default function AiDuanke({ result }: Props) {
             key={q}
             onClick={() => ask(q)}
             disabled={streaming}
-            className="rounded-full border border-ash/30 px-3 py-1 text-xs text-ash transition-colors hover:border-gold hover:text-gold disabled:opacity-40"
+            className="rounded-full border border-ash/30 px-3 py-1 text-xs text-ash transition-colors hover:border-qinghua hover:text-qinghua disabled:opacity-40"
           >
             {q}
           </button>
@@ -326,7 +326,7 @@ export default function AiDuanke({ result }: Props) {
           }}
           aria-label="输入想问的事"
           placeholder="输入想问的事，如：最近换工作合适吗？"
-          className="flex-1 rounded-md border border-ash/30 bg-ink-2 px-3 py-2 text-sm text-paper placeholder:text-ash/85 focus:border-gold focus-visible:ring-2 focus-visible:ring-gold"
+          className="flex-1 rounded-md border border-ash/30 bg-ink-2 px-3 py-2 text-sm text-paper placeholder:text-ash/85 focus:border-qinghua focus-visible:ring-2 focus-visible:ring-qinghua"
         />
         {streaming ? (
           <button

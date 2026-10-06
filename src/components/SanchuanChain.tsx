@@ -6,7 +6,7 @@ import { IconCheck, IconMinus, IconWarning } from "@/components/icons";
 const JIXIONG_COLOR: Record<string, string> = {
   吉: "text-jade border-jade/60",
   凶: "text-vermilion border-vermilion/60",
-  中: "text-gold border-gold/60",
+  中: "text-qinghua border-qinghua/60",
 };
 
 export default function SanchuanChain({ ks }: { ks: KeShi }) {

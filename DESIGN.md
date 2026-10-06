@@ -79,7 +79,7 @@ components:
 
 ### Secondary
 
-- **青花黛蓝 Qinghua Blue**（`--gold`，历史变量名保留）：标题、链接态、选中态、术语下划线。
+- **青花黛蓝 Qinghua Blue**（`--qinghua`，历史变量名保留）：标题、链接态、选中态、术语下划线。
 
 ### Tertiary
 
@@ -141,7 +141,7 @@ components:
 - **Shape:** 6px 圆角。
 - **Primary:** 朱砂实底 + 印白文字（`bg-vermilion text-seal-ink`），hover 降 90% 不透明度；busy 态带「…」文案。
 - **Secondary/Ghost:** 纸灰发丝描边（`border-ash/30~40`），hover 描边转青花、文字转墨色。
-- **Focus:** 全部保留 `focus-visible:ring-2 ring-gold` 或全局 :focus-visible 描边。
+- **Focus:** 全部保留 `focus-visible:ring-2 ring-qinghua` 或全局 :focus-visible 描边。
 
 ### Cards / Containers
 

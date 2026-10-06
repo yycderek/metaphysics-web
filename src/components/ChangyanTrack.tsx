@@ -6,6 +6,7 @@ import {
   loadChangyan,
   saveChangyan,
   upsertChangyan,
+  RECORDS_CHANGED_EVENT,
   type ChangyanOutcome,
   type ChangyanEntry,
 } from "@/lib/changyan";
@@ -25,9 +26,13 @@ export default function ChangyanTrack({ id, algorithmId, topic, 卦象, 总结 }
   const current = entries.find((e) => e.id === id)?.outcome;
   const stats = useMemo(() => changyanStats(entries), [entries]);
 
-  // 挂载后从 localStorage 载入，避免与 SSR 首帧不一致（hydration 错误）
+  // 挂载后从 localStorage 载入，避免与 SSR 首帧不一致（hydration 错误）；
+  // 监听记录变更事件（多处 ChangyanTrack / 复盘同源数据）后重读
   useEffect(() => {
-    setEntries(loadChangyan());
+    const refresh = () => setEntries(loadChangyan());
+    refresh();
+    window.addEventListener(RECORDS_CHANGED_EVENT, refresh);
+    return () => window.removeEventListener(RECORDS_CHANGED_EVENT, refresh);
   }, []);
 
   const pick = (o: ChangyanOutcome) => {

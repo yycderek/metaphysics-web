@@ -81,7 +81,7 @@ export default function BackupPanel() {
     window.setTimeout(() => setNote(""), 3000);
   };
 
-  const actionCls = "text-xs text-ash transition-colors hover:text-gold";
+  const actionCls = "text-xs text-ash transition-colors hover:text-qinghua";
 
   return (
     <div className="text-xs">
@@ -96,7 +96,7 @@ export default function BackupPanel() {
           导出
         </button>
         <label
-          className={`${actionCls} inline-flex cursor-pointer items-center gap-1 rounded-md focus-within:ring-2 focus-within:ring-gold`}
+          className={`${actionCls} inline-flex cursor-pointer items-center gap-1 rounded-md focus-within:ring-2 focus-within:ring-qinghua`}
         >
           导入
           <input
@@ -126,7 +126,7 @@ export default function BackupPanel() {
             <button
               type="button"
               onClick={() => apply("merge")}
-              className="rounded-md border border-gold/50 bg-gold/15 px-2.5 py-1 text-gold hover:bg-gold/25"
+              className="rounded-md border border-qinghua/50 bg-qinghua/15 px-2.5 py-1 text-qinghua hover:bg-qinghua/25"
             >
               合并导入
             </button>

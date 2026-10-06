@@ -31,7 +31,7 @@ export default function ThemeToggle() {
       onClick={toggle}
       aria-label="切换亮 / 暗主题"
       aria-pressed={dark}
-      className="rounded-md border border-ash/30 px-3 py-2 text-sm text-ash transition-colors hover:border-gold hover:text-gold"
+      className="rounded-md border border-ash/30 px-3 py-2 text-sm text-ash transition-colors hover:border-qinghua hover:text-qinghua"
     >
       <span className="only-light items-center gap-1.5">
         <IconMoon size={15} />

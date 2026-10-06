@@ -1,12 +1,24 @@
 "use client";
 // 首页：主区 = 智能占卜（对话框 + 算法选择）+ 高级用法（手动精确起课，用户主动开启）；
 // 侧边栏 = 术语速查 + 历史对话；主题切换固定在右上角。
-import { useMemo, useState } from "react";
+// 页面状态（移动视图 v / 课式模式 m / 算法 algo / 高级开关 adv / 起课参数 d）同步到 URL，刷新与分享链接可恢复。
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import "@/plugins"; // 副作用导入：注册本地算法插件
 import type { DivinationResult, AlgorithmInput, AlgorithmAdapter } from "@/lib/algorithms/types";
-import { buildDivination, listAdapters } from "@/lib/algorithms/registry";
+import { buildDivination, getAdapter, listAdapters } from "@/lib/algorithms/registry";
 import { DALIUREN_ID, rawKeShi } from "@/lib/algorithms/daliuren";
+import {
+  decodeShareState,
+  encodeShareState,
+  parseAdvanced,
+  parseAlgo,
+  parseMode,
+  parseView,
+  type PageView,
+  type ResultMode,
+} from "@/lib/shareState";
 import DivineForm from "@/components/DivineForm";
 import KeShiHeader from "@/components/KeShiHeader";
 import TianPanDisk from "@/components/TianPanDisk";
@@ -28,8 +40,6 @@ import {
   IconSliders,
 } from "@/components/icons";
 
-type Mode = "result" | "derive";
-
 const AiDuanke = dynamic(() => import("@/components/AiDuanke"));
 const StepRenderer = dynamic(() => import("@/components/StepRenderer"));
 const LiuyaoPan = dynamic(() => import("@/components/LiuyaoPan"));
@@ -44,41 +54,86 @@ const MOBILE_TABS = [
   { key: "history", label: "历史", Icon: IconHistory },
 ] as const;
 
-export default function HomePage() {
-  const [result, setResult] = useState<DivinationResult | null>(null);
-  const [mode, setMode] = useState<Mode>("result");
-  const [selectedId, setSelectedId] = useState<string>(DALIUREN_ID);
+function HomePageInner() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const adapters: AlgorithmAdapter[] = useMemo(() => listAdapters(), []);
-  const [advanced, setAdvanced] = useState(false);
-  const [view, setView] = useState<"divine" | "help" | "history">("divine");
+  const view = parseView(searchParams.get("v"));
+  const mode = parseMode(searchParams.get("m"));
+  const selectedId = parseAlgo(
+    searchParams.get("algo"),
+    adapters.map((a) => a.id),
+    DALIUREN_ID,
+  );
+  const advanced = parseAdvanced(searchParams.get("adv"));
+  const [result, setResult] = useState<DivinationResult | null>(null);
+  const handledDRef = useRef<string | null>(null);
+
+  const updateParams = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [k, v] of Object.entries(updates)) {
+      if (v === null) params.delete(k);
+      else params.set(k, v);
+    }
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+
+  const setView = (v: PageView) => updateParams({ v: v === "divine" ? null : v });
+  const setMode = (m: ResultMode) => updateParams({ m: m === "result" ? null : m });
+  const setAdvanced = (next: boolean) => updateParams({ adv: next ? "1" : null });
+
+  const onSelect = (id: string) => {
+    updateParams({ algo: id === DALIUREN_ID ? null : id, m: null });
+  };
+
+  const onDivine = async (input: AlgorithmInput) => {
+    const r = await buildDivination(selectedId, input);
+    const d = encodeShareState({ a: selectedId, i: input });
+    handledDRef.current = d;
+    setResult(r);
+    updateParams({ d, m: null });
+  };
+
+  // 分享链接恢复：?d= 合法则重算起课结果并展开高级用法；非法/损坏静默忽略
+  useEffect(() => {
+    const d = searchParams.get("d");
+    if (!d || d === handledDRef.current) return;
+    const state = decodeShareState(d);
+    if (!state || !getAdapter(state.a)) return;
+    handledDRef.current = d;
+    let cancelled = false;
+    buildDivination(state.a, state.i)
+      .then((r) => {
+        if (cancelled) return;
+        setResult(r);
+        updateParams({ algo: state.a === DALIUREN_ID ? null : state.a, adv: "1" });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const ks = result && result.algorithmId === DALIUREN_ID ? rawKeShi(result) : null;
   const chuan = useMemo(() => (ks ? chuanTianjiang(ks) : []), [ks]);
 
-  const onDivine = async (input: AlgorithmInput) => {
-    setResult(await buildDivination(selectedId, input));
-    setMode("result");
-  };
-
-  const onSelect = (id: string) => {
-    setSelectedId(id);
-    setMode("result");
-  };
-
   const tabCls = (active: boolean) =>
     `inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-sm border tracking-wider transition-colors ${
       active
-        ? "border-gold/60 bg-gold/10 text-gold"
-        : "border-ash/40 text-ash hover:border-gold hover:text-paper"
+        ? "border-qinghua/60 bg-qinghua/10 text-qinghua"
+        : "border-ash/40 text-ash hover:border-qinghua hover:text-paper"
     }`;
 
-  const panelH2 = "font-display text-base font-bold tracking-[0.25em] text-gold";
+  const panelH2 = "font-display text-base font-bold tracking-[0.25em] text-qinghua";
 
   return (
     <>
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-gold focus:text-ink focus:px-3 focus:py-2"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-qinghua focus:text-ink focus:px-3 focus:py-2"
       >
         跳到主内容
       </a>
@@ -102,8 +157,8 @@ export default function HomePage() {
               aria-pressed={view === k}
               className={`inline-flex items-center gap-1.5 rounded-md border px-4 py-2 text-sm tracking-wider transition-colors ${
                 view === k
-                  ? "border-gold/60 bg-gold/10 text-gold"
-                  : "border-ash/40 text-ash hover:border-gold hover:text-paper"
+                  ? "border-qinghua/60 bg-qinghua/10 text-qinghua"
+                  : "border-ash/40 text-ash hover:border-qinghua hover:text-paper"
               }`}
             >
               <Icon size={15} />
@@ -121,9 +176,9 @@ export default function HomePage() {
             <section className="rounded-md border border-ash/25 bg-ink-2 p-5">
               <button
                 type="button"
-                onClick={() => setAdvanced((s) => !s)}
+                onClick={() => setAdvanced(!advanced)}
                 aria-expanded={advanced}
-                className="inline-flex items-center gap-2 text-sm font-bold tracking-[0.2em] text-gold"
+                className="inline-flex items-center gap-2 text-sm font-bold tracking-[0.2em] text-qinghua"
               >
                 <IconSliders size={15} />
                 高级用法 · 手动精确起课
@@ -168,7 +223,7 @@ export default function HomePage() {
                             <KeShiHeader ks={ks} />
                             <section className="grid md:grid-cols-2 gap-5 items-start">
                               <div className="flex gap-4 rounded-md border border-ash/25 bg-ink p-5">
-                                <h2 className="vertical-rl shrink-0 select-none font-display text-sm font-bold text-gold">
+                                <h2 className="vertical-rl shrink-0 select-none font-display text-sm font-bold text-qinghua">
                                   天地盘
                                 </h2>
                                 <div className="min-w-0 flex-1">
@@ -177,7 +232,7 @@ export default function HomePage() {
                               </div>
                               <div className="space-y-5">
                                 <div className="flex gap-4 rounded-md border border-ash/25 bg-ink p-5">
-                                  <h2 className="vertical-rl shrink-0 select-none font-display text-sm font-bold text-gold">
+                                  <h2 className="vertical-rl shrink-0 select-none font-display text-sm font-bold text-qinghua">
                                     四课
                                   </h2>
                                   <div className="min-w-0 flex-1">
@@ -185,7 +240,7 @@ export default function HomePage() {
                                   </div>
                                 </div>
                                 <div className="flex gap-4 rounded-md border border-ash/25 bg-ink p-5">
-                                  <h2 className="vertical-rl shrink-0 select-none font-display text-sm font-bold text-gold">
+                                  <h2 className="vertical-rl shrink-0 select-none font-display text-sm font-bold text-qinghua">
                                     三传
                                   </h2>
                                   <div className="min-w-0 flex-1">
@@ -193,7 +248,7 @@ export default function HomePage() {
                                     <div className="mt-4 border-t border-ash/20 pt-3 space-y-1.5 text-sm">
                                       {chuan.map((c) => (
                                         <div key={c.name} className="flex items-center gap-3">
-                                          <span className="w-12 text-gold">{c.name}</span>
+                                          <span className="w-12 text-qinghua">{c.name}</span>
                                           <span className="w-8 font-display text-xl font-bold text-paper">
                                             {c.zhi}
                                           </span>
@@ -271,5 +326,13 @@ export default function HomePage() {
         </footer>
       </main>
     </>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={null}>
+      <HomePageInner />
+    </Suspense>
   );
 }

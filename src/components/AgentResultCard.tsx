@@ -48,7 +48,7 @@ export default function AgentResultCard({
   const tabCls = (active: boolean) =>
     `inline-flex items-center gap-1 rounded-md border px-3 py-1 text-xs transition-colors ${
       active
-        ? "border-gold/70 text-gold"
+        ? "border-qinghua/70 text-qinghua"
         : "border-ash/30 text-ash hover:border-ash/60 hover:text-paper"
     }`;
 
@@ -69,7 +69,7 @@ export default function AgentResultCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-baseline gap-2">
-            <span className="font-display text-xl font-bold tracking-[0.15em] text-gold">
+            <span className="font-display text-xl font-bold tracking-[0.15em] text-qinghua">
               {interpretation.卦象}
             </span>
             {interpretation.吉凶 && (
@@ -217,7 +217,7 @@ export default function AgentResultCard({
                 const interp = interpretation.逐步[i];
                 return (
                   <div key={s.key} className="border-l border-ash/30 pl-3">
-                    <div className="font-display text-sm font-bold tracking-[0.15em] text-gold">
+                    <div className="font-display text-sm font-bold tracking-[0.15em] text-qinghua">
                       {s.title}
                     </div>
                     <div className="mt-0.5 text-xs text-ash">{s.desc}</div>
@@ -313,7 +313,7 @@ function MultiPan({
             <tbody>
               {rows.map((r, i) => (
                 <tr key={`${r.卦象}-${i}`} className="border-b border-ash/15 align-top">
-                  <td className="px-2 py-1.5 text-gold">{r.卦象}</td>
+                  <td className="px-2 py-1.5 text-qinghua">{r.卦象}</td>
                   <td className="px-2 py-1.5">{r.吉凶 ?? "-"}</td>
                   <td className="px-2 py-1.5 text-paper/90">{r.要点}</td>
                   <td className="px-2 py-1.5 text-paper/90">{r.结论}</td>
@@ -328,7 +328,7 @@ function MultiPan({
         <div className="space-y-3">
           {groups.map((g, i) => (
             <div key={`${g.卦象}-${i}`} className="border-l border-ash/30 pl-3 text-sm">
-              <span className="mr-2 font-display font-bold tracking-[0.1em] text-gold">
+              <span className="mr-2 font-display font-bold tracking-[0.1em] text-qinghua">
                 {g.卦象}
               </span>
               {g.吉凶 && <span className="text-xs text-ash">{g.吉凶}</span>}

@@ -1,6 +1,6 @@
 "use client";
 // 算法输入表单：算法选择（内置）+ 各算法友好输入；大六壬→干支，小六壬→月日时，六爻→摇卦，梅花→报数。
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { DIZHI, TIANGAN, YUEJIANG_NAME, shizhiFromHour } from "@/lib/data";
 import { rizhuFromDate } from "@/lib/calendar";
 import { IconClock, IconDice } from "@/components/icons";
@@ -22,10 +22,10 @@ function randomTosses(): string {
 }
 
 const numCls =
-  "bg-ink-2 border border-ash/30 rounded-md px-3 py-2 text-paper text-sm focus:border-gold focus-visible:ring-2 focus-visible:ring-gold";
+  "bg-ink-2 border border-ash/30 rounded-md px-3 py-2 text-paper text-sm focus:border-qinghua focus-visible:ring-2 focus-visible:ring-qinghua";
 
 const inputCls =
-  "bg-ink-2 border border-ash/30 rounded-md px-3 py-2 text-paper text-sm focus:border-gold focus-visible:ring-2 focus-visible:ring-gold";
+  "bg-ink-2 border border-ash/30 rounded-md px-3 py-2 text-paper text-sm focus:border-qinghua focus-visible:ring-2 focus-visible:ring-qinghua";
 
 export default function DivineForm({ adapters, selectedId, onSelect, onDivine }: Props) {
   const uid = useId();
@@ -102,8 +102,15 @@ export default function DivineForm({ adapters, selectedId, onSelect, onDivine }:
 
   const selectCls = inputCls;
 
+  const onSubmitKey = (e: KeyboardEvent) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && !e.nativeEvent.isComposing) {
+      e.preventDefault();
+      if (!busy) void divine();
+    }
+  };
+
   return (
-    <div className="rounded-md border border-ash/25 bg-ink-2 p-5 space-y-5">
+    <div className="rounded-md border border-ash/25 bg-ink-2 p-5 space-y-5" onKeyDown={onSubmitKey}>
       {/* 算法选择 */}
       <div className="flex flex-wrap items-end gap-3">
         <div>
@@ -199,7 +206,7 @@ export default function DivineForm({ adapters, selectedId, onSelect, onDivine }:
           </div>
           <button
             onClick={useNow}
-            className="inline-flex items-center gap-1.5 rounded-md border border-ash/30 px-3 py-2 text-sm text-ash transition-colors hover:border-gold hover:text-paper"
+            className="inline-flex items-center gap-1.5 rounded-md border border-ash/30 px-3 py-2 text-sm text-ash transition-colors hover:border-qinghua hover:text-paper"
           >
             <IconClock size={14} />
             当前时间
@@ -248,7 +255,7 @@ export default function DivineForm({ adapters, selectedId, onSelect, onDivine }:
             <button
               type="button"
               onClick={toss}
-              className={`inline-flex items-center gap-1.5 rounded-md border border-gold/40 px-3 py-2 text-sm text-gold transition-colors hover:bg-gold/10 ${
+              className={`inline-flex items-center gap-1.5 rounded-md border border-qinghua/40 px-3 py-2 text-sm text-qinghua transition-colors hover:bg-qinghua/10 ${
                 shaking ? "shake" : ""
               }`}
             >

@@ -1,4 +1,7 @@
 // 应验追踪（客户端 localStorage 数据模型 + 纯函数统计）
+import { emitRecordsChanged } from "./history";
+
+export { RECORDS_CHANGED_EVENT } from "./history";
 export type ChangyanOutcome = "应验" | "未应验" | "待验证";
 
 export interface ChangyanEntry {
@@ -32,6 +35,7 @@ export function saveChangyan(list: ChangyanEntry[]): void {
   } catch {
     /* ignore */
   }
+  emitRecordsChanged();
 }
 
 /** 以 id 去重：有则更新，无则追加（最多保留 max 条） */
