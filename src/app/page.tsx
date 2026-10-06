@@ -36,6 +36,7 @@ const LiuyaoPan = dynamic(() => import("@/components/LiuyaoPan"));
 const MeihuaPan = dynamic(() => import("@/components/MeihuaPan"));
 const GlossaryPanel = dynamic(() => import("@/components/GlossaryPanel"));
 const HistoryPanel = dynamic(() => import("@/components/HistoryPanel"));
+const EvalPanel = dynamic(() => import("@/components/EvalPanel"));
 
 const MOBILE_TABS = [
   { key: "divine", label: "占卜", Icon: IconCompass },
@@ -244,6 +245,8 @@ export default function HomePage() {
                       选择算法与参数后点击「起课」，课盘与解读将在此展示。
                     </p>
                   )}
+
+                  <EvalPanel />
                 </div>
               )}
             </section>

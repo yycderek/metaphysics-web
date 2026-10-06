@@ -9,6 +9,13 @@ interface Bucket {
 }
 const buckets = new Map<string, Bucket>();
 
+/** 惰性过期清理：读写时顺手删掉已过期桶，避免 Map 无限增长 */
+function sweep(now: number, day: string): void {
+  for (const [k, b] of buckets) {
+    if (b.day !== day || !b.counts.some((t) => now - t < WINDOW_MS)) buckets.delete(k);
+  }
+}
+
 function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -20,6 +27,7 @@ export function rateLimit(
 ): { ok: true } | { ok: false; limit: string } {
   const now = Date.now();
   const day = today();
+  sweep(now, day);
   let b = buckets.get(key);
   if (!b || b.day !== day) {
     b = { counts: [], day, daily: 0 };

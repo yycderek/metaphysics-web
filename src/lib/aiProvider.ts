@@ -9,7 +9,7 @@ import type { AIProviderConfig, UserAIConfig, ChatMessage, ToolCall, ToolDef } f
 
 export type { AIProviderConfig, UserAIConfig, ChatMessage, ToolCall, ToolDef };
 
-const DEFAULT_BASE_URL = "https://api.deepseek.com";
+export const DEFAULT_BASE_URL = "https://api.deepseek.com";
 const DEFAULT_MODEL = "deepseek-v4-flash";
 const DEFAULT_TEMPERATURE = 0.7;
 const DEFAULT_MAX_TOKENS = 8192;
@@ -43,9 +43,12 @@ export function resolveApiKey(): string {
 export function resolveAIConfig(user?: UserAIConfig): AIProviderConfig {
   const envBaseUrl = process.env.AI_BASE_URL ?? process.env.DEEPSEEK_BASE_URL ?? DEFAULT_BASE_URL;
   const envModel = process.env.AI_MODEL ?? process.env.DEEPSEEK_MODEL ?? DEFAULT_MODEL;
+  const userBaseUrl = user?.baseUrl?.trim() ?? "";
   return {
-    baseUrl: user?.baseUrl?.trim() || envBaseUrl,
-    apiKey: user?.apiKey?.trim() || resolveApiKey(),
+    baseUrl: userBaseUrl || envBaseUrl,
+    // 安全：用户自定义 baseUrl 时禁止用服务端 env key 兜底（防 SSRF 携带服务端凭证打任意 URL），
+    // 必须由用户自带 apiKey；缺 key 时返回空串，由调用方报配置错误。
+    apiKey: user?.apiKey?.trim() || (userBaseUrl ? "" : resolveApiKey()),
     model: user?.model?.trim() || envModel,
     temperature: user?.temperature ?? DEFAULT_TEMPERATURE,
     maxTokens: user?.maxTokens ?? DEFAULT_MAX_TOKENS,

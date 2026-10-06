@@ -128,6 +128,9 @@ export async function POST(req: NextRequest) {
   }
 
   const encoder = new TextEncoder();
+  // 上游请求超时 + 客户端断连清理：合成信号传给 chatCompletion
+  const abort = new AbortController();
+  const signal = AbortSignal.any([abort.signal, AbortSignal.timeout(60_000)]);
   // SSE 流式返回 agent 过程：progress 事件 + 最终 done/clarify/error
   const stream = new ReadableStream({
     async start(controller) {
@@ -153,7 +156,7 @@ export async function POST(req: NextRequest) {
           question,
           history: sanitizeHistory(body.history),
           callLLM: (messages) =>
-            chatCompletion(config, messages, [divinateTool, askClarificationTool]),
+            chatCompletion(config, messages, [divinateTool, askClarificationTool], signal),
           onEvent: (e) => send(e),
         });
         send({
@@ -171,7 +174,9 @@ export async function POST(req: NextRequest) {
         controller.close();
       }
     },
-    cancel() {},
+    cancel() {
+      abort.abort();
+    },
   });
 
   return new Response(stream, {

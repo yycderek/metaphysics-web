@@ -60,6 +60,25 @@ describe("resolveAIConfig 优先级", () => {
     expect(cfg.model).toBe("deepseek-v4-flash");
     expect(cfg.temperature).toBe(0.7);
   });
+
+  it("用户自定义 baseUrl 但未自带 apiKey → 禁止用服务端 env key 兜底", () => {
+    process.env.AI_API_KEY = "env-ai-key";
+    const cfg = resolveAIConfig({ baseUrl: "https://evil.example.com" });
+    expect(cfg.baseUrl).toBe("https://evil.example.com");
+    expect(cfg.apiKey).toBe("");
+  });
+
+  it("用户自定义 baseUrl + 自带 apiKey → 正常使用用户 key", () => {
+    process.env.AI_API_KEY = "env-ai-key";
+    const cfg = resolveAIConfig({ baseUrl: "https://my.example.com", apiKey: "user-key" });
+    expect(cfg.apiKey).toBe("user-key");
+  });
+
+  it("未自定义 baseUrl 时 env key 照常兜底", () => {
+    process.env.AI_API_KEY = "env-ai-key";
+    const cfg = resolveAIConfig({ model: "some-model" });
+    expect(cfg.apiKey).toBe("env-ai-key");
+  });
 });
 
 describe("resolveApiKey 环境变量优先级", () => {

@@ -18,6 +18,7 @@ export async function judgeQuality(
   evalCase: EvalCase,
   interpretation: AgentDivination,
   realEvi?: number | null,
+  signal?: AbortSignal,
 ): Promise<JudgeResult | null> {
   const rubric = evalCase.rubric.map((r, i) => `${i + 1}. ${r}`).join("\n");
   const eviNote =
@@ -39,7 +40,7 @@ ${JSON.stringify(interpretation)}`,
     },
   ];
   try {
-    const turn = await chatCompletion(config, messages);
+    const turn = await chatCompletion(config, messages, undefined, signal);
     const m = turn.content.match(/\{[\s\S]*\}/);
     if (!m) return null;
     const o = JSON.parse(m[0]) as { 分数?: number; 理由?: string };

@@ -30,6 +30,7 @@ export async function runEvalCase(
   evalCase: EvalCase,
   now = new Date(),
   realEvi?: number | null,
+  signal?: AbortSignal,
 ): Promise<EvalCaseResult> {
   let divination;
   try {
@@ -52,7 +53,7 @@ export async function runEvalCase(
   ];
   let interpretation: AgentDivination | null = null;
   try {
-    const turn = await chatCompletion(config, messages);
+    const turn = await chatCompletion(config, messages, undefined, signal);
     interpretation = tryParseStructured(turn.content);
     // 结构解析失败 → 给一次纠正机会（与 agent 一致，保证公平）
     if (!interpretation && turn.content) {
@@ -64,7 +65,7 @@ export async function runEvalCase(
           content:
             "请只输出符合格式的 JSON 对象（必须含 卦象/算法/结论{总断,现状,建议}/逐步[{步骤,解读}]/置信度），不要任何解释或代码块。",
         },
-      ]);
+      ], undefined, signal);
       interpretation = tryParseStructured(retry.content);
     }
   } catch (e) {
@@ -81,7 +82,7 @@ export async function runEvalCase(
   }
   const grounding = scoreGrounding(divination, interpretation, evalCase);
   const quality = interpretation
-    ? await judgeQuality(config, evalCase, interpretation, realEvi)
+    ? await judgeQuality(config, evalCase, interpretation, realEvi, signal)
     : null;
   return {
     caseId: evalCase.id,

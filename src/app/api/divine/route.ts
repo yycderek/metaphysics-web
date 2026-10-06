@@ -7,6 +7,7 @@ import type { ChatMessage } from "@/lib/aiTypes";
 import "@/lib/divine"; // 副作用导入：注册内置断课模板
 import { getDivineTemplate, genericDivineTemplate, type Season } from "@/lib/divine";
 import { guardAI, guardResponse, baseUrlAllowed } from "@/lib/guard";
+import { classifyQuery } from "@/lib/safety";
 import type { StepResult } from "@/lib/algorithms/types";
 
 export const runtime = "nodejs";
@@ -45,6 +46,10 @@ export async function POST(req: NextRequest) {
   if (denied) return denied;
   if (aiConfig?.baseUrl && !baseUrlAllowed(aiConfig.baseUrl)) {
     return Response.json({ error: "该 Base URL 不在允许名单内" }, { status: 403 });
+  }
+  const safety = classifyQuery(question ?? "");
+  if (safety.blocked) {
+    return Response.json({ error: safety.message }, { status: 400 });
   }
 
   // 输入护栏：防止超长/滥用请求消耗 token（长度上限为保守值）
@@ -87,10 +92,15 @@ export async function POST(req: NextRequest) {
     season,
     steps,
   });
-  // 追问历史：最多保留最近 MAX_MSG_COUNT 轮，且单条内容截断
+  // 追问历史：role 白名单过滤（防客户端注入 system 消息），最多保留最近 MAX_MSG_COUNT 轮，且单条内容截断
   const historyMsgs: ChatMsg[] = (history ?? [])
+    .filter(
+      (h) =>
+        (h.role === "user" || h.role === "assistant") &&
+        typeof h.content === "string" &&
+        h.content.trim(),
+    )
     .slice(-MAX_MSG_COUNT)
-    .filter((h) => typeof h.content === "string" && h.content.trim())
     .map((h) => ({
       role: h.role,
       content: h.content.slice(0, MAX_MSG_LEN),
@@ -102,7 +112,10 @@ export async function POST(req: NextRequest) {
   ];
 
   try {
-    const upstream = await streamChat(config, messages);
+    // 上游请求超时 + 客户端断连清理：合成信号传给上游 fetch
+    const abort = new AbortController();
+    const signal = AbortSignal.any([abort.signal, AbortSignal.timeout(60_000)]);
+    const upstream = await streamChat(config, messages, signal);
 
     if (!upstream.ok) {
       const errText = await upstream.text().catch(() => "");
@@ -130,8 +143,13 @@ export async function POST(req: NextRequest) {
         } catch (e) {
           controller.error(e);
         } finally {
+          reader.cancel().catch(() => {});
           controller.close();
         }
+      },
+      cancel() {
+        abort.abort();
+        reader.cancel().catch(() => {});
       },
     });
 

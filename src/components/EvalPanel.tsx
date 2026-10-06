@@ -1,7 +1,6 @@
 "use client";
 // 断课质量评估面板：对一个 provider 切多个 model 跑黄金题库，SSE 展示进度 + 评分矩阵。
 import { useMemo, useRef, useState } from "react";
-import LiveNote from "@/components/LiveNote";
 import { changyanStats, loadChangyan } from "@/lib/changyan";
 
 interface Row {
@@ -125,15 +124,16 @@ export default function EvalPanel() {
         )}
       </div>
 
-      <LiveNote
-        className={
-          busy && progress.length
-            ? "mb-3 rounded-md border border-ash/25 bg-ink px-3 py-2 text-xs text-paper/90"
-            : "sr-only"
-        }
-      >
-        {busy && progress.length ? progress[progress.length - 1] : ""}
-      </LiveNote>
+      {progress.length > 0 && (
+        <ul
+          aria-live="polite"
+          className="mb-3 max-h-40 space-y-1 overflow-y-auto rounded-md border border-ash/25 bg-ink-2 px-3 py-2 text-xs text-paper/90"
+        >
+          {progress.map((text, i) => (
+            <li key={i}>{text}</li>
+          ))}
+        </ul>
+      )}
 
       {error && (
         <div role="alert" className="mb-3 text-sm text-vermilion">
